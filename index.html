@@ -92,11 +92,11 @@
     </div>
 
     <script>
-        // ★GASスクリプトの実行ログで取得した公開URLに置き換えてください★
-        const JSON_DATA_URL = 'https://drive.google.com/uc?export=download&id=1TV_JiTIuBUazxMs7ZerMyN4z1rWBP7kb';
+        // JSONファイルを相対パスで読み込む
+        // GASスクリプトのGITHUB_FILE_PATHと同じパスを指定します
+        const JSON_FILE_PATH = 'tree_data.json'; // ★GASスクリプトのGITHUB_FILE_PATHと同じパスに置き換えてください★
 
-        // JSONファイルを読み込む
-        d3.json(JSON_DATA_URL).then(function(jsonData) {
+        d3.json(JSON_FILE_PATH).then(function(jsonData) {
             // デバッグ用にjsonDataをコンソールに出力
             console.log("Loaded jsonData:", jsonData);
 
