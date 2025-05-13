@@ -12,7 +12,7 @@
             line-height: 1.6;
             padding: 20px;
             background-color: #f7f7f7;
-            overflow-x: auto; /* 横スクロールを可能にする */
+            overflow: hidden; /* bodyのデフォルトスクロールを無効化 */
         }
         h1 {
             text-align: center;
@@ -23,21 +23,24 @@
         }
         .chart-container {
             width: 100%;
-            min-height: 500px; /* ある程度の高さを確保 */
+            height: calc(100vh - 100px); /* ヘッダーなどを考慮した高さ */
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             padding: 20px;
             box-sizing: border-box;
+            overflow: hidden; /* SVGコンテナ自体は非表示 */
         }
         .node circle {
             fill: #999;
             stroke: steelblue;
             stroke-width: 3px;
+            cursor: pointer; /* クリック可能であることを示す */
         }
         .node text {
             font: 12px sans-serif;
             fill: #555;
+            pointer-events: none; /* テキストのクリックイベントを無効化 */
         }
         .node image {
             border-radius: 50%; /* 画像を丸くする */
@@ -52,6 +55,7 @@
             text-align: center;
             font-size: 1.2rem;
             color: #555;
+            margin-top: 50px;
          }
     </style>
 </head>
@@ -65,13 +69,22 @@
 
     <script>
         // ここをGitHubのRawtherapee URLに変更してください
-        const JSON_FILE_PATH = 'tree_data.json';
+        const JSON_FILE_PATH = 'https://github.com/kzk-jp/Senju-Caribbeans/blob/main/tree_data.json';
 
-        const margin = { top: 20, right: 90, bottom: 30, left: 90 };
+        // マージンを調整してルートノードを中央寄りに配置
+        const margin = { top: 20, right: 90, bottom: 30, left: 150 }; // 左マージンを増やしました
         let width = 960 - margin.left - margin.right;
         let height = 500 - margin.top - margin.bottom;
 
         let svg = null; // SVG要素を保持する変数
+        let gLink, gNode; // リンクとノードのグループを保持
+
+        // Zoom and Pan behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.1, 4]) // ズームの範囲
+            .on('zoom', (event) => {
+                svg.attr('transform', event.transform);
+            });
 
         // Function to render the tree
         function renderTree(data) {
@@ -81,19 +94,26 @@
             // Clear previous SVG if exists
             d3.select("#chart svg").remove();
 
-            // Set the dimensions and margins of the diagram dynamically
             const chartContainer = document.getElementById('chart');
             const containerWidth = chartContainer.clientWidth - margin.left - margin.right;
-            const containerHeight = Math.max(500, data.length * 50); // Adjust height based on number of nodes
+            const containerHeight = chartContainer.clientHeight - margin.top - margin.bottom;
 
             width = containerWidth;
-            height = containerHeight;
+            // ノード数に基づいて適切な高さを計算（最小値を設定）
+            const calculatedHeight = Math.max(containerHeight, data.length * 40); // 1ノードあたり40pxで計算
+            height = calculatedHeight;
+
 
             svg = d3.select("#chart").append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
+                 .call(zoom) // SVG全体にズームとパンを適用
                 .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+                .attr("transform", `translate(${margin.left},${margin.top})`); // マージン分移動
+
+            gLink = svg.append("g").attr("class", "links");
+            gNode = svg.append("g").attr("class", "nodes");
+
 
             // declares a tree layout and assigns the size
             const treemap = d3.tree().size([height, width]);
@@ -116,7 +136,7 @@
             // ****************** Nodes Section ***************************
 
             // Update the nodes...
-            const node = svg.selectAll('g.node')
+            const node = gNode.selectAll('g.node')
                 .data(treeNodes, d => d.id || (d.id = d.data.id));
 
             // Enter any new nodes at the parent's previous position.
@@ -158,7 +178,7 @@
 
             // Add labels for the nodes (Introducer Name)
              nodeEnter.append('text')
-                .attr("dy", "1.5em") // Position below the name
+                .attr("dy", "1.8em") // Position below the name (少し下げました)
                 .attr("x", 30) // Adjust text position
                 .attr("text-anchor", "start")
                 .style("font-size", "10px")
@@ -169,16 +189,17 @@
             // ****************** Links Section ***************************
 
             // Update the links...
-            const link = svg.selectAll('path.link')
+            const link = gLink.selectAll('path.link')
                 .data(treeLinks, d => d.target.id);
 
             // Enter any new links at the parent's previous position.
             link.enter().insert('path', "g")
                 .attr("class", "link")
                 .attr('d', d => {
+                    // リンクのパスを少し調整して角を丸く見せる
                     return "M" + d.source.y + "," + d.source.x
-                        + "C" + (d.source.y + d.target.y) / 2 + "," + d.source.x
-                        + " " + (d.source.y + d.target.y) / 2 + "," + d.target.x
+                        + "C" + (d.source.y + (d.target.y - d.source.y) / 2) + "," + d.source.x
+                        + " " + (d.source.y + (d.target.y - d.source.y) / 2) + "," + d.target.x
                         + " " + d.target.y + "," + d.target.x;
                 });
         }
