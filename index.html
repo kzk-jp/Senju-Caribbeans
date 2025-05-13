@@ -23,7 +23,7 @@
 
         #chart-container {
             width: 100%;
-            overflow-x: auto;
+            overflow-x: auto; /* 横スクロールは維持 */
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             padding: 1rem 0.5rem;
@@ -110,8 +110,12 @@
                 return;
             }
 
-            const dx = 110; // Vertical spacing between nodes
-            const dy = 180; // Horizontal spacing between nodes
+            // ノード間の間隔を調整 (縦型レイアウト向け)
+            // dx: 横方向の間隔 (ノードカードの幅 + 余白)
+            // dy: 縦方向の間隔 (ノードカードの高さ + 余白)
+            const dx = 180; // 横方向の間隔を広めに (ノードカード幅100px + 余白)
+            const dy = 110; // 縦方向の間隔を狭めに (ノードカード高さ80px程度 + 余白)
+
 
             // Determine the root node for D3.js based on jsonData structure
             // GAS側で常に仮想ルートを持つ構造にしているので、直接使用
@@ -120,11 +124,12 @@
 
             const root = d3.hierarchy(rootData);
 
-            // Compute the tree layout
-            const treeLayout = d3.tree().nodeSize([dx, dy]);
+            // Compute the tree layout (縦型レイアウト)
+            const treeLayout = d3.tree().nodeSize([dy, dx]); // nodeSizeの引数の順番を入れ替え
             treeLayout(root);
 
             // Calculate required SVG dimensions
+            // 縦型レイアウトでは、ツリーの幅が maxY - minY、ツリーの高さが maxX - minX になります
             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
             root.each(d => {
                 minX = Math.min(minX, d.x);
@@ -135,16 +140,17 @@
 
             // Add some padding around the tree
             const margin = { top: 40, right: 40, bottom: 40, left: 40 };
-            const svgWidth = maxY - minY + margin.left + margin.right;
-            const svgHeight = maxX - minX + margin.top + margin.bottom;
+            const svgWidth = maxY - minY + margin.left + margin.right; // ツリーの幅 + 余白
+            const svgHeight = maxX - minX + margin.top + margin.bottom; // ツリーの高さ + 余白
 
             const svg = d3.select("#tree-svg")
                 .attr("width", svgWidth)
                 .attr("height", svgHeight);
 
             // Add a group element to hold the tree, offset to center
+            // 縦型レイアウトでは、横方向の中心に寄せる
             const g = svg.append("g")
-                .attr("transform", `translate(${margin.left}, ${margin.top + (svgHeight / 2) - ((maxX - minX) / 2)})`);
+                .attr("transform", `translate(${margin.left + (svgWidth / 2) - ((maxY - minY) / 2)}, ${margin.top})`); // 横方向の中心に移動
 
 
             // Create the links
@@ -156,21 +162,24 @@
                 .data(root.links())
                 .join("path")
                 .attr("class", "link")
-                .attr("d", d3.linkHorizontal()
-                    .x(d => d.y)
-                    .y(d => d.x));
+                // 縦型レイアウト用のリンクパス
+                .attr("d", d3.linkVertical()
+                    .x(d => d.x) // d.x が横方向の位置になる
+                    .y(d => d.y)); // d.y が縦方向の位置になる
+
 
             // Create the nodes
             const node = g.append("g")
                 .selectAll("g")
                 .data(root.descendants())
                 .join("g")
-                .attr("transform", d => `translate(${d.y},${d.x})`);
+                // 縦型レイアウト用のノード位置 (d.x が横, d.y が縦)
+                .attr("transform", d => `translate(${d.x},${d.y})`);
 
             // Add foreignObject for custom HTML content (the node card)
             node.append("foreignObject")
-                .attr("x", -50) // Half of node-card width to center it
-                .attr("y", -35) // Adjust based on node-card height
+                .attr("x", -50) // ノードの中心に合わせる (ノードカード幅100pxの半分)
+                .attr("y", -35) // ノードの中心に合わせる (ノードカード高さ80px程度の半分)
                 .attr("width", 100) // node-card width
                 .attr("height", 80) // node-card height (adjust as needed)
                 .append("xhtml:div")
@@ -186,12 +195,13 @@
              node.append("title")
                  .text(d => d.data.introduction_reason ? `紹介理由: ${d.data.introduction_reason}` : '');
 
-            // Scroll to center the chart horizontally
+            // 横方向のスクロール位置を調整 (縦型レイアウトでも横スクロールは必要)
             const container = document.getElementById("chart-container");
             const svgElement = document.getElementById("tree-svg");
             if (svgElement) {
               const svgWidth = svgElement.getBoundingClientRect().width;
               const containerCenter = container.clientWidth / 2;
+              // 横方向の中心にスクロール
               container.scrollLeft = (svgWidth / 2) - containerCenter;
             }
 
