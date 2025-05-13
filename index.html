@@ -26,7 +26,7 @@
             overflow-x: auto; /* 横スクロールは維持 */
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
-            padding: 1rem 0.5rem;
+            padding: 1rem 0.5rem; /* コンテナ内のパディング */
             box-sizing: border-box;
         }
 
@@ -117,26 +117,27 @@
             // ノード間の間隔を調整 (縦型レイアウト向け)
             // dx: 横方向の間隔 (ノードカードの幅 + 余白)
             // dy: 縦方向の間隔 (ノードカードの高さ + 余白)
-            const dx = 180; // 横方向の間隔を広めに (ノードカード幅100px + 余白)
-            const dy = 110; // 縦方向の間隔を狭めに (ノードカード高さ80px程度 + 余白)
+            const dx = 250; // ★横方向の間隔を広めに調整 (180 -> 250)★
+            const dy = 110; // 縦方向の間隔はそのまま
+
 
             const svg = d3.select("#tree-svg");
             let totalSvgHeight = 0; // 全てのツリーを合わせたSVGの高さ
 
             // JSONデータの各要素（各独立したツリーのルート）に対して処理
             jsonData.forEach((rootData, index) => {
-                // childrenプロパティがない、または空の場合はスキップ（単独ノード）
-                // ★単独ノードも表示する場合のロジックを修正★
+                // childrenプロパティがない、または空の場合は単独ノードとして処理
                 if (!rootData.children || rootData.children.length === 0) {
                      console.log(`Processing single node: ${rootData.name}`);
                      const singleNodeG = svg.append("g")
-                         .attr("transform", `translate(${dx}, ${totalSvgHeight + dy / 2})`); // 適当な位置に配置
+                         // 単独ノードも横方向の中心に配置されるように調整
+                         .attr("transform", `translate(${margin.left + (container.clientWidth / 2) - (100 / 2)}, ${totalSvgHeight + margin.top})`); // 横方向の中心, 縦方向は累計高さ
 
                      singleNodeG.append("foreignObject")
-                         .attr("x", -50)
-                         .attr("y", -35)
-                         .attr("width", 100)
-                         .attr("height", 80)
+                         .attr("x", -50) // ノードの中心に合わせる (ノードカード幅100pxの半分)
+                         .attr("y", -35) // ノードの中心に合わせる (ノードカード高さ80px程度の半分)
+                         .attr("width", 100) // node-card width
+                         .attr("height", 80) // node-card height (adjust as needed)
                          .append("xhtml:div")
                          .attr("class", "node-card")
                          .html(`
@@ -147,7 +148,7 @@
                          `);
                      singleNodeG.append("title").text(rootData.introduction_reason ? `紹介理由: ${rootData.introduction_reason}` : '');
 
-                     totalSvgHeight += dy; // 単独ノード分の高さを加算
+                     totalSvgHeight += dy + margin.bottom; // 単独ノード分の高さ + 余白を加算
                      return; // 次のルートへ
                 }
 
@@ -175,7 +176,7 @@
                     .attr("class", "tree-group") // クラスを追加
                     // 各ツリーを縦に並べるように配置
                     // 横方向はツリーの幅を考慮して中央寄せ、縦方向は累計高さ
-                    .attr("transform", `translate(${margin.left + (svgWidth / 2) - (subtreeWidth / 2)}, ${totalSvgHeight + margin.top})`); // 横方向は中心、縦方向は累計高さ
+                    .attr("transform", `translate(${margin.left + (subtreeWidth / 2) - (minY)}, ${totalSvgHeight + margin.top})`); // 横方向の中心, 縦方向は累計高さ
 
 
                 // Create the links for the current tree
@@ -227,6 +228,10 @@
 
             // 全てのツリーを描画した後でSVG全体の高さを設定
             svg.attr("height", totalSvgHeight + margin.top); // 最後のツリーの下にも余白を追加
+             // SVGの幅をコンテナ幅に合わせるか、ツリーの最大幅に合わせるか検討
+             // スマホ優先ならコンテナ幅に合わせつつ横スクロールが良いかも
+             // svg.attr("width", container.clientWidth); // コンテナ幅に合わせる場合
+
 
             // 横方向のスクロール位置を調整 (縦型レイアウトでも横スクロールは必要)
             const container = document.getElementById("chart-container");
