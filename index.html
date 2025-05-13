@@ -229,7 +229,8 @@
                     .attr("class", "tree-group") // クラスを追加
                     // 各ツリーを縦に並べるように配置
                     // 横方向はツリーの幅を考慮して中央寄せ、縦方向は累計高さ
-                    .attr("transform", `translate(${margin.left + (subtreeWidth / 2) - (minY)}, ${totalSvgHeight + margin.top})`); // 横方向の中心, 縦方向は累計高さ
+                    // ★ここを修正: 横方向の配置を左端寄せに一時的に変更★
+                    .attr("transform", `translate(${margin.left - minY}, ${totalSvgHeight + margin.top})`); // 横方向を左端寄せ, 縦方向は累計高さ
 
 
                 // Create the links for the current tree
