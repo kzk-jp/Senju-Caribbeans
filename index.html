@@ -57,7 +57,7 @@
             object-fit: cover;
             margin-bottom: 4px;
             box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
-            background-color: #eee;
+            background-color: #eee; /* Placeholder background */
         }
 
         .node-name {
@@ -88,27 +88,25 @@
     <h1>カリビアンズ 加入チャート</h1>
     <div id="chart-container">
         <svg id="tree-svg"></svg>
+        <div id="loading-message" style="text-align: center; padding: 20px;">データを読み込み中...</div>
     </div>
 
     <script>
-        // Apps Scriptから渡されたjsonData文字列をパースして変数に格納
-        // Apps Script側で JSON.stringify された文字列がここに埋め込まれます
-        // エラーが発生しないように、try-catchで囲むのが安全です
-        let jsonData = null;
-        try {
-            jsonData = JSON.parse('<?= jsonData ?>');
-            console.log("Parsed jsonData:", jsonData);
-        } catch (e) {
-            console.error("Error parsing jsonData from template:", e);
-            document.getElementById("chart-container").textContent = "データのパースに失敗しました。";
-        }
+        // ★GASスクリプトの実行ログで取得した公開URLに置き換えてください★
+        const JSON_DATA_URL = 'https://drive.google.com/uc?export=download&id=1TV_JiTIuBUazxMs7ZerMyN4z1rWBP7kb';
+
+        // JSONファイルを読み込む
+        d3.json(JSON_DATA_URL).then(function(jsonData) {
+            // デバッグ用にjsonDataをコンソールに出力
+            console.log("Loaded jsonData:", jsonData);
+
+            // ローディングメッセージを非表示にする
+            d3.select("#loading-message").remove();
 
 
-        window.addEventListener("DOMContentLoaded", () => {
             // Check if jsonData is available and not empty
             if (!jsonData || (Array.isArray(jsonData) && jsonData.length === 0) || (typeof jsonData === 'object' && Object.keys(jsonData).length === 0) || jsonData.error || jsonData.message) {
-                // エラーオブジェクトやメッセージが含まれている場合も表示しない
-                document.getElementById("chart-container").textContent = jsonData && (jsonData.error || jsonData.message) ? `エラー: ${jsonData.error || jsonData.message}` : "表示するデータがありません。";
+                 d3.select("#chart-container").html(`<div style="text-align: center; padding: 20px; color: red;">エラー: データの読み込みに失敗しました。<br>${jsonData && (jsonData.error || jsonData.message) ? `詳細: ${jsonData.error || jsonData.message}` : 'データがありません。'}</div>`);
                 return;
             }
 
@@ -116,7 +114,7 @@
             const dy = 180; // Horizontal spacing between nodes
 
             // Determine the root node for D3.js based on jsonData structure
-            // Apps Script側で常に仮想ルートを持つ構造にしているので、直接使用
+            // GAS側で常に仮想ルートを持つ構造にしているので、直接使用
             const rootData = jsonData;
 
 
@@ -197,6 +195,11 @@
               container.scrollLeft = (svgWidth / 2) - containerCenter;
             }
 
+        }).catch(function(error) {
+            // JSONファイルの読み込みまたはパースに失敗した場合
+            console.error("Error loading or parsing JSON:", error);
+            d3.select("#loading-message").remove(); // ローディングメッセージを削除
+            d3.select("#chart-container").html(`<div style="text-align: center; padding: 20px; color: red;">データの読み込みに失敗しました。<br>詳細: ${error.message || error}</div>`);
         });
     </script>
 </body>
