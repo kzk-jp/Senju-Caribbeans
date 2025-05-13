@@ -1,323 +1,286 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>カリビアンズ 加入チャート</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        html, body { /* ★診断用: html, bodyに背景色を設定★ */
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            background-color: #f8f8f8; /* 薄いグレーなど */
-        }
-
         body {
-            font-family: "Helvetica Neue", sans-serif;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f7f7f7;
+        }
+        .group {
+            margin-bottom: 40px; /* 各グループ間のスペース */
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .group h2 {
+            border-bottom: 2px solid #e2e2e2;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
             color: #333;
         }
-
-        h1 {
-            text-align: center;
-            padding: 1rem;
-            margin: 0;
-            font-size: 1.4rem;
-            background: #2563eb;
-            color: white;
+        .tree ul {
+            padding-left: 20px;
+            margin: 7px 0;
+            position: relative;
+        }
+        .tree ul ul {
+            border-left: 1px solid #ccc;
+        }
+        .tree li {
+            list-style: none;
+            margin: 7px 0;
+            position: relative;
+        }
+        .tree li::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: -20px;
+            border-top: 1px solid #ccc;
+            width: 20px;
+            height: 0;
+        }
+        .tree li:last-child::before {
+             border-top: 1px solid #ccc;
         }
 
-        #chart-container {
-            width: 100%;
-            overflow: auto; /* 縦方向・横方向のスクロールを有効に */
-            -webkit-overflow-scrolling: touch;
-            padding: 1rem 0.5rem; /* コンテナ内のパディング */
-            box-sizing: border-box;
-            border: 2px solid blue; /* ★診断用: コンテナに枠線を追加★ */
-            /* height: auto; */ /* コンテンツに合わせて自動調整 */
-            min-height: 500px; /* ある程度の最小高さを確保 */
-        }
+         .tree ul ul > li:first-child::before {
+             top: 15px;
+         }
 
-        svg {
-            display: block; /* Ensure svg is a block element */
-            /* margin: auto; */ /* 中央寄せはせず、左上に配置 */
-            background-color: #e0e0e0; /* ★診断用: SVG領域に薄い背景色 (確認後削除可)★ */
-            /* SVGの幅と高さはJavaScriptで動的に設定 */
-        }
-
-        .node-card {
+        .tree li .node {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            background-color: white;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            padding: 6px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-            width: 100px;
-            box-sizing: border-box;
-            text-align: center; /* Center text within the card */
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 300px;
         }
-
-        .node-image {
-            width: 50px;
-            height: 50px;
+        .tree li .node img {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
+            margin-right: 10px;
             object-fit: cover;
-            margin-bottom: 4px;
-            box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
-            background-color: #eee; /* Placeholder background */
         }
-
-        .node-name {
-            font-size: 10px;
-            font-weight: 500;
-            line-height: 1.2;
-            white-space: nowrap;
-            overflow: hidden; /* Hide overflow text */
-            text-overflow: ellipsis; /* Add ellipsis for overflow */
-            max-width: 90px;
-            word-break: break-word;
+        .tree li .node .name {
+            font-weight: bold;
         }
-
-        .node-name a {
-            text-decoration: none;
-            color: #333;
+        .tree li .node .introducer {
+            font-size: 0.9em;
+            color: #555;
         }
-
-        .link {
-            fill: none;
-            stroke: #94a3b8;
-            stroke-width: 1.2px;
+         /* Remove default list styling from the outer ul within a group */
+        .group > ul {
+            padding-left: 0;
         }
-        /* 各ツリー間の余白 */
-        .tree-group {
-            /* margin-bottomは不要（横並びのため） */
-        }
-         /* 単独ノード用のグループクラス */
-        .single-node-group {
-             /* margin-bottomは不要（横並びのため） */
+         .group > ul > li::before {
+            content: none; /* Root nodes in a group have no line before */
         }
     </style>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>カリビアンズ 加入チャート</h1>
-    <div id="chart-container">
-        <svg id="tree-svg"></svg>
-        <div id="loading-message" style="text-align: center; padding: 20px;">データを読み込み中...</div>
+
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー</h1>
+
+    <div id="treeContainer">
+        <p>データを読み込んでいます...</p>
     </div>
 
     <script>
-        // JSONファイルを相対パスで読み込む (GASスクリプトが出力するフラットなJSON)
-        const JSON_FILE_PATH = 'tree_data.json'; // ★GASスクリプトのGITHUB_FILE_PATHと同じパスに置き換えてください★
+        // ここをGitHubのRawtherapee URLに変更してください
+        const JSON_FILE_PATH = 'tree_data.json';
 
-        d3.json(JSON_FILE_PATH).then(function(flatData) { // フラットなデータとして読み込む
-            const container = document.getElementById("chart-container");
-            const svgElement = document.getElementById("tree-svg");
-
-            console.log("Loaded flatData:", flatData);
-
-            d3.select("#loading-message").remove();
-
-            // JSONデータが配列であることを確認
-            if (!Array.isArray(flatData) || flatData.length === 0) {
-                 d3.select("#chart-container").html(`<div style="text-align: center; padding: 20px; color: red;">エラー: データの形式が不正です、またはデータがありません。</div>`);
-                return;
+        // Function to build the tree structure recursively
+        function buildTree(data, parentId) {
+            const children = data.filter(item => item.introducerPageId === parentId);
+            if (children.length === 0) {
+                return null;
             }
 
-            // フラットなデータから階層構造を構築
-            const nodesById = new Map(flatData.map(node => [node.id, node]));
-            const rootNodes = [];
-            const allChildrenIds = new Set();
+            const ul = document.createElement('ul');
+            children.forEach(child => {
+                const li = document.createElement('li');
 
-            flatData.forEach(node => {
-                if (node.introducerPageId && nodesById.has(node.introducerPageId)) {
-                    const parent = nodesById.get(node.introducerPageId);
-                    if (!parent.children) {
-                         parent.children = [];
+                const nodeDiv = document.createElement('div');
+                nodeDiv.classList.add('node');
+
+                if (child.image) {
+                    const img = document.createElement('img');
+                    img.src = child.image;
+                    img.alt = child.name;
+                     // Add error handling for image loading
+                    img.onerror = function() {
+                        this.style.display = 'none'; // Hide image if loading fails
+                        // Optional: Replace with placeholder if image fails
+                        const placeholder = document.createElement('div');
+                        placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                        placeholder.textContent = child.name ? child.name.charAt(0) : '?';
+                        this.parentNode.replaceChild(placeholder, this);
+                    };
+                    nodeDiv.appendChild(img);
+                } else {
+                     // Add a placeholder if no image is available
+                    const placeholder = document.createElement('div');
+                    placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                    placeholder.textContent = child.name ? child.name.charAt(0) : '?';
+                    nodeDiv.appendChild(placeholder);
+                }
+
+                const textDiv = document.createElement('div');
+                const nameSpan = document.createElement('span');
+                nameSpan.classList.add('name');
+                nameSpan.textContent = child.name;
+                textDiv.appendChild(nameSpan);
+
+                if (child.introducer_name) {
+                    const introducerDiv = document.createElement('div');
+                    introducerDiv.classList.add('introducer');
+                    introducerDiv.textContent = `紹介者: ${child.introducer_name}`;
+                    textDiv.appendChild(introducerDiv);
+                }
+
+                nodeDiv.appendChild(textDiv);
+                li.appendChild(nodeDiv);
+
+
+                const nestedUl = buildTree(data, child.id); // Pass data to recursive call
+                if (nestedUl) {
+                    li.appendChild(nestedUl);
+                }
+
+                ul.appendChild(li);
+            });
+            return ul;
+        }
+
+        // Fetch JSON data from GitHub
+        fetch(JSON_FILE_PATH)
+            .then(response => {
+                if (!response.ok) {
+                    // レスポンスがOKでない場合エラー
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(jsonData => {
+                // データ取得成功後にツリーを構築・表示
+
+                // Find root nodes (members with no introducer)
+                const rootNodes = jsonData.filter(item => item.introducerPageId === null);
+
+                const treeContainer = document.getElementById('treeContainer');
+                treeContainer.innerHTML = ''; // Remove loading message
+
+                const groupedTrees = {}; // Object to hold trees grouped by reason
+
+                rootNodes.forEach(root => {
+                    const directChildren = jsonData.filter(item => item.introducerPageId === root.id);
+                    let groupKey = root.name || 'その他'; // Default group key is root name or 'その他'
+
+                    if (directChildren.length > 0) {
+                        // Use the introduction_reason of the first direct child as the group key
+                        groupKey = directChildren[0].introduction_reason || 'その他';
                     }
-                    parent.children.push(node);
-                    allChildrenIds.add(node.id);
+
+                    // Build the tree structure starting from the root node
+                    const rootLi = document.createElement('li');
+
+                    const nodeDiv = document.createElement('div');
+                    nodeDiv.classList.add('node');
+
+                    if (root.image) {
+                        const img = document.createElement('img');
+                        img.src = root.image;
+                        img.alt = root.name;
+                         // Add error handling for image loading
+                        img.onerror = function() {
+                            this.style.display = 'none'; // Hide image if loading fails
+                             // Optional: Replace with placeholder if image fails
+                            const placeholder = document.createElement('div');
+                            placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                            placeholder.textContent = root.name ? root.name.charAt(0) : '?';
+                            this.parentNode.replaceChild(placeholder, this);
+                        };
+                        nodeDiv.appendChild(img);
+                    } else {
+                         // Add a placeholder if no image is available
+                        const placeholder = document.createElement('div');
+                        placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                        placeholder.textContent = root.name ? root.name.charAt(0) : '?';
+                        nodeDiv.appendChild(placeholder);
+                    }
+
+
+                    const textDiv = document.createElement('div');
+                    const nameSpan = document.createElement('span');
+                    nameSpan.classList.add('name');
+                    nameSpan.textContent = root.name;
+                    textDiv.appendChild(nameSpan);
+
+                     if (root.introduction_reason) {
+                        const reasonDiv = document.createElement('div');
+                        reasonDiv.classList.add('introducer'); // Reusing introducer class for styling
+                        reasonDiv.textContent = `(${root.introduction_reason})`;
+                        textDiv.appendChild(reasonDiv);
+                    }
+
+                    nodeDiv.appendChild(textDiv);
+                    rootLi.appendChild(nodeDiv);
+
+
+                    const nestedUl = buildTree(jsonData, root.id); // Pass data to recursive call
+                    if (nestedUl) {
+                        rootLi.appendChild(nestedUl);
+                    }
+
+                    // Store the root li element in the groupedTrees object
+                    if (!groupedTrees[groupKey]) {
+                        groupedTrees[groupKey] = [];
+                    }
+                    groupedTrees[groupKey].push(rootLi);
+                });
+
+                // Render the grouped trees
+                for (const groupKey in groupedTrees) {
+                    if (groupedTrees.hasOwnProperty(groupKey)) {
+                        const groupDiv = document.createElement('div');
+                        groupDiv.classList.add('group');
+
+                        const groupTitle = document.createElement('h2');
+                        groupTitle.classList.add('text-xl', 'font-semibold', 'mb-4');
+                        groupTitle.textContent = groupKey || 'その他'; // Use group key as title, default to 'その他'
+
+                        groupDiv.appendChild(groupTitle);
+
+                        const groupUl = document.createElement('ul');
+                         groupUl.classList.add('tree'); // Add tree class for styling
+
+                        groupedTrees[groupKey].forEach(rootLi => {
+                            groupUl.appendChild(rootLi);
+                        });
+
+                        groupDiv.appendChild(groupUl);
+                        treeContainer.appendChild(groupDiv);
+                    }
                 }
+
+            })
+            .catch(error => {
+                // データ取得失敗時のエラー表示
+                console.error('Error fetching JSON data:', error);
+                document.getElementById('treeContainer').innerHTML = '<p>データの読み込みに失敗しました。GitHubのRawtherapee URLが正しいか、またはCORSの問題がないか確認してください。</p>';
             });
 
-            flatData.forEach(node => {
-                if (!node.introducerPageId || !nodesById.has(node.introducerPageId)) {
-                     if (!allChildrenIds.has(node.id)) {
-                         rootNodes.push(node);
-                     } else {
-                         console.warn(`Node ${node.name} (ID: ${node.id}) has no parent or parent not found, but is listed as a child. Skipping as root.`);
-                     }
-                }
-            });
-
-
-            console.log("Built hierarchy roots:", rootNodes);
-
-            if (rootNodes.length === 0 && flatData.length > 0) {
-                 d3.select("#chart-container").html(`<div style="text-align: center; padding: 20px; color: red;">エラー: ルートノードが見つかりませんでした。データ構造を確認してください。</div>`);
-                 return;
-            } else if (rootNodes.length === 0 && flatData.length === 0) {
-                 d3.select("#chart-container").html(`<div style="text-align: center; padding: 20px; color: red;">データがありません。</div>`);
-                 return;
-            }
-
-
-            // ノード間の間隔を調整 (縦型レイアウト向け)
-            const dx = 110; // 横方向の間隔 (ノードカードの幅 + 余白を考慮して調整)
-            const dy = 140; // 縦方向の間隔 (ノードカードの高さ + 余白)
-
-            const margin = { top: 40, right: 40, bottom: 40, left: 40 }; // marginの定義
-
-            const svg = d3.select("#tree-svg");
-
-            let currentHorizontalOffset = margin.left; // 現在の横方向の配置オフセット
-            let maxTreeHeightInRow = 0; // この行での最大のツリー（またはノード）の高さ
-
-            // 各ルートノード（各独立したツリー）を横方向に並べて描画
-            rootNodes.forEach((rootData, index) => {
-                 // Calculate layout and dimensions for the current tree/node first
-                 let elementWidth = 0; // この要素（ツリーまたは単独ノード）の占める横幅
-                 let elementHeight = 0; // この要素（ツリーまたは単独ノード）の占める縦幅
-                 let minY = 0; // レイアウト計算後の横方向の最小位置 (単独ノードの場合は調整)
-                 let root = null;
-                 const nodeCardWidth = 100;
-                 const nodeCardHeight = 80;
-                 const horizontalSpacingBetweenElements = 80; // 要素間の横方向の間隔
-
-
-                 if (rootData.children && rootData.children.length > 0) {
-                     console.log(`Calculating layout for tree root: ${rootData.name}`);
-                     root = d3.hierarchy(rootData);
-                     // nodeSizeの[縦方向間隔, 横方向間隔]を設定
-                     const treeLayout = d3.tree().nodeSize([dy, dx]);
-                     treeLayout(root);
-
-                     let minX = Infinity, maxX = -Infinity;
-                     let layoutMinY = Infinity, layoutMaxY = -Infinity; // レイアウト計算後の横方向の範囲
-                      root.each(d => {
-                          minX = Math.min(minX, d.x);
-                          maxX = Math.max(maxX, d.x);
-                          layoutMinY = Math.min(layoutMinY, d.y);
-                          layoutMaxY = Math.max(layoutMaxY, d.y);
-                      });
-
-                     elementWidth = layoutMaxY - layoutMinY; // ツリーの実際の横幅
-                     elementHeight = maxX - minX; // ツリーの実際の縦幅
-                     minY = layoutMinY; // ツリーのレイアウト上の横方向開始位置
-
-                 } else {
-                      console.log(`Calculating layout for single node: ${rootData.name}`);
-                      // 単独ノードの寸法
-                      elementWidth = nodeCardWidth;
-                      elementHeight = nodeCardHeight;
-                      minY = -nodeCardWidth / 2; // ノードカードの左端を基準にするための調整
-                 }
-
-                 // この要素の高さを行の最大高さと比較して更新
-                 maxTreeHeightInRow = Math.max(maxTreeHeightInRow, elementHeight);
-
-
-                 const g = svg.append("g")
-                     .attr("class", rootData.children && rootData.children.length > 0 ? "tree-group" : "single-node-group")
-                     // 各要素を横方向に並べて配置
-                     // 縦方向は行の最も高い要素に合わせて調整（今回は単一行なのでマージントップに揃える）
-                     .attr("transform", `translate(${currentHorizontalOffset - minY}, ${margin.top - (root ? d3.min(root.descendants(), d => d.x) : -nodeCardHeight/2)})`); // 横方向は現在のオフセット位置から開始位置(minY)を引く, 縦方向はトップマージンに揃える
-
-
-                 if (rootData.children && rootData.children.length > 0) {
-                     // ツリーのリンクとノードを描画
-                     g.append("g")
-                         .attr("fill", "none")
-                         .attr("stroke-linejoin", "round")
-                         .attr("stroke-linecap", "round")
-                         .selectAll("path")
-                         .data(root.links())
-                         .join("path")
-                         .attr("class", "link")
-                         // 縦型レイアウト用のリンクパス
-                         .attr("d", d3.linkVertical()
-                             .x(d => d.x) // d.x が横方向の位置になる
-                             .y(d => d.y)); // d.y が縦方向の位置になる
-
-
-                     const node = g.append("g")
-                         .selectAll("g")
-                         .data(root.descendants())
-                         .join("g")
-                         .attr("transform", d => {
-                             console.log("Drawing node:", d.data.name, "at", d.x, d.y);
-                             return `translate(${d.x},${d.y})`;
-                         });
-
-                     node.append("foreignObject")
-                         .attr("x", -nodeCardWidth / 2) // ノードの中心に合わせる (ノードカード幅の半分)
-                         .attr("y", -nodeCardHeight / 2) // ノードの中心に合わせる (ノードカード高さの半分)
-                         .attr("width", nodeCardWidth)
-                         .attr("height", nodeCardHeight)
-                         .append("xhtml:div")
-                         .attr("class", "node-card")
-                         .html(d => `
-                             ${d.data.image ? `<img class="node-image" src="${d.data.image}" alt="${d.data.name} photo">` : '<div class="node-image" style="background-color: #ccc; display: flex; align-items: center; justify-content: center; font-size: 10px;">No Image</div>'}
-                             <div class="node-name">
-                                 ${d.data.page_url ? `<a href="${d.data.page_url}" target="_blank">${d.data.name}</a>` : d.data.name}
-                             </div>
-                         `);
-
-                      // Optional: Add tooltips for introduction reason
-                      node.append("title")
-                          .text(d => d.data.introduction_reason ? `紹介理由: ${d.data.introduction_reason}` : '');
-
-                 } else {
-                     // 単独ノードを描画
-                      g.append("foreignObject")
-                          .attr("x", 0) // グループの原点(左端)基準
-                          .attr("y", 0) // グループの原点(上端)基準
-                          .attr("width", nodeCardWidth)
-                          .attr("height", nodeCardHeight)
-                          .append("xhtml:div")
-                          .attr("class", "node-card")
-                          .html(`
-                              ${rootData.image ? `<img class="node-image" src="${rootData.image}" alt="${rootData.name} photo">` : '<div class="node-image" style="background-color: #ccc; display: flex; align-items: center; justify-content: center; font-size: 10px;">No Image</div>'}
-                              <div class="node-name">
-                                  ${rootData.page_url ? `<a href="${rootData.page_url}" target="_blank">${rootData.name}</a>` : rootData.name}
-                              </div>
-                          `);
-                      g.append("title").text(rootData.introduction_reason ? `紹介理由: ${rootData.introduction_reason}` : '');
-                 }
-
-                 // 次の要素のための横方向オフセットを更新
-                 currentHorizontalOffset += elementWidth + horizontalSpacingBetweenElements;
-
-            });
-
-            // 全体のSVGの幅と高さを設定
-            const totalSvgWidth = currentHorizontalOffset + margin.right - horizontalSpacingBetweenElements; // 最後の要素の間隔を引く
-            const totalSvgHeight = maxTreeHeightInRow + margin.top + margin.bottom; // 行の最大高さ+マージン
-
-            svg.attr("width", totalSvgWidth);
-            svg.attr("height", totalSvgHeight);
-
-
-            // 横方向のスクロール位置を調整（中央寄せ）
-            if (container) {
-                 const containerCenter = container.clientWidth / 2;
-                 if (totalSvgWidth > container.clientWidth) {
-                    container.scrollLeft = (totalSvgWidth / 2) - containerCenter;
-                 } else {
-                     container.scrollLeft = 0; // SVGがコンテナより小さい場合は左端に揃える
-                 }
-                 // 縦方向のスクロールはoverflow: autoが自動で処理
-            }
-
-
-        }).catch(function(error) {
-            // JSONファイルの読み込みまたはパースに失敗した場合
-            console.error("Error loading or parsing JSON:", error);
-            d3.select("#loading-message").remove(); // ローディングメッセージを削除
-            d3.select("#chart-container").html(`<div style="text-align: center; padding: 20px; color: red;">データの読み込みに失敗しました。<br>詳細: ${error.message || error}</div>`);
-        });
     </script>
+
 </body>
 </html>
