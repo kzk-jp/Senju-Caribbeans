@@ -23,8 +23,7 @@
 
         #chart-container {
             width: 100%;
-            overflow-x: auto; /* 横スクロールは維持 */
-            overflow-y: hidden;
+            overflow: auto; /* ★縦方向のスクロールも有効に★ */
             -webkit-overflow-scrolling: touch;
             padding: 1rem 0.5rem; /* コンテナ内のパディング */
             box-sizing: border-box;
@@ -34,9 +33,8 @@
             display: block;
             margin: auto;
             /* SVGの高さはJavaScriptで動的に設定 */
-            background-color: #e0e0e0; /* ★診断用: SVG領域に薄い背景色★ */
-            min-width: 2000px; /* ★診断用: 最小幅を大きく設定★ */
-            min-height: 1500px; /* ★診断用: 最小高さを大きく設定★ */
+            background-color: #e0e0e0; /* ★診断用: SVG領域に薄い背景色 (確認後削除可)★ */
+            /* min-widthとmin-heightは削除 */
         }
 
         .node-card {
@@ -88,6 +86,10 @@
         /* 各ツリー間の余白 */
         .tree-group {
             margin-bottom: 40px; /* ツリーの下に余白を追加 */
+        }
+         /* 単独ノード用のグループクラス */
+        .single-node-group {
+             margin-bottom: 40px; /* 単独ノードの下に余白を追加 */
         }
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -176,21 +178,27 @@
 
             const svg = d3.select("#tree-svg");
             let totalSvgHeight = 0; // 全てのツリーを合わせたSVGの高さ
+            let maxTreeWidth = 0; // 全てのツリーの中で最も横幅を取るツリーの幅
 
             // 各ルートノード（各独立したツリー）に対して描画処理
             rootNodes.forEach((rootData, index) => {
                  // childrenプロパティがない、または空の場合は単独ノードとして処理
                  if (!rootData.children || rootData.children.length === 0) {
                       console.log(`Processing single node: ${rootData.name}`);
+                      const singleNodeWidth = 100; // ノードカードの幅
+                      const singleNodeHeight = 80; // ノードカードの高さ
+
                       const singleNodeG = svg.append("g")
+                          .attr("class", "single-node-group") // 単独ノード用のクラス
                           // 単独ノードも横方向の中心に配置されるように調整
-                          .attr("transform", `translate(${margin.left + (container.clientWidth / 2) - (100 / 2)}, ${totalSvgHeight + margin.top})`); // 横方向の中心, 縦方向は累計高さ
+                          // ★横方向の配置を左端寄せに統一★
+                          .attr("transform", `translate(${margin.left}, ${totalSvgHeight + margin.top})`); // 横方向を左端寄せ, 縦方向は累計高さ
 
                       singleNodeG.append("foreignObject")
-                          .attr("x", -50) // ノードの中心に合わせる (ノードカード幅100pxの半分)
-                          .attr("y", -35) // ノードの中心に合わせる (ノードカード高さ80px程度の半分)
-                          .attr("width", 100) // node-card width
-                          .attr("height", 80) // node-card height (adjust as needed)
+                          .attr("x", 0) // グループの原点(左端)基準
+                          .attr("y", 0) // グループの原点(上端)基準
+                          .attr("width", singleNodeWidth)
+                          .attr("height", singleNodeHeight)
                           .append("xhtml:div")
                           .attr("class", "node-card")
                           .html(`
@@ -201,7 +209,9 @@
                           `);
                       singleNodeG.append("title").text(rootData.introduction_reason ? `紹介理由: ${rootData.introduction_reason}` : '');
 
-                      totalSvgHeight += dy + margin.bottom; // 単独ノード分の高さ + 余白を加算
+                      // 単独ノードの幅を最大幅と比較
+                      maxTreeWidth = Math.max(maxTreeWidth, singleNodeWidth);
+                      totalSvgHeight += singleNodeHeight + margin.bottom; // 単独ノード分の高さ + 余白を加算
                       return; // 次のルートへ
                  }
 
@@ -209,7 +219,7 @@
                 // D3.jsの階層データに変換
                 const root = d3.hierarchy(rootData);
 
-                const treeLayout = d3.tree().nodeSize([dy, dx]);
+                const treeLayout = d3.tree().nodeSize([dy, dx]); // dyは縦方向の間隔, dxは横方向の間隔
                 treeLayout(root);
 
                 // Calculate dimensions for the current subtree
@@ -217,19 +227,19 @@
                 root.each(d => {
                     minX = Math.min(minX, d.x);
                     maxX = Math.max(maxX, d.x);
-                    minY = Math.min(minY, d.y);
-                    maxY = Math.max(maxY, d.y);
+                    minY = Math.min(minY, d.y); // 横方向の最小位置
+                    maxY = Math.max(maxY, d.y); // 横方向の最大位置
                 });
 
-                const subtreeWidth = maxY - minY;
-                const subtreeHeight = maxX - minX;
+                const subtreeWidth = maxY - minY; // ツリーの実際の横幅
+                const subtreeHeight = maxX - minX; // ツリーの実際の縦幅
 
                 // Add a group element for the current tree
                 const g = svg.append("g")
                     .attr("class", "tree-group") // クラスを追加
                     // 各ツリーを縦に並べるように配置
-                    // 横方向はツリーの幅を考慮して中央寄せ、縦方向は累計高さ
-                    // ★ここを修正: 横方向の配置を左端寄せに一時的に変更★
+                    // 横方向はツリーの左端をSVGの左マージンに合わせる
+                    // ★横方向の配置を左端寄せに統一★
                     .attr("transform", `translate(${margin.left - minY}, ${totalSvgHeight + margin.top})`); // 横方向を左端寄せ, 縦方向は累計高さ
 
 
@@ -278,6 +288,8 @@
                  node.append("title")
                      .text(d => d.data.introduction_reason ? `紹介理由: ${d.data.introduction_reason}` : '');
 
+                // ツリーの幅を最大幅と比較
+                maxTreeWidth = Math.max(maxTreeWidth, subtreeWidth);
                 // 次のツリーのためにSVGの高さを更新
                 totalSvgHeight += subtreeHeight + margin.bottom; // ツリーの高さ + ツリー間の余白
 
@@ -285,41 +297,24 @@
 
             // 全てのツリーを描画した後でSVG全体の高さを設定
             svg.attr("height", totalSvgHeight + margin.top); // 最後のツリーの下にも余白を追加
-             // SVGの幅をコンテナ幅に合わせるか、ツリーの最大幅に合わせるか検討
-             // スマホ優先ならコンテナ幅に合わせつつ横スクロールが良いかも
-             // svg.attr("width", container.clientWidth); // コンテナ幅に合わせる場合
+
+            // SVGの幅を、全てのツリーの中で最も横幅を取るツリーに合わせて設定
+            const svgWidth = maxTreeWidth + margin.left + margin.right;
+            svg.attr("width", svgWidth);
 
 
-            // 横方向のスクロール位置を調整 (縦型レイアウトでも横スクロールは必要)
-            // containerとsvgElementは既に上で定義済み
-            if (svgElement) {
-              // ツリー全体の最大幅を計算してSVGの幅に設定する方が正確かもしれません
-              let maxTreeWidth = 0;
-               rootNodes.forEach(rootData => {
-                   // childrenプロパティがない、または空の場合はスキップ（単独ノードは幅0として扱う）
-                   if (!rootData.children || rootData.children.length === 0) {
-                       return;
-                   }
-                   const root = d3.hierarchy(rootData);
-                   const treeLayout = d3.tree().nodeSize([dy, dx]);
-                   treeLayout(root);
-                   let minY = Infinity, maxY = -Infinity;
-                   root.each(d => {
-                       minY = Math.min(minY, d.y);
-                       maxY = Math.max(maxY, d.y);
-                   });
-                   maxTreeWidth = Math.max(maxTreeWidth, maxY - minY);
-               });
-               // 単独ノードの幅 (100px) と余白も考慮してSVGの最小幅を確保
-               const minSvgWidth = 100 + margin.left + margin.right;
-               const svgWidth = Math.max(maxTreeWidth + margin.left + margin.right, minSvgWidth);
-
-               svg.attr("width", svgWidth);
-
-
-              const containerCenter = container.clientWidth / 2;
-              // 横方向の中心にスクロール
-              container.scrollLeft = (svgWidth / 2) - containerCenter;
+            // 横方向のスクロール位置を調整
+            if (container) {
+                 const containerCenter = container.clientWidth / 2;
+                 // SVGの幅がコンテナ幅より大きい場合、中央にスクロール
+                 if (svgWidth > container.clientWidth) {
+                    container.scrollLeft = (svgWidth / 2) - containerCenter;
+                 } else {
+                     // SVGがコンテナ幅より小さい場合、左端にスクロール（または中央寄せ）
+                     container.scrollLeft = 0; // 左端に揃える
+                     // もし中央寄せしたい場合は以下を使用:
+                     // container.scrollLeft = (container.clientWidth - svgWidth) / 2;
+                 }
             }
 
 
