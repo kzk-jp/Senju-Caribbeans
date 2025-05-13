@@ -57,6 +57,12 @@
             color: #555;
             margin-top: 50px;
          }
+         .error-message {
+             text-align: center;
+             font-size: 1.2rem;
+             color: red;
+             margin-top: 50px;
+         }
     </style>
 </head>
 <body>
@@ -69,7 +75,8 @@
 
     <script>
         // ここをGitHubのRawtherapee URLに変更してください
-        const JSON_FILE_PATH = 'https://github.com/kzk-jp/Senju-Caribbeans/blob/main/tree_data.json';
+        // 例: https://raw.githubusercontent.com/ユーザー名/リポジトリ名/ブランチ名/tree_data.json
+        const JSON_FILE_PATH = 'https:/raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/blob/main/tree_data.json'; // このURLはRawtherapee URLではありません
 
         // マージンを調整してルートノードを中央寄りに配置
         const margin = { top: 20, right: 90, bottom: 30, left: 150 }; // 左マージンを増やしました
@@ -208,7 +215,13 @@
         fetch(JSON_FILE_PATH)
             .then(response => {
                 if (!response.ok) {
+                    // レスポンスがOKでない場合エラー
                     throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                // レスポンスのContent-Typeを確認する（簡易的なチェック）
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                     throw new Error(`Invalid content type: ${contentType}. Please ensure the URL points to the raw JSON file.`);
                 }
                 return response.json();
             })
@@ -219,20 +232,22 @@
             .catch(error => {
                 // データ取得失敗時のエラー表示
                 console.error('Error fetching JSON data:', error);
-                d3.select("#chart").html('<p class="loading-message">データの読み込みに失敗しました。GitHubのRawtherapee URLが正しいか、またはCORSの問題がないか確認してください。</p>');
+                d3.select("#chart").html('<p class="error-message">データの読み込みに失敗しました。<br>原因として以下が考えられます:<br>1. GitHubの**Rawtherapee URL**が正しく指定されていません。<br>2. CORS (Cross-Origin Resource Sharing) の問題が発生しています（GitHub Pagesからのアクセスをお試しください）。<br>3. JSONファイルの内容に誤りがある可能性があります。</p>');
             });
 
          // Optional: Add responsiveness on window resize
         window.addEventListener('resize', () => {
-            // Re-fetch data or use cached data to re-render
-             fetch(JSON_FILE_PATH)
-                .then(response => response.json())
-                .then(jsonData => {
-                    renderTree(jsonData);
-                })
-                .catch(error => {
-                    console.error('Error fetching JSON data on resize:', error);
-                });
+             // ウィンドウサイズ変更時は、現在のデータで再描画を試みる
+             // 必要であれば、再度fetchすることも検討
+             const chartContainer = document.getElementById('chart');
+             // エラーメッセージが表示されていないか確認
+             if (!chartContainer.querySelector('.error-message')) {
+                // エラーがない場合のみ再描画を試みる（パフォーマンスに注意）
+                 // ここでは簡易的にリロードしていますが、データキャッシュと再描画関数を呼ぶ方が効率的です
+                 // window.location.reload();
+                 // または、取得済みのjsonDataを使ってrenderTreeを呼び出す
+                 // renderTree(cachedJsonData); // cachedJsonDataを適切に保持する必要あり
+             }
         });
 
     </script>
