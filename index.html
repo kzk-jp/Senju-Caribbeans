@@ -23,16 +23,17 @@
 
         #chart-container {
             width: 100%;
-            overflow: auto; /* ★縦方向のスクロールも有効に★ */
+            overflow: auto; /* 縦方向・横方向のスクロールを有効に */
             -webkit-overflow-scrolling: touch;
             padding: 1rem 0.5rem; /* コンテナ内のパディング */
             box-sizing: border-box;
+            border: 2px solid blue; /* ★診断用: コンテナに枠線を追加★ */
+            /* height: 500px; */ /* ★もし固定高さが設定されている場合はコメントアウトまたは削除★ */
         }
 
         svg {
-            display: block;
-            margin: auto;
-            /* SVGの高さはJavaScriptで動的に設定 */
+            display: block; /* Ensure svg is a block element */
+            margin: auto; /* Center the svg if smaller than container */
             background-color: #e0e0e0; /* ★診断用: SVG領域に薄い背景色 (確認後削除可)★ */
             /* min-widthとmin-heightは削除 */
         }
@@ -49,7 +50,7 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
             width: 100px;
             box-sizing: border-box;
-            text-align: center;
+            text-align: center; /* Center text within the card */
         }
 
         .node-image {
@@ -67,8 +68,8 @@
             font-weight: 500;
             line-height: 1.2;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            overflow: hidden; /* Hide overflow text */
+            text-overflow: ellipsis; /* Add ellipsis for overflow */
             max-width: 90px;
             word-break: break-word;
         }
@@ -127,7 +128,7 @@
             // 各ノードを処理し、親子関係を構築
             flatData.forEach(node => {
                 // children配列の初期化は、子を追加する親ノードでのみ行う
-                // node.children = []; // ★この行を削除★
+                // node.children = []; // ★この行は削除済み★
 
                 // introducerPageIdが存在し、かつそのIDを持つ親ノードがデータ内に存在する場合
                 if (node.introducerPageId && nodesById.has(node.introducerPageId)) {
@@ -182,23 +183,105 @@
 
             // 各ルートノード（各独立したツリー）に対して描画処理
             rootNodes.forEach((rootData, index) => {
-                 // childrenプロパティがない、または空の場合は単独ノードとして処理
-                 if (!rootData.children || rootData.children.length === 0) {
-                      console.log(`Processing single node: ${rootData.name}`);
-                      const singleNodeWidth = 100; // ノードカードの幅
-                      const singleNodeHeight = 80; // ノードカードの高さ
+                 // Calculate layout and dimensions for the current tree/node first
+                 let subtreeWidth = 0;
+                 let subtreeHeight = 0;
+                 let minY = 0; // Default for single node
+                 let maxY = 0; // Default for single node
+                 let root = null;
+                 const nodeCardWidth = 100; // Consistent node card width
+                 const nodeCardHeight = 80; // Consistent node card height
 
-                      const singleNodeG = svg.append("g")
-                          .attr("class", "single-node-group") // 単独ノード用のクラス
-                          // 単独ノードも横方向の中心に配置されるように調整
-                          // ★横方向の配置を左端寄せに統一★
-                          .attr("transform", `translate(${margin.left}, ${totalSvgHeight + margin.top})`); // 横方向を左端寄せ, 縦方向は累計高さ
+                 if (rootData.children && rootData.children.length > 0) {
+                     console.log(`Calculating layout for tree root: ${rootData.name}`);
+                     root = d3.hierarchy(rootData);
+                     const treeLayout = d3.tree().nodeSize([dy, dx]); // dyは縦方向の間隔, dxは横方向の間隔
+                     treeLayout(root);
 
-                      singleNodeG.append("foreignObject")
+                     let minX = Infinity, maxX = -Infinity;
+                     root.each(d => {
+                         minX = Math.min(minX, d.x);
+                         maxX = Math.max(maxX, d.x);
+                         minY = Math.min(minY, d.y); // 横方向の最小位置
+                         maxY = Math.max(maxY, d.y); // 横方向の最大位置
+                     });
+                     subtreeWidth = maxY - minY;
+                     subtreeHeight = maxX - minX;
+
+                 } else {
+                      console.log(`Calculating layout for single node: ${rootData.name}`);
+                      // Single node dimensions
+                      subtreeWidth = nodeCardWidth;
+                      subtreeHeight = nodeCardHeight;
+                      minY = -nodeCardWidth / 2; // Align with node-card x position (-50)
+                      maxY = nodeCardWidth / 2;  // Align with node-card x position + width (50)
+                 }
+
+                 // Update max tree width for SVG width calculation
+                 maxTreeWidth = Math.max(maxTreeWidth, subtreeWidth);
+
+
+                 const g = svg.append("g")
+                     .attr("class", rootData.children && rootData.children.length > 0 ? "tree-group" : "single-node-group") // Different class for single nodes
+                     // 各要素を縦に並べるように配置
+                     // 横方向は要素の左端をSVGの左マージンに合わせる
+                     .attr("transform", `translate(${margin.left - minY}, ${totalSvgHeight + margin.top})`); // 横方向を左端寄せ, 縦方向は累計高さ
+
+                 if (rootData.children && rootData.children.length > 0) {
+                     // Draw links and nodes for trees
+                     g.append("g")
+                         .attr("fill", "none")
+                         .attr("stroke-linejoin", "round")
+                         .attr("stroke-linecap", "round")
+                         .selectAll("path")
+                         .data(root.links())
+                         .join("path")
+                         .attr("class", "link")
+                         // 縦型レイアウト用のリンクパス
+                         .attr("d", d3.linkVertical()
+                             .x(d => d.x) // d.x が横方向の位置になる
+                             .y(d => d.y)); // d.y が縦方向の位置になる
+
+
+                     const node = g.append("g")
+                         .selectAll("g")
+                         .data(root.descendants())
+                         .join("g")
+                         .attr("transform", d => {
+                             console.log("Drawing node:", d.data.name, "at", d.x, d.y); // ★診断用ログ★
+                             return `translate(${d.x},${d.y})`;
+                         });
+
+                     node.append("foreignObject")
+                         .attr("x", -nodeCardWidth / 2) // ノードの中心に合わせる (ノードカード幅の半分)
+                         .attr("y", -nodeCardHeight / 2) // ノードの中心に合わせる (ノードカード高さの半分)
+                         .attr("width", nodeCardWidth)
+                         .attr("height", nodeCardHeight)
+                         .append("xhtml:div")
+                         .attr("class", "node-card")
+                         .html(d => `
+                             ${d.data.image ? `<img class="node-image" src="${d.data.image}" alt="${d.data.name} photo">` : '<div class="node-image" style="background-color: #ccc; display: flex; align-items: center; justify-content: center; font-size: 10px;">No Image</div>'}
+                             <div class="node-name">
+                                 ${d.data.page_url ? `<a href="${d.data.page_url}" target="_blank">${d.data.name}</a>` : d.data.name}
+                             </div>
+                         `);
+
+                      // Optional: Add tooltips for introduction reason
+                      node.append("title")
+                          .text(d => d.data.introduction_reason ? `紹介理由: ${d.data.introduction_reason}` : '');
+
+                 } else {
+                     // Draw single node
+                      const g = svg.append("g") // 単独ノードは別のグループに追加
+                           .attr("class", "single-node-group")
+                           // 横方向は左端寄せ、縦方向は累計高さ
+                           .attr("transform", `translate(${margin.left}, ${totalSvgHeight + margin.top})`);
+
+                      g.append("foreignObject")
                           .attr("x", 0) // グループの原点(左端)基準
                           .attr("y", 0) // グループの原点(上端)基準
-                          .attr("width", singleNodeWidth)
-                          .attr("height", singleNodeHeight)
+                          .attr("width", nodeCardWidth)
+                          .attr("height", nodeCardHeight)
                           .append("xhtml:div")
                           .attr("class", "node-card")
                           .html(`
@@ -207,91 +290,12 @@
                                   ${rootData.page_url ? `<a href="${rootData.page_url}" target="_blank">${rootData.name}</a>` : rootData.name}
                               </div>
                           `);
-                      singleNodeG.append("title").text(rootData.introduction_reason ? `紹介理由: ${rootData.introduction_reason}` : '');
-
-                      // 単独ノードの幅を最大幅と比較
-                      maxTreeWidth = Math.max(maxTreeWidth, singleNodeWidth);
-                      totalSvgHeight += singleNodeHeight + margin.bottom; // 単独ノード分の高さ + 余白を加算
-                      return; // 次のルートへ
+                      g.append("title").text(rootData.introduction_reason ? `紹介理由: ${rootData.introduction_reason}` : '');
                  }
 
-                console.log(`Drawing tree for root: ${rootData.name}`); // ★診断用ログ★
-                // D3.jsの階層データに変換
-                const root = d3.hierarchy(rootData);
 
-                const treeLayout = d3.tree().nodeSize([dy, dx]); // dyは縦方向の間隔, dxは横方向の間隔
-                treeLayout(root);
-
-                // Calculate dimensions for the current subtree
-                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-                root.each(d => {
-                    minX = Math.min(minX, d.x);
-                    maxX = Math.max(maxX, d.x);
-                    minY = Math.min(minY, d.y); // 横方向の最小位置
-                    maxY = Math.max(maxY, d.y); // 横方向の最大位置
-                });
-
-                const subtreeWidth = maxY - minY; // ツリーの実際の横幅
-                const subtreeHeight = maxX - minX; // ツリーの実際の縦幅
-
-                // Add a group element for the current tree
-                const g = svg.append("g")
-                    .attr("class", "tree-group") // クラスを追加
-                    // 各ツリーを縦に並べるように配置
-                    // 横方向はツリーの左端をSVGの左マージンに合わせる
-                    // ★横方向の配置を左端寄せに統一★
-                    .attr("transform", `translate(${margin.left - minY}, ${totalSvgHeight + margin.top})`); // 横方向を左端寄せ, 縦方向は累計高さ
-
-
-                // Create the links for the current tree
-                g.append("g")
-                    .attr("fill", "none")
-                    .attr("stroke-linejoin", "round")
-                    .attr("stroke-linecap", "round")
-                    .selectAll("path")
-                    .data(root.links())
-                    .join("path")
-                    .attr("class", "link")
-                    // 縦型レイアウト用のリンクパス
-                    .attr("d", d3.linkVertical()
-                        .x(d => d.x) // d.x が横方向の位置になる
-                        .y(d => d.y)); // d.y が縦方向の位置になる
-
-
-                // Create the nodes for the current tree
-                const node = g.append("g")
-                    .selectAll("g")
-                    .data(root.descendants())
-                    .join("g")
-                    // 縦型レイアウト用のノード位置 (d.x が横, d.y が縦)
-                    .attr("transform", d => {
-                        console.log("Drawing node:", d.data.name, "at", d.x, d.y); // ★診断用ログ★
-                        return `translate(${d.x},${d.y})`;
-                    });
-
-                // Add foreignObject for custom HTML content (the node card)
-                node.append("foreignObject")
-                    .attr("x", -50) // ノードの中心に合わせる (ノードカード幅100pxの半分)
-                    .attr("y", -35) // ノードの中心に合わせる (ノードカード高さ80px程度の半分)
-                    .attr("width", 100) // node-card width
-                    .attr("height", 80) // node-card height (adjust as needed)
-                    .append("xhtml:div")
-                    .attr("class", "node-card")
-                    .html(d => `
-                        ${d.data.image ? `<img class="node-image" src="${d.data.image}" alt="${d.data.name} photo">` : '<div class="node-image" style="background-color: #ccc; display: flex; align-items: center; justify-content: center; font-size: 10px;">No Image</div>'}
-                        <div class="node-name">
-                            ${d.data.page_url ? `<a href="${d.data.page_url}" target="_blank">${d.data.name}</a>` : d.data.name}
-                        </div>
-                    `);
-
-                 // Optional: Add tooltips for introduction reason
-                 node.append("title")
-                     .text(d => d.data.introduction_reason ? `紹介理由: ${d.data.introduction_reason}` : '');
-
-                // ツリーの幅を最大幅と比較
-                maxTreeWidth = Math.max(maxTreeWidth, subtreeWidth);
-                // 次のツリーのためにSVGの高さを更新
-                totalSvgHeight += subtreeHeight + margin.bottom; // ツリーの高さ + ツリー間の余白
+                 // Update total height (stacking vertically)
+                 totalSvgHeight += subtreeHeight + margin.bottom;
 
             });
 
