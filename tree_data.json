@@ -5,8 +5,215 @@
     "introducerPageId": null,
     "page_url": "https://www.notion.so/1f1ad9abbc868137b3eaca859aa3d831",
     "image": "",
-    "introduction_reason": "",
-    "children": []
+    "introduction_reason": ""
+  },
+  {
+    "id": "1f1ad9ab-bc86-8163-858f-c176b2a70df0",
+    "name": "リンカ",
+    "introducerPageId": "1f1ad9ab-bc86-8175-ba07-f332c7b57157",
+    "page_url": "https://www.notion.so/1f1ad9abbc868163858fc176b2a70df0",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/rinka_sen01.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8107-9e39-c152a01a5aea",
+    "name": "ヤマシタ　トモヒサ",
+    "introducerPageId": "1f1ad9ab-bc86-8188-a0ab-dcb769b7fa51",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681079e39c152a01a5aea",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/ty_main%20-%20kzk.webp",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8113-992f-e9b8248562f4",
+    "name": "コジマ　カズキ",
+    "introducerPageId": "1f1ad9ab-bc86-8160-bfba-c52965d67400",
+    "page_url": "https://www.notion.so/1f1ad9abbc868113992fe9b8248562f4",
+    "image": "",
+    "introduction_reason": "SNS"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8162-9145-efb6e6b2f33b",
+    "name": "リンカ",
+    "introducerPageId": "1f1ad9ab-bc86-8175-ba07-f332c7b57157",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681629145efb6e6b2f33b",
+    "image": "",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8175-ba07-f332c7b57157",
+    "name": "ヤマダ　タカユキ",
+    "introducerPageId": "1f1ad9ab-bc86-81f7-a279-eb206709803e",
+    "page_url": "https://www.notion.so/1f1ad9abbc868175ba07f332c7b57157",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/yamadatakayuki_sen01-367x550.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-81f7-a279-eb206709803e",
+    "name": "ヤマグチ　モエ",
+    "introducerPageId": "1f1ad9ab-bc86-8179-b16c-f3bf8ed772d2",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681f7a279eb206709803e",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/yamaguchimoe_sen01.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8179-b16c-f3bf8ed772d2",
+    "name": "ホンダ　ツバサ",
+    "introducerPageId": "1f1ad9ab-bc86-81f7-8482-c6075b29ed6e",
+    "page_url": "https://www.notion.so/1f1ad9abbc868179b16cf3bf8ed772d2",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/hondatsubasa_sen01-436x550.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-81f7-8482-c6075b29ed6e",
+    "name": "ハヤシ　ケント",
+    "introducerPageId": "1f1ad9ab-bc86-814b-8a9f-c966c21f6727",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681f78482c6075b29ed6e",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/hayashikento_sen01.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-814b-8a9f-c966c21f6727",
+    "name": "ハマダ　ガク",
+    "introducerPageId": "1f1ad9ab-bc86-8196-b856-d94f1507d2b8",
+    "page_url": "https://www.notion.so/1f1ad9abbc86814b8a9fc966c21f6727",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/hamadagaku_sen01.jpg",
+    "introduction_reason": "SNS"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8196-b856-d94f1507d2b8",
+    "name": "ナカノ　タイガ",
+    "introducerPageId": "1f1ad9ab-bc86-81c4-af80-ff7e18342c4b",
+    "page_url": "https://www.notion.so/1f1ad9abbc868196b856d94f1507d2b8",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/nakanotaiga_sen01.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8113-813e-ff6eb8bedf03",
+    "name": "トウコ",
+    "introducerPageId": "1f1ad9ab-bc86-81f7-8482-c6075b29ed6e",
+    "page_url": "https://www.notion.so/1f1ad9abbc868113813eff6eb8bedf03",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/4444411PXL_20250511_111704140.MP%20-%20kzk.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-81c4-af80-ff7e18342c4b",
+    "name": "タキザワ　カレン",
+    "introducerPageId": "1f1ad9ab-bc86-81a3-a7b3-eeadcd941d8c",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681c4af80ff7e18342c4b",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/takizawakaren_sen01-415x550.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-81a3-a7b3-eeadcd941d8c",
+    "name": "シイナ　キッペイ",
+    "introducerPageId": "1f1ad9ab-bc86-812b-9f28-d6675dd8e550",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681a3a7b3eeadcd941d8c",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/shiinakippei_sen02.jpg",
+    "introduction_reason": "SNS"
+  },
+  {
+    "id": "1f1ad9ab-bc86-812b-9f28-d6675dd8e550",
+    "name": "サマザキ　ケント",
+    "introducerPageId": "1f1ad9ab-bc86-81b8-acac-da8f6dd74f70",
+    "page_url": "https://www.notion.so/1f1ad9abbc86812b9f28d6675dd8e550",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/yamazakikento_sen04.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-81b8-acac-da8f6dd74f70",
+    "name": "サトウ　シオリ",
+    "introducerPageId": "1f1ad9ab-bc86-81a8-9784-dd3acbf2da37",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681b8acacda8f6dd74f70",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/satoshiori_sen01-364x550.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-81a8-9784-dd3acbf2da37",
+    "name": "コマツ　ナナ",
+    "introducerPageId": "1f1ad9ab-bc86-81f7-a279-eb206709803e",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681a89784dd3acbf2da37",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/komatsunana_sen01.jpg",
+    "introduction_reason": "SNS"
+  },
+  {
+    "id": "1f1ad9ab-bc86-813d-bd98-d5f8a757ac04",
+    "name": "キタムラ　タクミ",
+    "introducerPageId": "1f1ad9ab-bc86-8179-b16c-f3bf8ed772d2",
+    "page_url": "https://www.notion.so/1f1ad9abbc86813dbd98d5f8a757ac04",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/kitamuratakumi_sen01-367x550.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8117-8018-ecab4082aecb",
+    "name": "キタガワ　ケイコ",
+    "introducerPageId": "1f1ad9ab-bc86-81f7-8482-c6075b29ed6e",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681178018ecab4082aecb",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/kitagawakeiko_sen01.jpg",
+    "introduction_reason": "SNS"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8174-b97e-d48158c31063",
+    "name": "カホ",
+    "introducerPageId": "1f1ad9ab-bc86-814b-8a9f-c966c21f6727",
+    "page_url": "https://www.notion.so/1f1ad9abbc868174b97ed48158c31063",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/kaho_sen01.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-818e-bcd5-f9fdad2732d5",
+    "name": "オカダ　マサキ",
+    "introducerPageId": "1f1ad9ab-bc86-8196-b856-d94f1507d2b8",
+    "page_url": "https://www.notion.so/1f1ad9abbc86818ebcd5f9fdad2732d5",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/okadamasaki_sen01.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-81c6-92f6-da3009b7753f",
+    "name": "オオマサ　アヤ",
+    "introducerPageId": "1f1ad9ab-bc86-81c4-af80-ff7e18342c4b",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681c692f6da3009b7753f",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/oomasaaya_sen01.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8186-83f8-c8c1b88d2607",
+    "name": "エマ",
+    "introducerPageId": "1f1ad9ab-bc86-81a3-a7b3-eeadcd941d8c",
+    "page_url": "https://www.notion.so/1f1ad9abbc86818683f8c8c1b88d2607",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/emma_sen01.jpg",
+    "introduction_reason": "紹介"
+  },
+  {
+    "id": "1f1ad9ab-bc86-81a3-8a58-fba91b5c65de",
+    "name": "ウチノ　セイヨウ",
+    "introducerPageId": "1f1ad9ab-bc86-812b-9f28-d6675dd8e550",
+    "page_url": "https://www.notion.so/1f1ad9abbc8681a38a58fba91b5c65de",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/uchinoseiyo_sen01.jpg",
+    "introduction_reason": "SNS"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8155-a364-cc8bc69cc446",
+    "name": "イチハラ　ハヤト",
+    "introducerPageId": "1f1ad9ab-bc86-81b8-acac-da8f6dd74f70",
+    "page_url": "https://www.notion.so/1f1ad9abbc868155a364cc8bc69cc446",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/ichiharahayato_sen01.jpg",
+    "introduction_reason": "SNS"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8164-aa60-c18fefcee3ba",
+    "name": "アラキ　ユウコ",
+    "introducerPageId": "1f1ad9ab-bc86-81a8-9784-dd3acbf2da37",
+    "page_url": "https://www.notion.so/1f1ad9abbc868164aa60c18fefcee3ba",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/arakiyuko_sen01-1.jpg",
+    "introduction_reason": "SNS"
+  },
+  {
+    "id": "1f1ad9ab-bc86-8188-a0ab-dcb769b7fa51",
+    "name": "アラガキ　ユイ",
+    "introducerPageId": "1f1ad9ab-bc86-8121-87c6-c836bf86720b",
+    "page_url": "https://www.notion.so/1f1ad9abbc868188a0abdcb769b7fa51",
+    "image": "",
+    "introduction_reason": "紹介"
   },
   {
     "id": "1f1ad9ab-bc86-8121-87c6-c836bf86720b",
@@ -14,28 +221,7 @@
     "introducerPageId": null,
     "page_url": "https://www.notion.so/1f1ad9abbc86812187c6c836bf86720b",
     "image": "",
-    "introduction_reason": "",
-    "children": [
-      {
-        "id": "1f1ad9ab-bc86-8188-a0ab-dcb769b7fa51",
-        "name": "アラガキ　ユイ",
-        "introducerPageId": "1f1ad9ab-bc86-8121-87c6-c836bf86720b",
-        "page_url": "https://www.notion.so/1f1ad9abbc868188a0abdcb769b7fa51",
-        "image": "",
-        "introduction_reason": "紹介",
-        "children": [
-          {
-            "id": "1f1ad9ab-bc86-8107-9e39-c152a01a5aea",
-            "name": "ヤマシタ　トモヒサ",
-            "introducerPageId": "1f1ad9ab-bc86-8188-a0ab-dcb769b7fa51",
-            "page_url": "https://www.notion.so/1f1ad9abbc8681079e39c152a01a5aea",
-            "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/ty_main%20-%20kzk.webp",
-            "introduction_reason": "紹介",
-            "children": []
-          }
-        ]
-      }
-    ]
+    "introduction_reason": ""
   },
   {
     "id": "1f1ad9ab-bc86-8129-b2ca-f6b3174e58c1",
@@ -43,8 +229,7 @@
     "introducerPageId": null,
     "page_url": "https://www.notion.so/1f1ad9abbc868129b2caf6b3174e58c1",
     "image": "",
-    "introduction_reason": "",
-    "children": []
+    "introduction_reason": ""
   },
   {
     "id": "1f1ad9ab-bc86-8160-bfba-c52965d67400",
@@ -52,17 +237,6 @@
     "introducerPageId": null,
     "page_url": "https://www.notion.so/SNS-1f1ad9abbc868160bfbac52965d67400",
     "image": "",
-    "introduction_reason": "",
-    "children": [
-      {
-        "id": "1f1ad9ab-bc86-8113-992f-e9b8248562f4",
-        "name": "コジマ　カズキ",
-        "introducerPageId": "1f1ad9ab-bc86-8160-bfba-c52965d67400",
-        "page_url": "https://www.notion.so/1f1ad9abbc868113992fe9b8248562f4",
-        "image": "",
-        "introduction_reason": "SNS",
-        "children": []
-      }
-    ]
+    "introduction_reason": ""
   }
 ]
