@@ -122,15 +122,15 @@
 
             // 各ノードを処理し、親子関係を構築
             flatData.forEach(node => {
-                // children配列を初期化 (D3.jsのhierarchyで使用するため)
-                node.children = [];
+                // children配列の初期化は、子を追加する親ノードでのみ行う
+                // node.children = []; // ★この行を削除★
 
                 // introducerPageIdが存在し、かつそのIDを持つ親ノードがデータ内に存在する場合
                 if (node.introducerPageId && nodesById.has(node.introducerPageId)) {
                     const parent = nodesById.get(node.introducerPageId);
                     // 親ノードに子として追加
                     if (!parent.children) {
-                         parent.children = []; // 念のため初期化
+                         parent.children = []; // 親のchildren配列が存在しない場合のみ初期化
                     }
                     parent.children.push(node);
                     allChildrenIds.add(node.id); // 子として追加されたノードのIDを記録
