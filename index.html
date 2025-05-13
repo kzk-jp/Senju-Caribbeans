@@ -102,6 +102,12 @@
         const JSON_FILE_PATH = 'tree_data.json'; // ★GASスクリプトのGITHUB_FILE_PATHと同じパスに置き換えてください★
 
         d3.json(JSON_FILE_PATH).then(function(jsonData) {
+            // ★ここから修正★
+            // containerとsvgElementの定義を一番最初に移動
+            const container = document.getElementById("chart-container");
+            const svgElement = document.getElementById("tree-svg");
+            // ★ここまで修正★
+
             // デバッグ用にjsonDataをコンソールに出力
             console.log("Loaded jsonData:", jsonData);
 
@@ -117,8 +123,10 @@
             // ノード間の間隔を調整 (縦型レイアウト向け)
             // dx: 横方向の間隔 (ノードカードの幅 + 余白)
             // dy: 縦方向の間隔 (ノードカードの高さ + 余白)
-            const dx = 250; // ★横方向の間隔を広めに調整 (180 -> 250)★
+            const dx = 250; // 横方向の間隔を広めに調整
             const dy = 110; // 縦方向の間隔はそのまま
+
+            const margin = { top: 40, right: 40, bottom: 40, left: 40 }; // marginの定義
 
 
             const svg = d3.select("#tree-svg");
@@ -143,7 +151,7 @@
                          .html(`
                              ${rootData.image ? `<img class="node-image" src="${rootData.image}" alt="${rootData.name} photo">` : '<div class="node-image" style="background-color: #ccc; display: flex; align-items: center; justify-content: center; font-size: 10px;">No Image</div>'}
                              <div class="node-name">
-                                 ${rootData.page_url ? `<a href="${rootData.page_url}" target="_blank">${rootData.name}</a>` : rootData.name}
+                                 ${rootData.page_url ? `<a href="${rootData.page_url}" target="_blank">${d.data.name}</a>` : rootData.name}
                              </div>
                          `);
                      singleNodeG.append("title").text(rootData.introduction_reason ? `紹介理由: ${rootData.introduction_reason}` : '');
@@ -234,8 +242,7 @@
 
 
             // 横方向のスクロール位置を調整 (縦型レイアウトでも横スクロールは必要)
-            const container = document.getElementById("chart-container");
-            const svgElement = document.getElementById("tree-svg");
+            // containerとsvgElementは既に上で定義済み
             if (svgElement) {
               const svgWidth = svgElement.getBoundingClientRect().width;
               const containerCenter = container.clientWidth / 2;
