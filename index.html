@@ -27,12 +27,12 @@
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             padding: 1rem 0.5rem;
-            box-sizing: border-box; /* Add box-sizing */
+            box-sizing: border-box;
         }
 
         svg {
-            display: block; /* Ensure svg is a block element */
-            margin: auto; /* Center the svg if smaller than container */
+            display: block;
+            margin: auto;
         }
 
         .node-card {
@@ -47,7 +47,7 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
             width: 100px;
             box-sizing: border-box;
-            text-align: center; /* Center text within the card */
+            text-align: center;
         }
 
         .node-image {
@@ -57,7 +57,7 @@
             object-fit: cover;
             margin-bottom: 4px;
             box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
-            background-color: #eee; /* Placeholder background */
+            background-color: #eee;
         }
 
         .node-name {
@@ -65,8 +65,8 @@
             font-weight: 500;
             line-height: 1.2;
             white-space: nowrap;
-            overflow: hidden; /* Hide overflow text */
-            text-overflow: ellipsis; /* Add ellipsis for overflow */
+            overflow: hidden;
+            text-overflow: ellipsis;
             max-width: 90px;
             word-break: break-word;
         }
@@ -91,31 +91,34 @@
     </div>
 
     <script>
-        // This script assumes jsonData is passed from the Google Apps Script doGet function
-        // via the <script> tag appended to the HTML output.
+        // Apps Scriptから渡されたjsonData文字列をパースして変数に格納
+        // Apps Script側で JSON.stringify された文字列がここに埋め込まれます
+        // エラーが発生しないように、try-catchで囲むのが安全です
+        let jsonData = null;
+        try {
+            jsonData = JSON.parse('<?= jsonData ?>');
+            console.log("Parsed jsonData:", jsonData);
+        } catch (e) {
+            console.error("Error parsing jsonData from template:", e);
+            document.getElementById("chart-container").textContent = "データのパースに失敗しました。";
+        }
 
-        // デバッグ用にjsonDataをコンソールに出力
-        console.log("Received jsonData:", window.jsonData);
 
         window.addEventListener("DOMContentLoaded", () => {
             // Check if jsonData is available and not empty
-            if (!window.jsonData || (Array.isArray(window.jsonData) && window.jsonData.length === 0) || (typeof window.jsonData === 'object' && Object.keys(window.jsonData).length === 0)) {
-                document.getElementById("chart-container").textContent = "表示するデータがありません。";
+            if (!jsonData || (Array.isArray(jsonData) && jsonData.length === 0) || (typeof jsonData === 'object' && Object.keys(jsonData).length === 0) || jsonData.error || jsonData.message) {
+                // エラーオブジェクトやメッセージが含まれている場合も表示しない
+                document.getElementById("chart-container").textContent = jsonData && (jsonData.error || jsonData.message) ? `エラー: ${jsonData.error || jsonData.message}` : "表示するデータがありません。";
                 return;
             }
 
             const dx = 110; // Vertical spacing between nodes
-            const dy = 180; // Horizontal spacing between nodes (increased for card width)
+            const dy = 180; // Horizontal spacing between nodes
 
             // Determine the root node for D3.js based on jsonData structure
-            let rootData;
-            if (Array.isArray(window.jsonData)) {
-                // If jsonData is an array, create a dummy root
-                rootData = { name: "Root", children: window.jsonData };
-            } else {
-                // If jsonData is a single object, use it as the root
-                rootData = window.jsonData;
-            }
+            // Apps Script側で常に仮想ルートを持つ構造にしているので、直接使用
+            const rootData = jsonData;
+
 
             const root = d3.hierarchy(rootData);
 
@@ -143,7 +146,7 @@
 
             // Add a group element to hold the tree, offset to center
             const g = svg.append("g")
-                .attr("transform", `translate(${margin.left}, ${margin.top + (svgHeight / 2) - ((maxX - minX) / 2)})`); // Vertically center the tree
+                .attr("transform", `translate(${margin.left}, ${margin.top + (svgHeight / 2) - ((maxX - minX) / 2)})`);
 
 
             // Create the links
@@ -155,7 +158,6 @@
                 .data(root.links())
                 .join("path")
                 .attr("class", "link")
-                // Use d3.linkHorizontal for horizontal tree layout
                 .attr("d", d3.linkHorizontal()
                     .x(d => d.y)
                     .y(d => d.x));
@@ -165,7 +167,7 @@
                 .selectAll("g")
                 .data(root.descendants())
                 .join("g")
-                .attr("transform", d => `translate(${d.y},${d.x})`); // Use d.y for x and d.x for y for horizontal layout
+                .attr("transform", d => `translate(${d.y},${d.x})`);
 
             // Add foreignObject for custom HTML content (the node card)
             node.append("foreignObject")
@@ -188,10 +190,12 @@
 
             // Scroll to center the chart horizontally
             const container = document.getElementById("chart-container");
-            // Calculate the center position of the SVG within the container
-            const svgCenter = svgWidth / 2;
-            const containerCenter = container.clientWidth / 2;
-            container.scrollLeft = svgCenter - containerCenter;
+            const svgElement = document.getElementById("tree-svg");
+            if (svgElement) {
+              const svgWidth = svgElement.getBoundingClientRect().width;
+              const containerCenter = container.clientWidth / 2;
+              container.scrollLeft = (svgWidth / 2) - containerCenter;
+            }
 
         });
     </script>
