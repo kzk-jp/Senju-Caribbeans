@@ -3,7 +3,7 @@
   "children": [
     {
       "id": "1f1ad9ab-bc86-8137-b3ea-ca859aa3d831",
-      "name": "???",
+      "name": "テスト",
       "introducerPageId": null,
       "page_url": "https://www.notion.so/1f1ad9abbc868137b3eaca859aa3d831",
       "image": "",
@@ -12,7 +12,7 @@
     },
     {
       "id": "1f1ad9ab-bc86-8121-87c6-c836bf86720b",
-      "name": "????",
+      "name": "＊未登録",
       "introducerPageId": null,
       "page_url": "https://www.notion.so/1f1ad9abbc86812187c6c836bf86720b",
       "image": "",
@@ -20,7 +20,7 @@
       "children": [
         {
           "id": "1f1ad9ab-bc86-8188-a0ab-dcb769b7fa51",
-          "name": "???????",
+          "name": "アラガキ　ユイ",
           "introducerPageId": "1f1ad9ab-bc86-8121-87c6-c836bf86720b",
           "page_url": "https://www.notion.so/1f1ad9abbc868188a0abdcb769b7fa51",
           "image": "",
@@ -28,7 +28,7 @@
           "children": [
             {
               "id": "1f1ad9ab-bc86-8107-9e39-c152a01a5aea",
-              "name": "?????????",
+              "name": "ヤマシタ　トモヒサ",
               "introducerPageId": "1f1ad9ab-bc86-8188-a0ab-dcb769b7fa51",
               "page_url": "https://www.notion.so/1f1ad9abbc8681079e39c152a01a5aea",
               "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/ty_main%20-%20kzk.webp",
@@ -41,7 +41,7 @@
     },
     {
       "id": "1f1ad9ab-bc86-8129-b2ca-f6b3174e58c1",
-      "name": "??????????",
+      "name": "＊オリジナルメンバー",
       "introducerPageId": null,
       "page_url": "https://www.notion.so/1f1ad9abbc868129b2caf6b3174e58c1",
       "image": "",
@@ -50,7 +50,7 @@
     },
     {
       "id": "1f1ad9ab-bc86-8160-bfba-c52965d67400",
-      "name": "?SNS",
+      "name": "＊SNS",
       "introducerPageId": null,
       "page_url": "https://www.notion.so/SNS-1f1ad9abbc868160bfbac52965d67400",
       "image": "",
@@ -58,7 +58,7 @@
       "children": [
         {
           "id": "1f1ad9ab-bc86-8113-992f-e9b8248562f4",
-          "name": "???????",
+          "name": "コジマ　カズキ",
           "introducerPageId": "1f1ad9ab-bc86-8160-bfba-c52965d67400",
           "page_url": "https://www.notion.so/1f1ad9abbc868113992fe9b8248562f4",
           "image": "",
