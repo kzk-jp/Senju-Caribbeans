@@ -34,6 +34,7 @@
             display: block;
             margin: auto;
             /* SVGの高さはJavaScriptで動的に設定 */
+            background-color: #e0e0e0; /* ★診断用: SVG領域に薄い背景色★ */
         }
 
         .node-card {
@@ -202,7 +203,7 @@
                       return; // 次のルートへ
                  }
 
-
+                console.log(`Drawing tree for root: ${rootData.name}`); // ★診断用ログ★
                 // D3.jsの階層データに変換
                 const root = d3.hierarchy(rootData);
 
@@ -250,7 +251,10 @@
                     .data(root.descendants())
                     .join("g")
                     // 縦型レイアウト用のノード位置 (d.x が横, d.y が縦)
-                    .attr("transform", d => `translate(${d.x},${d.y})`);
+                    .attr("transform", d => {
+                        console.log("Drawing node:", d.data.name, "at", d.x, d.y); // ★診断用ログ★
+                        return `translate(${d.x},${d.y})`;
+                    });
 
                 // Add foreignObject for custom HTML content (the node card)
                 node.append("foreignObject")
@@ -289,6 +293,10 @@
               // ツリー全体の最大幅を計算してSVGの幅に設定する方が正確かもしれません
               let maxTreeWidth = 0;
                rootNodes.forEach(rootData => {
+                   // childrenプロパティがない、または空の場合はスキップ（単独ノードは幅0として扱う）
+                   if (!rootData.children || rootData.children.length === 0) {
+                       return;
+                   }
                    const root = d3.hierarchy(rootData);
                    const treeLayout = d3.tree().nodeSize([dy, dx]);
                    treeLayout(root);
@@ -299,7 +307,10 @@
                    });
                    maxTreeWidth = Math.max(maxTreeWidth, maxY - minY);
                });
-               const svgWidth = maxTreeWidth + margin.left + margin.right;
+               // 単独ノードの幅 (100px) と余白も考慮してSVGの最小幅を確保
+               const minSvgWidth = 100 + margin.left + margin.right;
+               const svgWidth = Math.max(maxTreeWidth + margin.left + margin.right, minSvgWidth);
+
                svg.attr("width", svgWidth);
 
 
