@@ -94,6 +94,9 @@
         // This script assumes jsonData is passed from the Google Apps Script doGet function
         // via the <script> tag appended to the HTML output.
 
+        // デバッグ用にjsonDataをコンソールに出力
+        console.log("Received jsonData:", window.jsonData);
+
         window.addEventListener("DOMContentLoaded", () => {
             // Check if jsonData is available and not empty
             if (!window.jsonData || (Array.isArray(window.jsonData) && window.jsonData.length === 0) || (typeof window.jsonData === 'object' && Object.keys(window.jsonData).length === 0)) {
