@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 組織図風・修正版）</title>
+    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 組織図風・線修正）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -129,6 +129,10 @@
             border-radius: 50%;
             margin-bottom: 5px; /* Space below image */
             object-fit: cover;
+            /* Center image within its container */
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
          .tree li .node .placeholder {
              width: 40px;
@@ -142,6 +146,9 @@
              font-weight: bold; /* font-bold */
              font-size: 0.875rem; /* text-sm */
              margin-bottom: 5px; /* Space below placeholder */
+             /* Center placeholder within its container */
+             margin-left: auto;
+             margin-right: auto;
          }
         .tree li .node .name {
             font-weight: bold;
@@ -202,7 +209,7 @@
 </head>
 <body>
 
-    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・修正版）</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・線修正）</h1>
 
     <div id="treeContainer">
         <p>データを読み込んでいます...</p>
