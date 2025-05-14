@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 組織図風・リンク付き）</title>
+    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 組織図風・改良版）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -56,7 +56,7 @@
             top: 0; /* Position at the top of the li */
             left: 50%; /* Center horizontally */
             transform: translateX(-50%); /* Adjust for centering */
-            border-left: 2px solid #999; /* Vertical line up to parent - Made thicker and darker */
+            border-left: 2px solid #999; /* Vertical line up to parent */
             height: 30px; /* Height of the vertical line */
             width: 0;
         }
@@ -71,32 +71,20 @@
             top: 0; /* Position at the top of the ul */
             left: 50%; /* Center horizontally */
             transform: translateX(-50%); /* Adjust for centering */
-            border-top: 2px solid #999; /* Horizontal line connecting siblings - Made thicker and darker */
+            border-top: 2px solid #999; /* Horizontal line connecting siblings */
             width: calc(100% - 20px); /* Width of the horizontal line, accounting for li padding */
             height: 0;
         }
 
+        /* Adjust horizontal line endpoints for first and last child */
         .tree ul > li:first-child::before {
-            /* Extend the horizontal line to the first child */
-             left: 50%;
-             transform: translateX(-50%);
-             width: calc(50% + 10px); /* Extend to the center of the first child */
-             border-top: 2px solid #999; /* Made thicker and darker */
-             border-left: none; /* No vertical line up from the first child directly to ul::before */
-             height: 0; /* No vertical height */
-             top: 0; /* Position at the top of the ul */
+             /* No vertical line up from the first child directly to ul::before */
+             content: none;
         }
 
          .tree ul > li:last-child::before {
-             /* Extend the horizontal line to the last child */
-             left: auto;
-             right: 50%;
-             transform: translateX(50%);
-             width: calc(50% + 10px); /* Extend to the center of the last child */
-             border-top: 2px solid #999; /* Made thicker and darker */
-             border-left: none; /* No vertical line up from the last child directly to ul::before */
-             height: 0; /* No vertical height */
-             top: 0; /* Position at the top of the ul */
+             /* No vertical line up from the last child directly to ul::before */
+             content: none;
          }
 
          .tree ul > li:only-child::before {
@@ -104,17 +92,47 @@
              content: none;
          }
 
+         /* Vertical line from parent to single child */
          .tree ul > li:only-child::after {
-             /* Vertical line down from parent to single child */
              content: '';
              position: absolute;
              top: 0;
              left: 50%;
              transform: translateX(-50%);
-             border-left: 2px solid #999; /* Made thicker and darker */
+             border-left: 2px solid #999;
              height: 30px;
              width: 0;
          }
+
+         /* Horizontal line connecting siblings */
+         .tree ul li:not(:only-child)::after {
+             content: '';
+             position: absolute;
+             top: -1px; /* Position just above the vertical line start */
+             left: 50%;
+             transform: translateX(-50%);
+             border-top: 2px solid #999;
+             width: calc(100% - 20px); /* Full width of the li minus padding */
+             height: 0;
+             z-index: -1; /* Ensure line is behind the node */
+         }
+
+         .tree ul li:first-child::after {
+             left: 50%;
+             transform: translateX(-100%); /* Start from the right edge of the node */
+             width: calc(50% + 10px); /* Extend to the center of the li */
+         }
+
+         .tree ul li:last-child::after {
+             left: 50%;
+             transform: translateX(0%); /* Start from the left edge of the node */
+             width: calc(50% + 10px); /* Extend to the center of the li */
+         }
+
+          .tree ul li:first-child:last-child::after {
+              /* No horizontal line for a single child */
+              content: none;
+          }
 
 
         .tree li .node {
@@ -201,7 +219,7 @@
              top: 0;
              left: 50%;
              transform: translateX(-50%);
-             border-left: 2px solid #999; /* Made thicker and darker */
+             border-left: 2px solid #999;
              height: 30px; /* Height of the vertical line */
              width: 0;
              border-top: none; /* No horizontal line here */
@@ -217,7 +235,7 @@
 </head>
 <body>
 
-    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・リンク付き）</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・改良版）</h1>
 
     <div id="treeContainer">
         <p>データを読み込んでいます...</p>
@@ -280,7 +298,8 @@
 
             content.appendChild(textDiv);
 
-            // Add link if URL exists
+            /*
+            // Add link if URL exists - Moved link wrapping outside of node content
             if (member.url) {
                 const link = document.createElement('a');
                 link.href = member.url;
@@ -290,6 +309,8 @@
             } else {
                 nodeDiv.appendChild(content); // Append content directly if no link
             }
+            */
+             nodeDiv.appendChild(content); // Always append content to nodeDiv
 
 
             return nodeDiv;
@@ -309,7 +330,18 @@
                 const li = document.createElement('li');
 
                 const nodeElement = createNodeElement(child); // Create node using the new function
-                li.appendChild(nodeElement);
+
+                // Wrap nodeElement in a link if URL exists
+                if (child.url) {
+                    const link = document.createElement('a');
+                    link.href = child.url;
+                    link.target = "_blank"; // Open link in a new tab
+                    link.appendChild(nodeElement); // Append the node element to the link
+                    li.appendChild(link); // Append the link to the list item
+                } else {
+                    li.appendChild(nodeElement); // Append node element directly if no link
+                }
+
 
                 const nestedUl = buildTree(data, child.id); // Pass data to recursive call
                 if (nestedUl) {
@@ -361,7 +393,17 @@
                     const rootLi = document.createElement('li');
 
                     const rootNodeElement = createNodeElement(root); // Create root node using the new function
-                    rootLi.appendChild(rootNodeElement);
+
+                    // Wrap rootNodeElement in a link if URL exists
+                    if (root.url) {
+                         const link = document.createElement('a');
+                         link.href = root.url;
+                         link.target = "_blank"; // Open link in a new tab
+                         link.appendChild(rootNodeElement); // Append the node element to the link
+                         rootLi.appendChild(link); // Append the link to the list item
+                     } else {
+                         rootLi.appendChild(rootNodeElement); // Append node element directly if no link
+                     }
 
 
                     const nestedUl = buildTree(jsonData, root.id); // Pass data to recursive call
