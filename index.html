@@ -3,240 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー組織図（上から下）</title>
+    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み）</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
             line-height: 1.6;
             padding: 20px;
             background-color: #f7f7f7;
-            overflow: hidden; /* bodyのデフォルトスクロールを無効化 */
         }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #333;
-        }
-        .chart-container {
-            width: 100%;
-            height: calc(100vh - 100px); /* ヘッダーなどを考慮した高さ */
+        .group {
+            margin-bottom: 40px; /* 各グループ間のスペース */
+            padding: 20px;
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            padding: 20px;
-            box-sizing: border-box;
-            overflow: hidden; /* SVGコンテナ自体は非表示 */
         }
-        .node circle {
-            fill: #999;
-            stroke: steelblue;
-            stroke-width: 3px;
-            cursor: pointer; /* クリック可能であることを示す */
+        .group h2 {
+            border-bottom: 2px solid #e2e2e2;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #333;
         }
-        .node text {
-            font: 10px sans-serif; /* フォントサイズを小さく */
-            fill: #555;
-            pointer-events: none; /* テキストのクリックイベントを無効化 */
+        .tree ul {
+            padding-left: 20px;
+            margin: 7px 0;
+            position: relative;
         }
-        .node image {
-            border-radius: 50%; /* 画像を丸くする */
-            object-fit: cover; /* 画像のアスペクト比を維持 */
+        .tree ul ul {
+            border-left: 1px solid #ccc;
         }
-        .link {
-            fill: none;
-            stroke: #ccc;
-            stroke-width: 1.5px; /* 線の太さを少し細く */
+        .tree li {
+            list-style: none;
+            margin: 7px 0;
+            position: relative;
         }
-         .loading-message {
-            text-align: center;
-            font-size: 1.2rem;
+        .tree li::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: -20px;
+            border-top: 1px solid #ccc;
+            width: 20px;
+            height: 0;
+        }
+        .tree li:last-child::before {
+             border-top: 1px solid #ccc;
+        }
+
+         .tree ul ul > li:first-child::before {
+             top: 15px;
+         }
+
+        .tree li .node {
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 300px;
+        }
+        .tree li .node img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        .tree li .node .name {
+            font-weight: bold;
+        }
+        .tree li .node .introducer {
+            font-size: 0.9em;
             color: #555;
-            margin-top: 50px;
-         }
-         .error-message {
-             text-align: center;
-             font-size: 1.2rem;
-             color: red;
-             margin-top: 50px;
-         }
+        }
+         /* Remove default list styling from the outer ul within a group */
+        .group > ul {
+            padding-left: 0;
+        }
+         .group > ul > li::before {
+            content: none; /* Root nodes in a group have no line before */
+        }
     </style>
 </head>
 <body>
 
-    <h1>フットサルメンバー組織図</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー</h1>
 
-    <div id="chart" class="chart-container">
-         <p class="loading-message">データを読み込んでいます...</p>
+    <div id="treeContainer">
+        <p>データを読み込んでいます...</p>
     </div>
 
     <script>
         // ここをGitHubのRawtherapee URLに変更してください
-        // 例: https://raw.githubusercontent.com/ユーザー名/リポジトリ名/ブランチ名/tree_data.json
-        const JSON_FILE_PATH = 'https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/main/tree_data.json'; // GitHub Rawtherapee URL
+        const JSON_FILE_PATH = 'tree_data.json';
 
-        // マージンを調整
-        const margin = { top: 40, right: 20, bottom: 20, left: 20 }; // 上マージンを増やし、左右を減らしました
-        let width = 960 - margin.left - margin.right;
-        let height = 500 - margin.top - margin.bottom;
+        // Function to build the tree structure recursively
+        function buildTree(data, parentId) {
+            const children = data.filter(item => item.introducerPageId === parentId);
+            if (children.length === 0) {
+                return null;
+            }
 
-        let svg = null; // SVG要素を保持する変数
-        let gLink, gNode; // リンクとノードのグループを保持
+            const ul = document.createElement('ul');
+            children.forEach(child => {
+                const li = document.createElement('li');
 
-        // Zoom and Pan behavior
-        const zoom = d3.zoom()
-            .scaleExtent([0.1, 4]) // ズームの範囲
-            .on('zoom', (event) => {
-                svg.attr('transform', event.transform);
-            });
+                const nodeDiv = document.createElement('div');
+                nodeDiv.classList.add('node');
 
-        // Function to render the tree
-        function renderTree(data) {
-            // Remove loading message
-            d3.select("#chart").select(".loading-message").remove();
-
-            // Clear previous SVG if exists
-            d3.select("#chart svg").remove();
-
-            const chartContainer = document.getElementById('chart');
-            const containerWidth = chartContainer.clientWidth - margin.left - margin.right;
-            const containerHeight = chartContainer.clientHeight - margin.top - margin.bottom;
-
-            width = containerWidth;
-             // ノード数に基づいて適切な高さを計算（最小値を設定）
-             // D3.jsのhierarchyを使う場合、ルートからの深さを計算
-             const rootNode = d3.hierarchy(data[0], d => { // 最初の要素を仮のルートとしてhierarchyを作成
-                 const children = data.filter(item => item.introducerPageId === d.id);
-                 return children.length > 0 ? children : null;
-             });
-             const maxDepth = rootNode.height; // 最大深さを取得
-             const calculatedHeight = Math.max(containerHeight, (maxDepth + 1) * 80); // 深さに基づいて高さを計算 (1レベルあたり80px)
-             height = calculatedHeight;
-
-
-            svg = d3.select("#chart").append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                 .call(zoom) // SVG全体にズームとパンを適用
-                .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`); // マージン分移動
-
-            gLink = svg.append("g").attr("class", "links");
-            gNode = svg.append("g").attr("class", "nodes");
-
-
-            // --- データの階層構造を構築（複数ルート対応） ---
-            // 仮想的なルートノードを作成
-            const virtualRootData = { id: "virtual-root", name: "全体", introducerPageId: null };
-            const nodesById = new Map(data.map(d => [d.id, d]));
-
-            // 各ノードの子ノードを見つける関数
-            const getChildren = (node) => {
-                // 仮想ルートの場合、introducerPageIdがnullのノードが子
-                if (node.id === "virtual-root") {
-                    return data.filter(item => item.introducerPageId === null);
+                if (child.image) {
+                    const img = document.createElement('img');
+                    img.src = child.image;
+                    img.alt = child.name;
+                     // Add error handling for image loading
+                    img.onerror = function() {
+                        this.style.display = 'none'; // Hide image if loading fails
+                        // Optional: Replace with placeholder if image fails
+                        const placeholder = document.createElement('div');
+                        placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                        placeholder.textContent = child.name ? child.name.charAt(0) : '?';
+                        this.parentNode.replaceChild(placeholder, this);
+                    };
+                    nodeDiv.appendChild(img);
+                } else {
+                     // Add a placeholder if no image is available
+                    const placeholder = document.createElement('div');
+                    placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                    placeholder.textContent = child.name ? child.name.charAt(0) : '?';
+                    nodeDiv.appendChild(placeholder);
                 }
-                // それ以外のノードの場合、introducerPageIdがそのノードのidと一致するノードが子
-                return data.filter(item => item.introducerPageId === node.id);
-            };
 
-            // d3.hierarchyを使用して階層構造を構築
-            const root = d3.hierarchy(virtualRootData, getChildren);
-             // -------------------------------------------------
+                const textDiv = document.createElement('div');
+                const nameSpan = document.createElement('span');
+                nameSpan.classList.add('name');
+                nameSpan.textContent = child.name;
+                textDiv.appendChild(nameSpan);
 
+                if (child.introducer_name) {
+                    const introducerDiv = document.createElement('div');
+                    introducerDiv.classList.add('introducer');
+                    introducerDiv.textContent = `紹介者: ${child.introducer_name}`;
+                    textDiv.appendChild(introducerDiv);
+                }
 
-            // declares a tree layout and assigns the size
-            // レイアウトの向きを上から下に変更 (サイズを [width, height] に)
-            const treemap = d3.tree().size([width, height]);
-
-            // Assigns tree data to the root
-            const nodes = treemap(root);
-
-            // Compute the new tree layout.
-            const treeNodes = nodes.descendants();
-            const treeLinks = nodes.links();
-
-            // Normalize for fixed-depth. (上から下向きの場合はx座標が深さに依存)
-            treeNodes.forEach(d => { d.y = d.depth * 80 }); // 垂直方向の間隔を調整 (1レベルあたり80px)
-
-            // 仮想ルートノードを除外
-            const visibleNodes = treeNodes.filter(d => d.data.id !== "virtual-root");
-            const visibleLinks = treeLinks.filter(d => d.source.data.id !== "virtual-root");
+                nodeDiv.appendChild(textDiv);
+                li.appendChild(nodeDiv);
 
 
-            // ****************** Nodes Section ***************************
+                const nestedUl = buildTree(data, child.id); // Pass data to recursive call
+                if (nestedUl) {
+                    li.appendChild(nestedUl);
+                }
 
-            // Update the nodes...
-            const node = gNode.selectAll('g.node')
-                .data(visibleNodes, d => d.id || (d.id = d.data.id));
-
-            // Enter any new nodes at the parent's previous position.
-            const nodeEnter = node.enter().append('g')
-                .attr('class', 'node')
-                // ノードの座標を上から下向きに変更 (xとyを入れ替え)
-                .attr("transform", d => `translate(${d.x},${d.y})`);
-
-            // Add Circle for the nodes
-            nodeEnter.append('circle')
-                .attr('r', 20) // Adjust circle size
-                .style("fill", d => d._children ? "lightsteelblue" : "#fff");
-
-             // Add Image for the nodes
-            nodeEnter.append("image")
-                .attr("xlink:href", d => d.data.image ? d.data.image : 'placeholder.png') // Placeholder image if none
-                .attr("x", -15) // Adjust image position relative to circle center
-                .attr("y", -15)
-                .attr("width", 30)
-                .attr("height", 30)
-                 .attr("clip-path", "circle(15px at 15px 15px)") // Clip image to circle
-                 .on('error', function() { // Handle image loading errors
-                     d3.select(this).remove(); // Remove image on error
-                     // Append placeholder text or icon
-                     d3.select(this.parentNode).append("text")
-                        .attr("dy", ".35em")
-                        .attr("x", 0)
-                        .attr("text-anchor", "middle")
-                         .style("font-size", "10px")
-                        .text(d => d.data.name ? d.data.name.charAt(0) : '?');
-                 });
-
-
-            // Add labels for the nodes (Name)
-            nodeEnter.append('text')
-                .attr("dy", "2.2em") // 画像の下に配置
-                .attr("x", 0) // 中央揃え
-                .attr("text-anchor", "middle") // 中央揃え
-                .text(d => d.data.name);
-
-            // Add labels for the nodes (Introducer Name)
-             nodeEnter.append('text')
-                .attr("dy", "3.2em") // 名前の下に配置
-                .attr("x", 0) // 中央揃え
-                .attr("text-anchor", "middle") // 中央揃え
-                .style("font-size", "8px") // さらに小さく
-                .style("fill", "#777")
-                .text(d => d.data.introducer_name ? `紹介者: ${d.data.introducer_name}` : '');
-
-
-            // ****************** Links Section ***************************
-
-            // Update the links...
-            const link = gLink.selectAll('path.link')
-                .data(visibleLinks, d => d.target.id);
-
-            // Enter any new links at the parent's previous position.
-            link.enter().insert('path', "g")
-                .attr("class", "link")
-                .attr('d', d => {
-                    // リンクのパスを上から下向きに変更
-                    return "M" + d.source.x + "," + d.source.y
-                        + "C" + d.source.x + "," + (d.source.y + d.target.y) / 2
-                        + " " + d.target.x + "," + (d.source.y + d.target.y) / 2
-                        + " " + d.target.x + "," + d.target.y;
-                });
+                ul.appendChild(li);
+            });
+            return ul;
         }
 
         // Fetch JSON data from GitHub
@@ -246,37 +169,116 @@
                     // レスポンスがOKでない場合エラー
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                // レスポンスのContent-Typeを確認する（簡易的なチェック）
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                     throw new Error(`Invalid content type: ${contentType}. Please ensure the URL points to the raw JSON file.`);
-                }
                 return response.json();
             })
             .then(jsonData => {
                 // データ取得成功後にツリーを構築・表示
-                renderTree(jsonData);
+
+                // Find root nodes (members with no introducer)
+                const rootNodes = jsonData.filter(item => item.introducerPageId === null);
+
+                const treeContainer = document.getElementById('treeContainer');
+                treeContainer.innerHTML = ''; // Remove loading message
+
+                const groupedTrees = {}; // Object to hold trees grouped by reason
+
+                rootNodes.forEach(root => {
+                    const directChildren = jsonData.filter(item => item.introducerPageId === root.id);
+                    let groupKey = root.name || 'その他'; // Default group key is root name or 'その他'
+
+                    if (directChildren.length > 0) {
+                        // Use the introduction_reason of the first direct child as the group key
+                        groupKey = directChildren[0].introduction_reason || 'その他';
+                    }
+
+                    // Build the tree structure starting from the root node
+                    const rootLi = document.createElement('li');
+
+                    const nodeDiv = document.createElement('div');
+                    nodeDiv.classList.add('node');
+
+                    if (root.image) {
+                        const img = document.createElement('img');
+                        img.src = root.image;
+                        img.alt = root.name;
+                         // Add error handling for image loading
+                        img.onerror = function() {
+                            this.style.display = 'none'; // Hide image if loading fails
+                             // Optional: Replace with placeholder if image fails
+                            const placeholder = document.createElement('div');
+                            placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                            placeholder.textContent = root.name ? root.name.charAt(0) : '?';
+                            this.parentNode.replaceChild(placeholder, this);
+                        };
+                        nodeDiv.appendChild(img);
+                    } else {
+                         // Add a placeholder if no image is available
+                        const placeholder = document.createElement('div');
+                        placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                        placeholder.textContent = root.name ? root.name.charAt(0) : '?';
+                        nodeDiv.appendChild(placeholder);
+                    }
+
+
+                    const textDiv = document.createElement('div');
+                    const nameSpan = document.createElement('span');
+                    nameSpan.classList.add('name');
+                    nameSpan.textContent = root.name;
+                    textDiv.appendChild(nameSpan);
+
+                     if (root.introduction_reason) {
+                        const reasonDiv = document.createElement('div');
+                        reasonDiv.classList.add('introducer'); // Reusing introducer class for styling
+                        reasonDiv.textContent = `(${root.introduction_reason})`;
+                        textDiv.appendChild(reasonDiv);
+                    }
+
+                    nodeDiv.appendChild(textDiv);
+                    rootLi.appendChild(nodeDiv);
+
+
+                    const nestedUl = buildTree(jsonData, root.id); // Pass data to recursive call
+                    if (nestedUl) {
+                        rootLi.appendChild(nestedUl);
+                    }
+
+                    // Store the root li element in the groupedTrees object
+                    if (!groupedTrees[groupKey]) {
+                        groupedTrees[groupKey] = [];
+                    }
+                    groupedTrees[groupKey].push(rootLi);
+                });
+
+                // Render the grouped trees
+                for (const groupKey in groupedTrees) {
+                    if (groupedTrees.hasOwnProperty(groupKey)) {
+                        const groupDiv = document.createElement('div');
+                        groupDiv.classList.add('group');
+
+                        const groupTitle = document.createElement('h2');
+                        groupTitle.classList.add('text-xl', 'font-semibold', 'mb-4');
+                        groupTitle.textContent = groupKey || 'その他'; // Use group key as title, default to 'その他'
+
+                        groupDiv.appendChild(groupTitle);
+
+                        const groupUl = document.createElement('ul');
+                         groupUl.classList.add('tree'); // Add tree class for styling
+
+                        groupedTrees[groupKey].forEach(rootLi => {
+                            groupUl.appendChild(rootLi);
+                        });
+
+                        groupDiv.appendChild(groupUl);
+                        treeContainer.appendChild(groupDiv);
+                    }
+                }
+
             })
             .catch(error => {
                 // データ取得失敗時のエラー表示
                 console.error('Error fetching JSON data:', error);
-                d3.select("#chart").html('<p class="error-message">データの読み込みに失敗しました。<br>原因として以下が考えられます:<br>1. GitHubの**Rawtherapee URL**が正しく指定されているかご確認ください。<br>2. CORS (Cross-Origin Resource Sharing) の問題が発生している可能性があります（GitHub Pagesからのアクセスをお試しください）。<br>3. JSONファイルの内容に構文エラーがある可能性があります。</p>');
+                document.getElementById('treeContainer').innerHTML = '<p>データの読み込みに失敗しました。GitHubのRawtherapee URLが正しいか、またはCORSの問題がないか確認してください。</p>';
             });
-
-         // Optional: Add responsiveness on window resize
-        window.addEventListener('resize', () => {
-             // ウィンドウサイズ変更時は、現在のデータで再描画を試みる
-             // 必要であれば、再度fetchすることも検討
-             const chartContainer = document.getElementById('chart');
-             // エラーメッセージが表示されていないか確認
-             if (!chartContainer.querySelector('.error-message')) {
-                // エラーがない場合のみ再描画を試みる（パフォーマンスに注意）
-                 // ここでは簡易的にリロードしていますが、データキャッシュと再描画関数を呼ぶ方が効率的です
-                 // window.location.reload();
-                 // または、取得済みのjsonDataを使ってrenderTreeを呼び出す
-                 // renderTree(cachedJsonData); // cachedJsonDataを適切に保持する必要あり
-             }
-        });
 
     </script>
 
