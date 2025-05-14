@@ -76,7 +76,7 @@
     <script>
         // ここをGitHubのRawtherapee URLに変更してください
         // 例: https://raw.githubusercontent.com/ユーザー名/リポジトリ名/ブランチ名/tree_data.json
-        const JSON_FILE_PATH = 'tree_data.json';
+        const JSON_FILE_PATH = 'https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/main/tree_data.json'; // GitHub Rawtherapee URL
 
         // マージンを調整
         const margin = { top: 40, right: 20, bottom: 20, left: 20 }; // 上マージンを増やし、左右を減らしました
@@ -106,24 +106,15 @@
             const containerHeight = chartContainer.clientHeight - margin.top - margin.bottom;
 
             width = containerWidth;
-            // ノード数に基づいて適切な高さを計算（最小値を設定）
-             // 上から下向きの場合、高さはノードの深さに依存
-            const maxDepth = d3.max(data, d => {
-                 let depth = 0;
-                 let current = d;
-                 while(current && current.introducerPageId) {
-                     const parent = data.find(p => p.id === current.introducerPageId);
-                     if (parent) {
-                         depth++;
-                         current = parent;
-                     } else {
-                         break; // 循環参照などを避ける
-                     }
-                 }
-                 return depth;
-            });
-            const calculatedHeight = Math.max(containerHeight, (maxDepth + 1) * 80); // 深さに基づいて高さを計算 (1レベルあたり80px)
-            height = calculatedHeight;
+             // ノード数に基づいて適切な高さを計算（最小値を設定）
+             // D3.jsのhierarchyを使う場合、ルートからの深さを計算
+             const rootNode = d3.hierarchy(data[0], d => { // 最初の要素を仮のルートとしてhierarchyを作成
+                 const children = data.filter(item => item.introducerPageId === d.id);
+                 return children.length > 0 ? children : null;
+             });
+             const maxDepth = rootNode.height; // 最大深さを取得
+             const calculatedHeight = Math.max(containerHeight, (maxDepth + 1) * 80); // 深さに基づいて高さを計算 (1レベルあたり80px)
+             height = calculatedHeight;
 
 
             svg = d3.select("#chart").append("svg")
@@ -137,14 +128,29 @@
             gNode = svg.append("g").attr("class", "nodes");
 
 
+            // --- データの階層構造を構築（複数ルート対応） ---
+            // 仮想的なルートノードを作成
+            const virtualRootData = { id: "virtual-root", name: "全体", introducerPageId: null };
+            const nodesById = new Map(data.map(d => [d.id, d]));
+
+            // 各ノードの子ノードを見つける関数
+            const getChildren = (node) => {
+                // 仮想ルートの場合、introducerPageIdがnullのノードが子
+                if (node.id === "virtual-root") {
+                    return data.filter(item => item.introducerPageId === null);
+                }
+                // それ以外のノードの場合、introducerPageIdがそのノードのidと一致するノードが子
+                return data.filter(item => item.introducerPageId === node.id);
+            };
+
+            // d3.hierarchyを使用して階層構造を構築
+            const root = d3.hierarchy(virtualRootData, getChildren);
+             // -------------------------------------------------
+
+
             // declares a tree layout and assigns the size
             // レイアウトの向きを上から下に変更 (サイズを [width, height] に)
             const treemap = d3.tree().size([width, height]);
-
-            // Assigns parent, children, height, depth and links
-            const root = d3.stratify()
-                .id(d => d.id)
-                .parentId(d => d.introducerPageId)(data);
 
             // Assigns tree data to the root
             const nodes = treemap(root);
@@ -156,11 +162,16 @@
             // Normalize for fixed-depth. (上から下向きの場合はx座標が深さに依存)
             treeNodes.forEach(d => { d.y = d.depth * 80 }); // 垂直方向の間隔を調整 (1レベルあたり80px)
 
+            // 仮想ルートノードを除外
+            const visibleNodes = treeNodes.filter(d => d.data.id !== "virtual-root");
+            const visibleLinks = treeLinks.filter(d => d.source.data.id !== "virtual-root");
+
+
             // ****************** Nodes Section ***************************
 
             // Update the nodes...
             const node = gNode.selectAll('g.node')
-                .data(treeNodes, d => d.id || (d.id = d.data.id));
+                .data(visibleNodes, d => d.id || (d.id = d.data.id));
 
             // Enter any new nodes at the parent's previous position.
             const nodeEnter = node.enter().append('g')
@@ -214,7 +225,7 @@
 
             // Update the links...
             const link = gLink.selectAll('path.link')
-                .data(treeLinks, d => d.target.id);
+                .data(visibleLinks, d => d.target.id);
 
             // Enter any new links at the parent's previous position.
             link.enter().insert('path', "g")
@@ -249,7 +260,7 @@
             .catch(error => {
                 // データ取得失敗時のエラー表示
                 console.error('Error fetching JSON data:', error);
-                d3.select("#chart").html('<p class="error-message">データの読み込みに失敗しました。<br>原因として以下が考えられます:<br>1. GitHubの**Rawtherapee URL**が正しく指定されていません。<br>2. CORS (Cross-Origin Resource Sharing) の問題が発生しています（GitHub Pagesからのアクセスをお試しください）。<br>3. JSONファイルの内容に誤りがある可能性があります。</p>');
+                d3.select("#chart").html('<p class="error-message">データの読み込みに失敗しました。<br>原因として以下が考えられます:<br>1. GitHubの**Rawtherapee URL**が正しく指定されているかご確認ください。<br>2. CORS (Cross-Origin Resource Sharing) の問題が発生している可能性があります（GitHub Pagesからのアクセスをお試しください）。<br>3. JSONファイルの内容に構文エラーがある可能性があります。</p>');
             });
 
          // Optional: Add responsiveness on window resize
