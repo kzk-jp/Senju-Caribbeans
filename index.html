@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>フットサルメンバー紹介ツリー（D3.js版・スペース調整）</title>
+    <title>フットサルメンバー紹介ツリー（D3.js版・グループ位置修正）</title>
     <style>
         body {
             margin: 0;
@@ -115,7 +115,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版・スペース調整）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版・グループ位置修正）</h1>
     <div id="chart-container">
         <svg id="tree-svg"></svg>
     </div>
@@ -163,6 +163,11 @@
                          // Calculate the maximum height needed for this entire group
                          let groupMaxHeight = 0;
 
+                         // Create a group specifically for this group's subtrees
+                         const groupG = mainG.append("g")
+                             .attr("transform", `translate(0, ${currentYOffset})`); // Translate the entire group
+
+
                          rootNodesData.forEach(rootData => {
                              // Build the hierarchy for this root and its descendants
                              const root = d3.hierarchy(rootData, d => jsonData.filter(item => item.introducerPageId === d.id));
@@ -188,7 +193,6 @@
                              }
 
                              // Calculate the height of the current subtree
-                             // We need to find the maximum depth within this subtree to calculate its height
                              let maxDepth = 0;
                              root.each(d => {
                                  if (d.depth > maxDepth) maxDepth = d.depth;
@@ -204,9 +208,10 @@
                              const offsetX = (maxSvgWidth / 2) - ((x1 + x0) / 2);
 
 
-                             // Create a group for the current subtree
-                             const subtreeG = mainG.append("g")
-                                 .attr("transform", `translate(${margin.left + offsetX}, ${currentYOffset})`); // Apply margin and calculated offset
+                             // Create a group for the current subtree within the groupG
+                             const subtreeG = groupG.append("g")
+                                 .attr("transform", `translate(${margin.left + offsetX}, 0)`); // Apply horizontal offset within the group
+
 
                              // Draw links
                              subtreeG.append("g")
