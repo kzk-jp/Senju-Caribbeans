@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>フットサルメンバー紹介ツリー（D3.js版）</title>
+    <title>フットサルメンバー紹介ツリー（D3.js版・重なり修正）</title>
     <style>
         body {
             margin: 0;
@@ -115,7 +115,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版・重なり修正）</h1>
     <div id="chart-container">
         <svg id="tree-svg"></svg>
     </div>
@@ -157,10 +157,10 @@
 
                     groupedData.forEach((groupData, reason) => {
                         // Find the root node(s) for this group (introducerPageId is null within this group's data)
-                        // Note: D3 hierarchy typically expects a single root. If a group has multiple
-                        // members with introducerPageId === null, they will be treated as separate roots
-                        // within this group's processing, but we'll append them sequentially.
                          const rootNodesData = groupData.filter(d => d.introducerPageId === null);
+
+                         // Calculate the maximum height needed for this entire group
+                         let groupMaxHeight = 0;
 
                          rootNodesData.forEach(rootData => {
                              // Build the hierarchy for this root and its descendants
@@ -186,9 +186,14 @@
                                  maxSvgWidth = subtreeWidth;
                              }
 
+                             // Calculate the height of the current subtree
+                             const subtreeHeight = (root.height + 1) * (nodeHeight + verticalSpacing);
+                             if (subtreeHeight > groupMaxHeight) {
+                                 groupMaxHeight = subtreeHeight;
+                             }
+
+
                              // Calculate the horizontal offset to center the subtree (initially)
-                             // This centering might be relative to the maxSvgWidth or the container width
-                             // Let's center relative to the potential max width for consistent horizontal alignment
                              const offsetX = (maxSvgWidth / 2) - ((x1 + x0) / 2);
 
 
@@ -270,16 +275,20 @@
                                   */
                              });
 
-
-                             // Add space for the next subtree
-                             currentYOffset += root.height * (nodeHeight + verticalSpacing) + margin.bottom + verticalSpacing; // Calculate height based on subtree depth
+                             // Note: We are not incrementing currentYOffset here, but after processing all roots in the group
 
                          }); // End rootNodesData.forEach
+
+                         // After processing all roots in a group, add the maximum height of the group
+                         // to the currentYOffset for the next group.
+                         currentYOffset += groupMaxHeight + margin.bottom;
+
+
                     }); // End groupedData.forEach
 
                     // Adjust SVG width and height based on content
                     svg.attr("width", maxSvgWidth + margin.left + margin.right);
-                    svg.attr("height", currentYOffset + margin.bottom);
+                    svg.attr("height", currentYOffset); // Use the final currentYOffset
 
 
                     // 🌟 中央に自動スクロールする処理を追加
