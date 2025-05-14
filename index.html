@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（SVG線描画・修正版）</title>
+    <title>フットサルメンバー紹介ツリー（SVG線描画・最終調整）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -50,8 +50,9 @@
             padding: 0; /* Remove default padding */
         }
 
+        /* Adjust margin-top for nested lists to create space for lines */
         .tree ul ul {
-             margin-top: 40px; /* Space between parent row and child row */
+             margin-top: 50px; /* Increased space for vertical and horizontal lines */
         }
 
         .tree li {
@@ -62,6 +63,7 @@
             padding: 0 10px; /* Horizontal padding between nodes */
             display: flex; /* Use flexbox to center the node div */
             justify-content: center;
+            align-items: flex-start; /* Align items to the top */
         }
 
         .tree li .node {
@@ -139,7 +141,7 @@
 
          /* Style for the ul containing children of a root node */
          .group > ul > li > ul {
-             margin-top: 40px; /* Space between root node and its children's ul */
+             margin-top: 50px; /* Space between root node and its children's ul */
              justify-content: center; /* Center the children's ul under the root */
          }
 
@@ -159,7 +161,7 @@
 </head>
 <body>
 
-    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（SVG線描画・修正版）</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・最終調整）</h1>
 
     <div id="treeContainer">
         <p>データを読み込んでいます...</p>
@@ -301,9 +303,7 @@
                 const parentY = parentRect.bottom - treeContainerRect.top;
 
                 // Calculate the Y coordinate for the horizontal line
-                // This could be a fixed distance below the parent, or based on child positions
-                // Let's use a fixed distance for simplicity
-                const horizontalLineY = parentY + 30; // 30px below parent node
+                const horizontalLineY = parentY + 25; // Vertical distance from parent to horizontal line
 
                 // Draw vertical line from parent to the horizontal line
                 const parentToHorizontalPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -330,119 +330,35 @@
                 const minChildX = Math.min(...childPositions.map(pos => pos.x));
                 const maxChildX = Math.max(...childPositions.map(pos => pos.x));
 
-                // Draw the horizontal line connecting the children's vertical lines
+                // Draw the horizontal line connecting the vertical lines from children
                 const horizontalPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                // Draw from the parent's X to the min child X, then across to max child X
-                 const horizontalPathData = `M ${parentX} ${horizontalLineY} H ${minChildX} L ${maxChildX} ${horizontalLineY}`;
-                 // If only one child, just draw a point or small segment at parentX on the horizontal line
-                 if (childPositions.length === 1) {
-                      horizontalPathData = `M ${parentX} ${horizontalLineY} L ${childPositions[0].x} ${horizontalLineY}`;
-                 } else {
-                     // For multiple children, draw from the parent's X to the horizontal line,
-                     // then across the range of children's X coordinates.
-                     // A more robust path would connect the vertical lines from each child.
-                     // Let's draw from the leftmost child's X to the rightmost child's X on the horizontal line.
-                      horizontalPathData = `M ${minChildX} ${horizontalLineY} H ${maxChildX}`;
-                      // Add a segment from the parent's X down to the horizontal line if it's outside the children's range
-                      if (parentX < minChildX) {
-                           horizontalPathData = `M ${parentX} ${horizontalLineY} H ${maxChildX}`;
-                      } else if (parentX > maxChildX) {
-                            horizontalPathData = `M ${minChildX} ${horizontalLineY} H ${parentX}`;
-                      } else {
-                           // If parentX is within the child range, draw from min to max
-                           horizontalPathData = `M ${minChildX} ${horizontalLineY} H ${maxChildX}`;
-                      }
-                      // Ensure the horizontal line connects to the parent's vertical line
-                       horizontalPathData = `M ${parentX} ${horizontalLineY} ${horizontalPathData}`; // Start from parentX on the horizontal line
-
-                 }
-
-
-                // Simpler horizontal line connecting all child x positions at horizontalLineY
-                 let simplifiedHorizontalPathData = `M ${childPositions[0].x} ${horizontalLineY}`;
-                 for (let i = 1; i < childPositions.length; i++) {
-                     simplifiedHorizontalPathData += ` L ${childPositions[i].x} ${horizontalLineY}`;
-                 }
-                 // Connect the parent vertical line to the horizontal line
-                  simplifiedHorizontalPathData = `M ${parentX} ${horizontalLineY} ${simplifiedHorizontalPathData}`;
-
-
-                 // Let's use a path that goes from parentX down to horizontalLineY, then across to minChildX, then segments to each childX, then across to maxChildX
-                 let complexHorizontalPathData = `M ${parentX} ${horizontalLineY}`;
-                 if (childPositions.length > 0) {
-                     // Sort child positions by X coordinate
-                     childPositions.sort((a, b) => a.x - b.x);
-                     const firstChildX = childPositions[0].x;
-                     const lastChildX = childPositions[childPositions.length - 1].x;
-
-                     complexHorizontalPathData += ` H ${firstChildX}`; // Draw horizontal to the first child's X
-                     for (let i = 1; i < childPositions.length; i++) {
-                         // No need to draw horizontal segments between children if they are already connected by vertical lines from the horizontal line
-                     }
-                     complexHorizontalPathData += ` H ${lastChildX}`; // Draw horizontal to the last child's X
-                 }
-
-
-                 // Final attempt at a robust horizontal line path:
-                 // Start at parentX on the horizontal line, draw to the min/max child X range
-                 let finalHorizontalPathData = `M ${parentX} ${horizontalLineY}`;
+                // The horizontal line should span from the leftmost child's X to the rightmost child's X
+                // and also connect to the vertical line from the parent.
+                // Let's draw from the parentX on the horizontal line to the min/max child X range.
+                 let horizontalPathData = `M ${parentX} ${horizontalLineY}`;
                  if (childPositions.length > 0) {
                      const minX = Math.min(parentX, ...childPositions.map(pos => pos.x));
                      const maxX = Math.max(parentX, ...childPositions.map(pos => pos.x));
-                     finalHorizontalPathData = `M ${minX} ${horizontalLineY} H ${maxX}`;
-                     // Ensure parent vertical line connects
-                     finalHorizontalPathData += ` M ${parentX} ${parentY} V ${horizontalLineY}`;
+                     horizontalPathData = `M ${minX} ${horizontalLineY} H ${maxX}`;
                  }
 
 
-                // Let's simplify: Draw a horizontal line from the min child X to the max child X,
-                // and a vertical line from the parent to the midpoint of this horizontal line.
-                // Then vertical lines from the horizontal line to each child.
-
-                if (childPositions.length > 0) {
-                    const minChildX = Math.min(...childPositions.map(pos => pos.x));
-                    const maxChildX = Math.max(...childPositions.map(pos => pos.x));
-                    const horizontalMidX = (minChildX + maxChildX) / 2;
-
-                    // Draw horizontal line connecting children
-                    const horizontalPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    horizontalPath.setAttribute('d', `M ${minChildX} ${horizontalLineY} H ${maxChildX}`);
-                    horizontalPath.setAttribute('stroke', '#999');
-                    horizontalPath.setAttribute('stroke-width', '2');
-                    horizontalPath.setAttribute('fill', 'none');
-                    svgContainer.appendChild(horizontalPath);
-
-                    // Draw vertical line from parent to the horizontal line
-                    const parentToHorizontalPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    parentToHorizontalPath.setAttribute('d', `M ${parentX} ${parentY} V ${horizontalLineY}`);
-                     // If the parent's X is outside the min/max child X range, draw to the closest end of the horizontal line
-                    if (parentX < minChildX) {
-                         parentToHorizontalPath.setAttribute('d', `M ${parentX} ${parentY} V ${horizontalLineY} H ${minChildX}`);
-                    } else if (parentX > maxChildX) {
-                         parentToHorizontalPath.setAttribute('d', `M ${parentX} ${parentY} V ${horizontalLineY} H ${maxChildX}`);
-                    } else {
-                         parentToHorizontalPath.setAttribute('d', `M ${parentX} ${parentY} V ${horizontalLineY}`);
-                    }
+                horizontalPath.setAttribute('d', horizontalPathData);
+                horizontalPath.setAttribute('stroke', '#999');
+                horizontalPath.setAttribute('stroke-width', '2');
+                horizontalPath.setAttribute('fill', 'none');
+                svgContainer.appendChild(horizontalPath);
 
 
-                    parentToHorizontalPath.setAttribute('stroke', '#999');
-                    parentToHorizontalPath.setAttribute('stroke-width', '2');
-                    parentToHorizontalPath.setAttribute('fill', 'none');
-                    svgContainer.appendChild(parentToHorizontalPath);
-
-
-                     // Draw vertical lines from the horizontal line to each child
-                     childPositions.forEach(childPos => {
-                         const horizontalToChildPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                         horizontalToChildPath.setAttribute('d', `M ${childPos.x} ${horizontalLineY} V ${childPos.y}`);
-                         horizontalToChildPath.setAttribute('stroke', '#999');
-                         horizontalToChildPath.setAttribute('stroke-width', '2');
-                         horizontalToChildPath.setAttribute('fill', 'none');
-                         svgContainer.appendChild(horizontalToChildPath);
-                     });
-
-                }
-
+                 // Draw vertical lines from the horizontal line to each child
+                 childPositions.forEach(childPos => {
+                     const horizontalToChildPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                     horizontalToChildPath.setAttribute('d', `M ${childPos.x} ${horizontalLineY} V ${childPos.y}`);
+                     horizontalToChildPath.setAttribute('stroke', '#999');
+                     horizontalToChildPath.setAttribute('stroke-width', '2');
+                     horizontalToChildPath.setAttribute('fill', 'none');
+                     svgContainer.appendChild(horizontalToChildPath);
+                 });
 
             });
         }
