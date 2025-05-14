@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 組織図風）</title>
+    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 組織図風・リンク付き）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -56,7 +56,7 @@
             top: 0; /* Position at the top of the li */
             left: 50%; /* Center horizontally */
             transform: translateX(-50%); /* Adjust for centering */
-            border-left: 1px solid #ccc; /* Vertical line up to parent */
+            border-left: 2px solid #999; /* Vertical line up to parent - Made thicker and darker */
             height: 30px; /* Height of the vertical line */
             width: 0;
         }
@@ -71,7 +71,7 @@
             top: 0; /* Position at the top of the ul */
             left: 50%; /* Center horizontally */
             transform: translateX(-50%); /* Adjust for centering */
-            border-top: 1px solid #ccc; /* Horizontal line connecting siblings */
+            border-top: 2px solid #999; /* Horizontal line connecting siblings - Made thicker and darker */
             width: calc(100% - 20px); /* Width of the horizontal line, accounting for li padding */
             height: 0;
         }
@@ -81,7 +81,7 @@
              left: 50%;
              transform: translateX(-50%);
              width: calc(50% + 10px); /* Extend to the center of the first child */
-             border-top: 1px solid #ccc;
+             border-top: 2px solid #999; /* Made thicker and darker */
              border-left: none; /* No vertical line up from the first child directly to ul::before */
              height: 0; /* No vertical height */
              top: 0; /* Position at the top of the ul */
@@ -93,7 +93,7 @@
              right: 50%;
              transform: translateX(50%);
              width: calc(50% + 10px); /* Extend to the center of the last child */
-             border-top: 1px solid #ccc;
+             border-top: 2px solid #999; /* Made thicker and darker */
              border-left: none; /* No vertical line up from the last child directly to ul::before */
              height: 0; /* No vertical height */
              top: 0; /* Position at the top of the ul */
@@ -111,7 +111,7 @@
              top: 0;
              left: 50%;
              transform: translateX(-50%);
-             border-left: 1px solid #ccc;
+             border-left: 2px solid #999; /* Made thicker and darker */
              height: 30px;
              width: 0;
          }
@@ -129,6 +129,15 @@
             text-align: center;
             margin: 0 auto; /* Center the node within its li */
         }
+
+        .tree li .node a {
+            text-decoration: none; /* Remove underline from links */
+            color: inherit; /* Inherit text color */
+            display: flex; /* Use flexbox for link content */
+            flex-direction: column; /* Stack content vertically within link */
+            align-items: center; /* Center content horizontally within link */
+        }
+
         .tree li .node img {
             width: 40px;
             height: 40px;
@@ -140,11 +149,11 @@
              width: 40px;
              height: 40px;
              border-radius: 50%;
-             background-color: #gray-300;
+             background-color: #d1d5db; /* bg-gray-300 */
              display: flex;
              align-items: center;
              justify-content: center;
-             color: #6b7280; /* text-gray-600 */
+             color: #4b5563; /* text-gray-600 */
              font-weight: bold; /* font-bold */
              font-size: 0.875rem; /* text-sm */
              margin-bottom: 5px; /* Space below placeholder */
@@ -181,7 +190,6 @@
          /* Style for the ul containing children of a root node */
          .group > ul > li > ul {
              padding-top: 30px; /* Space for the line connecting root to children */
-             /* border-top: 1px solid #ccc; /* Line connecting root to its children - handled by ul::before */
              margin-top: 20px; /* Space between root node and its children's ul */
              justify-content: center; /* Center the children's ul under the root */
          }
@@ -193,7 +201,7 @@
              top: 0;
              left: 50%;
              transform: translateX(-50%);
-             border-left: 1px solid #ccc;
+             border-left: 2px solid #999; /* Made thicker and darker */
              height: 30px; /* Height of the vertical line */
              width: 0;
              border-top: none; /* No horizontal line here */
@@ -209,7 +217,7 @@
 </head>
 <body>
 
-    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風）</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・リンク付き）</h1>
 
     <div id="treeContainer">
         <p>データを読み込んでいます...</p>
@@ -218,6 +226,75 @@
     <script>
         // ここをGitHubのRawtherapee URLに変更してください
         const JSON_FILE_PATH = 'tree_data.json'; // Replace with your actual GitHub Raw URL
+
+        // Function to create a node element (image/placeholder + text)
+        function createNodeElement(member) {
+            const nodeDiv = document.createElement('div');
+            nodeDiv.classList.add('node');
+
+            const content = document.createElement('div'); // Container for image/placeholder and text
+            content.classList.add('node-content'); // Add a class for potential future styling
+
+            if (member.image) {
+                const img = document.createElement('img');
+                img.src = member.image;
+                img.alt = member.name;
+                // Add error handling for image loading
+                img.onerror = function() {
+                    this.style.display = 'none'; // Hide image if loading fails
+                    // Optional: Replace with placeholder if image fails
+                    const placeholder = document.createElement('div');
+                    placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
+                    placeholder.textContent = member.name ? member.name.charAt(0) : '?';
+                    this.parentNode.replaceChild(placeholder, this);
+                };
+                content.appendChild(img);
+            } else {
+                // Add a placeholder if no image is available
+                const placeholder = document.createElement('div');
+                placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-content', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
+                placeholder.textContent = member.name ? member.name.charAt(0) : '?';
+                content.appendChild(placeholder);
+            }
+
+            const textDiv = document.createElement('div');
+            const nameSpan = document.createElement('span');
+            nameSpan.classList.add('name');
+            nameSpan.textContent = member.name;
+            textDiv.appendChild(nameSpan);
+
+            if (member.introducer_name) {
+                const introducerDiv = document.createElement('div');
+                introducerDiv.classList.add('introducer');
+                introducerDiv.textContent = `紹介者: ${member.introducer_name}`;
+                textDiv.appendChild(introducerDiv);
+            }
+
+             if (member.introduction_reason) {
+                 const reasonDiv = document.createElement('div');
+                 reasonDiv.classList.add('introducer'); // Reusing introducer class for styling
+                 reasonDiv.textContent = `(${member.introduction_reason})`;
+                 textDiv.appendChild(reasonDiv);
+             }
+
+
+            content.appendChild(textDiv);
+
+            // Add link if URL exists
+            if (member.url) {
+                const link = document.createElement('a');
+                link.href = member.url;
+                link.target = "_blank"; // Open link in a new tab
+                link.appendChild(content); // Append the content (image+text) to the link
+                nodeDiv.appendChild(link); // Append the link to the node div
+            } else {
+                nodeDiv.appendChild(content); // Append content directly if no link
+            }
+
+
+            return nodeDiv;
+        }
+
 
         // Function to build the tree structure recursively
         function buildTree(data, parentId) {
@@ -231,47 +308,8 @@
             children.forEach(child => {
                 const li = document.createElement('li');
 
-                const nodeDiv = document.createElement('div');
-                nodeDiv.classList.add('node');
-
-                if (child.image) {
-                    const img = document.createElement('img');
-                    img.src = child.image;
-                    img.alt = child.name;
-                    // Add error handling for image loading
-                    img.onerror = function() {
-                        this.style.display = 'none'; // Hide image if loading fails
-                        // Optional: Replace with placeholder if image fails
-                        const placeholder = document.createElement('div');
-                        placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
-                        placeholder.textContent = child.name ? child.name.charAt(0) : '?';
-                        this.parentNode.replaceChild(placeholder, this);
-                    };
-                    nodeDiv.appendChild(img);
-                } else {
-                    // Add a placeholder if no image is available
-                    const placeholder = document.createElement('div');
-                    placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
-                    placeholder.textContent = child.name ? child.name.charAt(0) : '?';
-                    nodeDiv.appendChild(placeholder);
-                }
-
-                const textDiv = document.createElement('div');
-                const nameSpan = document.createElement('span');
-                nameSpan.classList.add('name');
-                nameSpan.textContent = child.name;
-                textDiv.appendChild(nameSpan);
-
-                if (child.introducer_name) {
-                    const introducerDiv = document.createElement('div');
-                    introducerDiv.classList.add('introducer');
-                    introducerDiv.textContent = `紹介者: ${child.introducer_name}`;
-                    textDiv.appendChild(introducerDiv);
-                }
-
-                nodeDiv.appendChild(textDiv);
-                li.appendChild(nodeDiv);
-
+                const nodeElement = createNodeElement(child); // Create node using the new function
+                li.appendChild(nodeElement);
 
                 const nestedUl = buildTree(data, child.id); // Pass data to recursive call
                 if (nestedUl) {
@@ -322,48 +360,8 @@
                     // Build the tree structure starting from the root node
                     const rootLi = document.createElement('li');
 
-                    const nodeDiv = document.createElement('div');
-                    nodeDiv.classList.add('node');
-
-                    if (root.image) {
-                        const img = document.createElement('img');
-                        img.src = root.image;
-                        img.alt = root.name;
-                        // Add error handling for image loading
-                        img.onerror = function() {
-                            this.style.display = 'none'; // Hide image if loading fails
-                            // Optional: Replace with placeholder if image fails
-                            const placeholder = document.createElement('div');
-                            placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
-                            placeholder.textContent = root.name ? root.name.charAt(0) : '?';
-                            this.parentNode.replaceChild(placeholder, this);
-                        };
-                        nodeDiv.appendChild(img);
-                    } else {
-                        // Add a placeholder if no image is available
-                        const placeholder = document.createElement('div');
-                        placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
-                        placeholder.textContent = root.name ? root.name.charAt(0) : '?';
-                        nodeDiv.appendChild(placeholder);
-                    }
-
-
-                    const textDiv = document.createElement('div');
-                    const nameSpan = document.createElement('span');
-                    nameSpan.classList.add('name');
-                    nameSpan.textContent = root.name;
-                    textDiv.appendChild(nameSpan);
-
-                     if (root.introduction_reason) {
-                         const reasonDiv = document.createElement('div');
-                         reasonDiv.classList.add('introducer'); // Reusing introducer class for styling
-                         reasonDiv.textContent = `(${root.introduction_reason})`;
-                         textDiv.appendChild(reasonDiv);
-                     }
-
-
-                    nodeDiv.appendChild(textDiv);
-                    rootLi.appendChild(nodeDiv);
+                    const rootNodeElement = createNodeElement(root); // Create root node using the new function
+                    rootLi.appendChild(rootNodeElement);
 
 
                     const nestedUl = buildTree(jsonData, root.id); // Pass data to recursive call
