@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>フットサルメンバー紹介ツリー（D3.js版・グループ重なり解消）</title>
+    <title>フットサルメンバー紹介ツリー（D3.js版・グループ位置修正完了）</title>
     <style>
         body {
             margin: 0;
@@ -115,7 +115,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版・グループ重なり解消）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版・グループ位置修正完了）</h1>
     <div id="chart-container">
         <svg id="tree-svg"></svg>
     </div>
@@ -156,7 +156,11 @@
                     // Create a main group to hold all group subtrees
                     const mainG = svg.append("g");
 
-                    groupedData.forEach((groupData, reason) => {
+                    // Sort groups by reason for consistent order (optional)
+                    const sortedGroups = Array.from(groupedData).sort((a, b) => a[0].localeCompare(b[0]));
+
+
+                    sortedGroups.forEach(([reason, groupData]) => {
                         // Find the root node(s) for this group (introducerPageId is null within this group's data)
                          const rootNodesData = groupData.filter(d => d.introducerPageId === null);
 
@@ -190,7 +194,9 @@
                              tempRoot.each(d => {
                                  if (d.depth > maxDepth) maxDepth = d.depth;
                              });
+                             // Calculate height including the node itself and spacing below it for its deepest descendant
                              const subtreeCalculatedHeight = (maxDepth + 1) * (nodeHeight + verticalSpacing);
+
 
                              if (subtreeCalculatedHeight > groupMaxHeight) {
                                  groupMaxHeight = subtreeCalculatedHeight;
@@ -208,7 +214,7 @@
                              .attr("transform", `translate(0, ${currentYOffset})`); // Translate the entire group
 
 
-                         // Add a text element for the group title (optional, but can help visualize groups)
+                         // Add a text element for the group title
                          groupG.append("text")
                              .attr("x", margin.left) // Position title
                              .attr("y", -groupSpacing / 2) // Position above the group
