@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（SVG線描画・最終調整）</title>
+    <title>フットサルメンバー紹介ツリー（SVG線描画・線修正完了）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -161,7 +161,7 @@
 </head>
 <body>
 
-    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・最終調整）</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・線修正完了）</h1>
 
     <div id="treeContainer">
         <p>データを読み込んでいます...</p>
@@ -334,7 +334,7 @@
                 const horizontalPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 // The horizontal line should span from the leftmost child's X to the rightmost child's X
                 // and also connect to the vertical line from the parent.
-                // Let's draw from the parentX on the horizontal line to the min/max child X range.
+                // Draw from the parentX on the horizontal line to the min/max child X range.
                  let horizontalPathData = `M ${parentX} ${horizontalLineY}`;
                  if (childPositions.length > 0) {
                      const minX = Math.min(parentX, ...childPositions.map(pos => pos.x));
