@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（SVG線描画の概念）</title>
+    <title>フットサルメンバー紹介ツリー（SVG線描画）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -12,7 +12,6 @@
             padding: 20px;
             background-color: #f7f7f7;
             overflow-x: auto; /* Allow horizontal scrolling if needed */
-            position: relative; /* Container for absolute positioning of SVG and nodes */
         }
 
         .group {
@@ -22,7 +21,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             overflow-x: auto; /* Allow horizontal scrolling within group if needed */
-            position: relative; /* Container for absolute positioning of SVG and nodes */
+            position: relative; /* Needed for positioning SVG correctly */
         }
         .group h2 {
             border-bottom: 2px solid #e2e2e2;
@@ -33,7 +32,7 @@
 
         /* --- SVG Container --- */
         .tree-svg-container {
-            position: absolute; /* Position SVG relative to its parent (.group or body) */
+            position: absolute; /* Position SVG relative to its parent (.group) */
             top: 0;
             left: 0;
             width: 100%;
@@ -42,9 +41,9 @@
             z-index: 0; /* Ensure SVG is behind the nodes */
         }
 
-        /* --- Node Styles (Similar to previous, but prepared for positioning) --- */
+        /* --- Node Styles --- */
         .tree ul {
-            position: relative; /* Needed for absolute positioning of list items */
+            position: relative;
             display: flex; /* Arrange children horizontally */
             justify-content: center; /* Center children */
             margin: 0; /* Remove default margin */
@@ -52,15 +51,17 @@
         }
 
         .tree ul ul {
-             padding-top: 60px; /* Space for vertical line and horizontal line from parent */
+             margin-top: 40px; /* Space between parent row and child row */
         }
 
         .tree li {
             list-style: none;
-            position: absolute; /* Position list items absolutely */
+            position: relative; /* Position relative for positioning nodes */
             text-align: center; /* Center the node content */
-            /* flex-grow: 1; /* flex-grow is not needed with absolute positioning */
-            padding: 0; /* Remove padding */
+            flex-grow: 1; /* Allow list items to grow and take available space */
+            padding: 0 10px; /* Horizontal padding between nodes */
+            display: flex; /* Use flexbox to center the node div */
+            justify-content: center;
         }
 
         .tree li .node {
@@ -73,7 +74,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             max-width: 150px; /* Adjust max-width for layout */
             text-align: center;
-            margin: 0 auto; /* Center the node within its li (if li had width) */
+            /* margin: 0 auto; /* Center the node within its li - handled by flexbox on li */
         }
 
         .tree li .node a {
@@ -128,22 +129,18 @@
             justify-content: center; /* Center root nodes */
             align-items: flex-start; /* Align roots at the top */
             margin-bottom: 20px; /* Space below root nodes */
-            position: relative; /* Needed for absolute positioning of root list items */
         }
 
          .group > ul > li {
-             padding: 0; /* Remove padding */
+             padding: 0 20px; /* Horizontal padding between root nodes */
              flex-grow: 0; /* Root nodes don't need to grow */
              position: relative; /* Position list items relative for node absolute positioning */
-             margin: 0 20px; /* Horizontal margin between root nodes */
          }
 
          /* Style for the ul containing children of a root node */
          .group > ul > li > ul {
-             padding-top: 60px; /* Space for the vertical line connecting root to children */
-             margin-top: 20px; /* Space between root node and its children's ul */
+             margin-top: 40px; /* Space between root node and its children's ul */
              justify-content: center; /* Center the children's ul under the root */
-             position: relative; /* Needed for absolute positioning of child list items */
          }
 
          /* Hide CSS pseudo-element lines when using SVG */
@@ -162,7 +159,7 @@
 </head>
 <body>
 
-    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（SVG線描画の概念）</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（SVG線描画）</h1>
 
     <div id="treeContainer">
         <p>データを読み込んでいます...</p>
@@ -264,60 +261,67 @@
             return ul;
         }
 
-        // Function to draw SVG lines (Simplified example)
+        // Function to draw SVG lines
         function drawSVGLines(data) {
+            // Clear previous SVG
+            const existingSvg = document.querySelector('.tree-svg-container');
+            if (existingSvg) {
+                existingSvg.remove();
+            }
+
+            const treeContainer = document.getElementById('treeContainer');
             const svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svgContainer.classList.add('tree-svg-container');
-            svgContainer.setAttribute('width', '100%');
-            svgContainer.setAttribute('height', '100%');
+            // Set SVG dimensions to cover the entire tree container
+            svgContainer.setAttribute('width', treeContainer.scrollWidth);
+            svgContainer.setAttribute('height', treeContainer.scrollHeight);
 
-            // This is a simplified example. In a real implementation, you would iterate
-            // through the data, find parent-child relationships, get the positions
-            // of the corresponding HTML node elements, and draw paths accordingly.
-
-            // Example: Drawing a line from a hypothetical parent to a child
-            // This requires knowing the exact positions of the nodes after rendering.
-            // For demonstration, let's assume we have two nodes with data-id 'parent-node' and 'child-node'
-
-            // You would need to get the actual rendered positions like this:
-            // const parentNode = document.querySelector('[data-id="parent-node"] .node');
-            // const childNode = document.querySelector('[data-id="child-node"] .node');
-
-            // if (parentNode && childNode) {
-            //     const parentRect = parentNode.getBoundingClientRect();
-            //     const childRect = childNode.getBoundingClientRect();
-
-            //     // Calculate connection points (e.g., bottom center of parent to top center of child)
-            //     const parentX = parentRect.left + parentRect.width / 2;
-            //     const parentY = parentRect.bottom;
-            //     const childX = childRect.left + childRect.width / 2;
-            //     const childY = childRect.top;
-
-            //     // Create SVG path data (example: simple vertical line)
-            //     const pathData = `M ${parentX} ${parentY} L ${childX} ${childY}`;
-
-            //     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            //     path.setAttribute('d', pathData);
-            //     path.setAttribute('stroke', '#999');
-            //     path.setAttribute('stroke-width', '2');
-            //     path.setAttribute('fill', 'none');
-
-            //     svgContainer.appendChild(path);
-            // }
-
-            // Append the SVG container to the tree container or group
-            const treeContainer = document.getElementById('treeContainer');
-            // Find the first group or a suitable container to append the SVG
-            const targetContainer = treeContainer.querySelector('.group') || treeContainer;
-             if (targetContainer) {
-                 targetContainer.appendChild(svgContainer);
-             }
+            // Append SVG to the main container
+            treeContainer.appendChild(svgContainer);
 
 
+            // Iterate through the data to find parent-child relationships
+            data.forEach(child => {
+                if (child.introducerPageId !== null) {
+                    const parent = data.find(item => item.id === child.introducerPageId);
+
+                    if (parent) {
+                        // Get the actual rendered DOM elements
+                        const parentNodeElement = document.querySelector(`[data-id="${parent.id}"] .node`);
+                        const childNodeElement = document.querySelector(`[data-id="${child.id}"] .node`);
+
+                        if (parentNodeElement && childNodeElement) {
+                            const parentRect = parentNodeElement.getBoundingClientRect();
+                            const childRect = childNodeElement.getBoundingClientRect();
+                            const treeContainerRect = treeContainer.getBoundingClientRect();
+
+                            // Calculate connection points relative to the treeContainer
+                            const parentX = parentRect.left + parentRect.width / 2 - treeContainerRect.left;
+                            const parentY = parentRect.bottom - treeContainerRect.top;
+                            const childX = childRect.left + childRect.width / 2 - treeContainerRect.left;
+                            const childY = childRect.top - treeContainerRect.top;
+
+                            // Draw the line
+                            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+                            // Path data: Move to parent bottom, draw vertical down, horizontal across, vertical up to child top
+                            const pathData = `M ${parentX} ${parentY} V ${parentY + 20} H ${childX} V ${childY}`; // Adjust 20 for vertical line length
+
+                            path.setAttribute('d', pathData);
+                            path.setAttribute('stroke', '#999');
+                            path.setAttribute('stroke-width', '2');
+                            path.setAttribute('fill', 'none');
+
+                            svgContainer.appendChild(path);
+                        }
+                    }
+                }
+            });
         }
 
 
         // Fetch JSON data from GitHub
+        let treeData = []; // Store fetched data globally for redrawing
         fetch(JSON_FILE_PATH)
             .then(response => {
                 if (!response.ok) {
@@ -326,14 +330,15 @@
                 return response.json();
             })
             .then(jsonData => {
-                const rootNodes = jsonData.filter(item => item.introducerPageId === null);
+                treeData = jsonData; // Store data
+                const rootNodes = treeData.filter(item => item.introducerPageId === null);
                 const treeContainer = document.getElementById('treeContainer');
                 treeContainer.innerHTML = ''; // Remove loading message
 
                 const groupedTrees = {};
 
                 rootNodes.forEach(root => {
-                    const directChildren = jsonData.filter(item => item.introducerPageId === root.id);
+                    const directChildren = treeData.filter(item => item.introducerPageId === root.id);
                     let groupKey = root.name || 'その他';
 
                     if (directChildren.length > 0 && directChildren[0].introduction_reason) {
@@ -350,7 +355,7 @@
                     const rootNodeElement = createNodeElement(root);
                     rootLi.appendChild(rootNodeElement);
 
-                    const nestedUl = buildTree(jsonData, root.id);
+                    const nestedUl = buildTree(treeData, root.id);
                     if (nestedUl) {
                         rootLi.appendChild(nestedUl);
                     }
@@ -385,15 +390,28 @@
                 }
 
                 // After the HTML nodes are rendered, draw the SVG lines
-                // A full implementation would call a function here to calculate
-                // node positions and draw all necessary SVG paths.
-                // drawSVGLines(jsonData); // Call the function to draw lines (requires implementation)
+                // Use a slight delay to ensure layout is complete
+                 setTimeout(() => {
+                     drawSVGLines(treeData);
+                 }, 100);
+
 
             })
             .catch(error => {
                 console.error('Error fetching JSON data:', error);
                 document.getElementById('treeContainer').innerHTML = '<p>データの読み込みに失敗しました。GitHubのRawtherapee URLが正しいか、またはCORSの問題がないか確認してください。</p>';
             });
+
+            // Redraw SVG lines on window resize
+            window.addEventListener('resize', () => {
+                if (treeData.length > 0) {
+                    // Use a slight delay for resize as well
+                    setTimeout(() => {
+                        drawSVGLines(treeData);
+                    }, 100);
+                }
+            });
+
 
     </script>
 
