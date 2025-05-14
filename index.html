@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>フットサルメンバー紹介ツリー（D3.js版）</title>
+    <title>フットサルメンバー紹介ツリー（D3.js版・グループ重なり解消＋箱）</title>
     <style>
         body {
             margin: 0;
@@ -24,7 +24,7 @@
         #chart-container {
             width: 100%;
             overflow-x: auto;
-            overflow-y: hidden;
+            overflow-y: auto; /* Allow vertical scrolling */
             -webkit-overflow-scrolling: touch;
             padding: 1rem 0.5rem;
             box-sizing: border-box; /* Include padding in width */
@@ -111,11 +111,20 @@
             stroke: #94a3b8; /* slate-400 */
             stroke-width: 1.5px; /* Increased line thickness */
         }
+
+        .group-box {
+            fill: none; /* No fill */
+            stroke: #ccc; /* Light gray border */
+            stroke-width: 1px;
+            stroke-dasharray: 5,5; /* Dashed line */
+            rx: 15; /* Rounded corners */
+            ry: 15;
+        }
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版・グループ重なり解消＋箱）</h1>
     <div id="chart-container">
         <svg id="tree-svg"></svg>
     </div>
@@ -143,58 +152,118 @@
 
                     const svg = d3.select("#tree-svg");
                     const chartContainer = d3.select("#chart-container");
-                    const margin = {top: 40, right: 20, bottom: 40, left: 20}; // Adjusted margins
+                    const margin = {top: 60, right: 40, bottom: 60, left: 40}; // Increased margins for box padding
                     const nodeWidth = 120; // Matches .node-card width
                     const nodeHeight = 80; // Approximate height of .node-card content
-                    const verticalSpacing = 50; // Space between parent and child levels
-                    const horizontalSpacing = 20; // Minimum space between sibling nodes
+                    const verticalSpacing = 80; // Increased space between parent and child levels
+                    const horizontalSpacing = 30; // Increased minimum space between sibling nodes
+                    const groupSpacing = 150; // Space between different groups (Adjust this value)
+                    const boxPadding = 30; // Padding inside the group box
 
                     let currentYOffset = margin.top;
                     let maxSvgWidth = 0;
 
-                    // Create a main group to hold all group subtrees
+                    // Create a main group to hold all group subtrees and boxes
                     const mainG = svg.append("g");
 
-                    groupedData.forEach((groupData, reason) => {
-                        // Find the root node(s) for this group (introducerPageId is null within this group's data)
-                        // Note: D3 hierarchy typically expects a single root. If a group has multiple
-                        // members with introducerPageId === null, they will be treated as separate roots
-                        // within this group's processing, but we'll append them sequentially.
+                    // Sort groups by reason for consistent order (optional)
+                    const sortedGroups = Array.from(groupedData).sort((a, b) => a[0].localeCompare(b[0]));
+
+
+                    sortedGroups.forEach(([reason, groupData]) => {
+                         // Find the root node(s) for this group (introducerPageId is null within this group's data)
                          const rootNodesData = groupData.filter(d => d.introducerPageId === null);
 
+                         // --- Calculate Group Dimensions (before drawing) ---
+                         let groupMinX = Infinity, groupMaxX = -Infinity;
+                         let groupMinY = Infinity, groupMaxY = -Infinity;
+                         let groupCalculatedWidth = 0; // Width needed for layout
+                         let groupCalculatedHeight = 0; // Height needed for layout
+
+                         // To calculate group dimensions, we need to layout each subtree within the group
+                         // and find the overall extent.
+                         const tempSubtreeLayouts = [];
+
                          rootNodesData.forEach(rootData => {
-                             // Build the hierarchy for this root and its descendants
-                             const root = d3.hierarchy(rootData, d => jsonData.filter(item => item.introducerPageId === d.id));
+                             const tempRoot = d3.hierarchy(rootData, d => jsonData.filter(item => item.introducerPageId === d.id));
+                             const tempTreeLayout = d3.tree()
+                                 .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]);
+                             tempTreeLayout(tempRoot);
+                             tempSubtreeLayouts.push(tempRoot);
 
-                             // Define the tree layout
-                             const treeLayout = d3.tree()
-                                 .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]); // [vertical, horizontal] spacing
-
-                             // Compute the layout
-                             treeLayout(root);
-
-                             // Calculate the extent of the subtree for positioning
-                             let x0 = Infinity, x1 = -Infinity;
-                             root.each(d => {
-                                 if (d.x < x0) x0 = d.x;
-                                 if (d.x > x1) x1 = d.x;
+                             // Calculate extent for this subtree
+                             let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+                             tempRoot.each(d => {
+                                 // Account for node card size when calculating extent
+                                 const halfNodeWidth = nodeWidth / 2;
+                                 const halfNodeHeight = nodeHeight / 2;
+                                 if (d.x - halfNodeWidth < x0) x0 = d.x - halfNodeWidth;
+                                 if (d.x + halfNodeWidth > x1) x1 = d.x + halfNodeWidth;
+                                 if (d.y - halfNodeHeight < y0) y0 = d.y - halfNodeHeight;
+                                 if (d.y + halfNodeHeight > y1) y1 = d.y + halfNodeHeight;
                              });
 
-                             // Calculate the width of the subtree
-                             const subtreeWidth = x1 - x0 + nodeWidth + horizontalSpacing;
-                             if (subtreeWidth > maxSvgWidth) {
-                                 maxSvgWidth = subtreeWidth;
-                             }
+                             // Update overall group extent
+                             if (x0 < groupMinX) groupMinX = x0;
+                             if (x1 > groupMaxX) groupMaxX = x1;
+                             if (y0 < groupMinY) groupMinY = y0;
+                             if (y1 > groupMaxY) groupMaxY = y1;
+                         });
 
-                             // Calculate the horizontal offset to center the subtree (initially)
-                             // This centering might be relative to the maxSvgWidth or the container width
-                             // Let's center relative to the potential max width for consistent horizontal alignment
-                             const offsetX = (maxSvgWidth / 2) - ((x1 + x0) / 2);
+                         // Calculate layout width and height based on extents
+                         groupCalculatedWidth = groupMaxX - groupMinX;
+                         groupCalculatedHeight = groupMaxY - groupMinY;
 
 
-                             // Create a group for the current subtree
-                             const subtreeG = mainG.append("g")
-                                 .attr("transform", `translate(${margin.left + offsetX}, ${currentYOffset})`); // Apply margin and calculated offset
+                         // Update the overall max SVG width needed
+                         if (groupCalculatedWidth + margin.left + margin.right > maxSvgWidth) {
+                             maxSvgWidth = groupCalculatedWidth + margin.left + margin.right;
+                         }
+
+
+                         // --- Draw Group Elements ---
+
+                         // Create a group specifically for this group's content (box, title, subtrees)
+                         // Position this group using the currentYOffset
+                         const groupG = mainG.append("g")
+                             .attr("transform", `translate(${margin.left}, ${currentYOffset})`); // Apply margin and currentYOffset
+
+
+                         // Add the group box (rectangle)
+                         groupG.append("rect")
+                             .attr("class", "group-box")
+                             .attr("x", groupMinX - boxPadding) // Apply padding
+                             .attr("y", groupMinY - boxPadding) // Apply padding
+                             .attr("width", groupCalculatedWidth + boxPadding * 2) // Add padding to width
+                             .attr("height", groupCalculatedHeight + boxPadding * 2); // Add padding to height
+
+
+                         // Add the group title
+                         groupG.append("text")
+                             .attr("x", groupMinX - boxPadding) // Position title relative to box
+                             .attr("y", groupMinY - boxPadding - (groupSpacing / 2) + (boxPadding / 2)) // Position above the box
+                             .attr("dy", "0.35em")
+                             .style("font-weight", "bold")
+                             .text(reason);
+
+
+                         // Draw each subtree within this groupG
+                         tempSubtreeLayouts.forEach(root => { // Use the pre-calculated layouts
+                             // Calculate the horizontal offset to center the subtree within the *group's* calculated width
+                             let x0 = Infinity, x1 = -Infinity;
+                             root.each(d => {
+                                 const halfNodeWidth = nodeWidth / 2;
+                                 if (d.x - halfNodeWidth < x0) x0 = d.x - halfNodeWidth;
+                                 if (d.x + halfNodeWidth > x1) x1 = d.x + halfNodeWidth;
+                             });
+                             const subtreeWidth = x1 - x0; // Width of the subtree's nodes
+                             const offsetX = (groupCalculatedWidth / 2) - ((x1 + x0) / 2); // Center relative to group width
+
+
+                             // Create a group for the current subtree within the groupG
+                             const subtreeG = groupG.append("g")
+                                 .attr("transform", `translate(${offsetX - groupMinX}, ${-groupMinY})`); // Translate relative to group's minX/minY
+
 
                              // Draw links
                              subtreeG.append("g")
@@ -260,26 +329,22 @@
                                          .attr("class", "node-introducer")
                                          .text(`紹介者: ${d.data.introducer_name}`);
                                  }
-                                 // Reason is used for grouping title, might not be needed on every card
-                                 /*
-                                 if (d.data.introduction_reason) {
-                                      container.append("div")
-                                          .attr("class", "node-reason")
-                                          .text(`(${d.data.introduction_reason})`);
-                                  }
-                                  */
                              });
 
+                         }); // End drawing rootNodesData.forEach
 
-                             // Add space for the next subtree
-                             currentYOffset += root.height * (nodeHeight + verticalSpacing) + margin.bottom + verticalSpacing; // Calculate height based on subtree depth
+                         // After processing and drawing all roots and the box in a group,
+                         // add the total height of the group (including box padding and title space)
+                         // to the currentYOffset for the next group, plus the group spacing.
+                         const totalGroupHeightNeeded = groupCalculatedHeight + boxPadding * 2 + groupSpacing;
+                         currentYOffset += totalGroupHeightNeeded;
 
-                         }); // End rootNodesData.forEach
+
                     }); // End groupedData.forEach
 
                     // Adjust SVG width and height based on content
-                    svg.attr("width", maxSvgWidth + margin.left + margin.right);
-                    svg.attr("height", currentYOffset + margin.bottom);
+                    svg.attr("width", maxSvgWidth); // maxSvgWidth already includes margins
+                    svg.attr("height", currentYOffset); // Use the final currentYOffset
 
 
                     // 🌟 中央に自動スクロールする処理を追加
