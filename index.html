@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 組織図風・改良版）</title>
+    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 組織図風・修正版）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -50,89 +50,56 @@
         }
 
         /* Lines connecting nodes */
-        .tree ul li::before {
-            content: '';
-            position: absolute;
-            top: 0; /* Position at the top of the li */
-            left: 50%; /* Center horizontally */
-            transform: translateX(-50%); /* Adjust for centering */
-            border-left: 2px solid #999; /* Vertical line up to parent */
-            height: 30px; /* Height of the vertical line */
-            width: 0;
-        }
 
-         .tree ul ul > li::before {
-             height: 30px; /* Consistent height for vertical line */
-         }
-
+        /* Vertical line from parent to the horizontal line above children */
         .tree ul::before {
             content: '';
             position: absolute;
-            top: 0; /* Position at the top of the ul */
-            left: 50%; /* Center horizontally */
-            transform: translateX(-50%); /* Adjust for centering */
-            border-top: 2px solid #999; /* Horizontal line connecting siblings */
-            width: calc(100% - 20px); /* Width of the horizontal line, accounting for li padding */
-            height: 0;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 2px solid #999; /* Vertical line */
+            height: 30px; /* Height to connect to the horizontal line */
+            width: 0;
         }
 
-        /* Adjust horizontal line endpoints for first and last child */
-        .tree ul > li:first-child::before {
-             /* No vertical line up from the first child directly to ul::before */
-             content: none;
-        }
-
-         .tree ul > li:last-child::before {
-             /* No vertical line up from the last child directly to ul::before */
-             content: none;
-         }
-
-         .tree ul > li:only-child::before {
-             /* No horizontal line needed for a single child */
-             content: none;
-         }
-
-         /* Vertical line from parent to single child */
-         .tree ul > li:only-child::after {
+        /* Horizontal line connecting siblings */
+        .tree ul::after {
              content: '';
              position: absolute;
-             top: 0;
-             left: 50%;
-             transform: translateX(-50%);
-             border-left: 2px solid #999;
-             height: 30px;
-             width: 0;
-         }
-
-         /* Horizontal line connecting siblings */
-         .tree ul li:not(:only-child)::after {
-             content: '';
-             position: absolute;
-             top: -1px; /* Position just above the vertical line start */
-             left: 50%;
-             transform: translateX(-50%);
-             border-top: 2px solid #999;
-             width: calc(100% - 20px); /* Full width of the li minus padding */
+             top: 30px; /* Position below the vertical line from parent */
+             left: 10px; /* Start from the left edge of the first child's padding */
+             right: 10px; /* End at the right edge of the last child's padding */
+             border-top: 2px solid #999; /* Horizontal line */
              height: 0;
-             z-index: -1; /* Ensure line is behind the node */
+             z-index: -1; /* Ensure line is behind the nodes */
+        }
+
+        /* Vertical line from the horizontal line down to each child node */
+        .tree li::before {
+            content: '';
+            position: absolute;
+            top: 30px; /* Position at the horizontal line */
+            left: 50%; /* Center horizontally above the node */
+            transform: translateX(-50%);
+            border-left: 2px solid #999; /* Vertical line down to the node */
+            height: 10px; /* Height to connect to the node */
+            width: 0;
+        }
+
+        /* Remove the horizontal line for a single child */
+        .tree ul:only-child::after {
+            content: none;
+        }
+
+         /* Adjust the vertical line for a single child */
+         .tree ul:only-child::before {
+             height: 40px; /* Extend vertical line directly to the single child */
          }
 
-         .tree ul li:first-child::after {
-             left: 50%;
-             transform: translateX(-100%); /* Start from the right edge of the node */
-             width: calc(50% + 10px); /* Extend to the center of the li */
+         .tree ul:only-child > li::before {
+             content: none; /* No vertical line from the horizontal line if there's no horizontal line */
          }
-
-         .tree ul li:last-child::after {
-             left: 50%;
-             transform: translateX(0%); /* Start from the left edge of the node */
-             width: calc(50% + 10px); /* Extend to the center of the li */
-         }
-
-          .tree ul li:first-child:last-child::after {
-              /* No horizontal line for a single child */
-              content: none;
-          }
 
 
         .tree li .node {
@@ -207,7 +174,7 @@
 
          /* Style for the ul containing children of a root node */
          .group > ul > li > ul {
-             padding-top: 30px; /* Space for the line connecting root to children */
+             padding-top: 40px; /* Space for the vertical line connecting root to children */
              margin-top: 20px; /* Space between root node and its children's ul */
              justify-content: center; /* Center the children's ul under the root */
          }
@@ -220,14 +187,14 @@
              left: 50%;
              transform: translateX(-50%);
              border-left: 2px solid #999;
-             height: 30px; /* Height of the vertical line */
+             height: 40px; /* Height of the vertical line */
              width: 0;
              border-top: none; /* No horizontal line here */
          }
 
          .group > ul > li > ul > li::before {
-             top: 0; /* Position the line correctly relative to the child node */
-             height: 30px;
+             top: 30px; /* Position the line correctly relative to the child node */
+             height: 10px;
          }
 
 
@@ -235,7 +202,7 @@
 </head>
 <body>
 
-    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・改良版）</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・修正版）</h1>
 
     <div id="treeContainer">
         <p>データを読み込んでいます...</p>
@@ -298,18 +265,6 @@
 
             content.appendChild(textDiv);
 
-            /*
-            // Add link if URL exists - Moved link wrapping outside of node content
-            if (member.url) {
-                const link = document.createElement('a');
-                link.href = member.url;
-                link.target = "_blank"; // Open link in a new tab
-                link.appendChild(content); // Append the content (image+text) to the link
-                nodeDiv.appendChild(link); // Append the link to the node div
-            } else {
-                nodeDiv.appendChild(content); // Append content directly if no link
-            }
-            */
              nodeDiv.appendChild(content); // Always append content to nodeDiv
 
 
