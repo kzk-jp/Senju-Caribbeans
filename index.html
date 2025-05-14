@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>フットサルメンバー紹介ツリー（D3.js版・重なり修正）</title>
+    <title>フットサルメンバー紹介ツリー（D3.js版・スペース調整）</title>
     <style>
         body {
             margin: 0;
@@ -115,7 +115,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版・重なり修正）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版・スペース調整）</h1>
     <div id="chart-container">
         <svg id="tree-svg"></svg>
     </div>
@@ -146,8 +146,9 @@
                     const margin = {top: 40, right: 20, bottom: 40, left: 20}; // Adjusted margins
                     const nodeWidth = 120; // Matches .node-card width
                     const nodeHeight = 80; // Approximate height of .node-card content
-                    const verticalSpacing = 50; // Space between parent and child levels
-                    const horizontalSpacing = 20; // Minimum space between sibling nodes
+                    const verticalSpacing = 60; // Increased space between parent and child levels
+                    const horizontalSpacing = 30; // Increased minimum space between sibling nodes
+                    const groupSpacing = 80; // Increased space between different groups
 
                     let currentYOffset = margin.top;
                     let maxSvgWidth = 0;
@@ -187,9 +188,15 @@
                              }
 
                              // Calculate the height of the current subtree
-                             const subtreeHeight = (root.height + 1) * (nodeHeight + verticalSpacing);
-                             if (subtreeHeight > groupMaxHeight) {
-                                 groupMaxHeight = subtreeHeight;
+                             // We need to find the maximum depth within this subtree to calculate its height
+                             let maxDepth = 0;
+                             root.each(d => {
+                                 if (d.depth > maxDepth) maxDepth = d.depth;
+                             });
+                             const subtreeCalculatedHeight = (maxDepth + 1) * (nodeHeight + verticalSpacing);
+
+                             if (subtreeCalculatedHeight > groupMaxHeight) {
+                                 groupMaxHeight = subtreeCalculatedHeight;
                              }
 
 
@@ -275,13 +282,11 @@
                                   */
                              });
 
-                             // Note: We are not incrementing currentYOffset here, but after processing all roots in the group
-
                          }); // End rootNodesData.forEach
 
                          // After processing all roots in a group, add the maximum height of the group
-                         // to the currentYOffset for the next group.
-                         currentYOffset += groupMaxHeight + margin.bottom;
+                         // to the currentYOffset for the next group, plus the group spacing.
+                         currentYOffset += groupMaxHeight + groupSpacing;
 
 
                     }); // End groupedData.forEach
