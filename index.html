@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み）</title>
+    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 縦型）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -25,66 +25,130 @@
             margin-bottom: 20px;
             color: #333;
         }
+        /* --- Vertical Tree Styles --- */
         .tree ul {
-            padding-left: 20px;
-            margin: 7px 0;
+            padding-top: 20px; /* Space for vertical line */
+            margin: 0;
             position: relative;
+            display: flex; /* Use flexbox for horizontal alignment of children */
+            flex-direction: column; /* Stack children vertically */
+            align-items: center; /* Center children horizontally */
         }
         .tree ul ul {
-            border-left: 1px solid #ccc;
+             /* No border-left needed for vertical tree */
+             padding-top: 20px; /* Space for vertical line from parent */
         }
         .tree li {
             list-style: none;
-            margin: 7px 0;
+            margin: 10px 0; /* Vertical margin between nodes */
             position: relative;
-        }
-        .tree li::before {
-            content: '';
-            position: absolute;
-            top: 15px;
-            left: -20px;
-            border-top: 1px solid #ccc;
-            width: 20px;
-            height: 0;
-        }
-        .tree li:last-child::before {
-             border-top: 1px solid #ccc;
+            text-align: center; /* Center the node content */
         }
 
-         .tree ul ul > li:first-child::before {
-             top: 15px;
+        /* Connecting lines */
+        .tree ul li::before {
+            content: '';
+            position: absolute;
+            top: -10px; /* Position above the node */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Adjust for centering */
+            border-left: 1px solid #ccc; /* Vertical line from parent */
+            height: 10px; /* Height of the vertical line */
+            width: 0;
+        }
+
+         .tree ul ul > li::before {
+             top: -20px; /* Extend line further up for nested children */
+             height: 20px;
          }
+
+        .tree ul li:first-child::before {
+            /* No top line for the first child in a list */
+             content: none;
+        }
+
+        .tree ul li:not(:first-child)::after {
+             content: '';
+             position: absolute;
+             top: -10px; /* Position above the node */
+             left: 50%; /* Center horizontally */
+             transform: translateX(-50%); /* Adjust for centering */
+             border-top: 1px solid #ccc; /* Horizontal line connecting siblings */
+             width: 20px; /* Width of the horizontal line */
+             height: 0;
+        }
+
 
         .tree li .node {
             display: flex;
-            align-items: center;
+            flex-direction: column; /* Stack image and text vertically */
+            align-items: center; /* Center content horizontally */
             background-color: #fff;
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 300px;
+            max-width: 150px; /* Adjust max-width for vertical layout */
+            text-align: center;
         }
         .tree li .node img {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-bottom: 5px; /* Space below image */
             object-fit: cover;
         }
+         .tree li .node .placeholder {
+             width: 40px;
+             height: 40px;
+             border-radius: 50%;
+             background-color: #gray-300;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             text-gray-600;
+             font-bold;
+             text-sm;
+             margin-bottom: 5px; /* Space below placeholder */
+         }
         .tree li .node .name {
             font-weight: bold;
+            word-break: break-word; /* Prevent long names from overflowing */
         }
         .tree li .node .introducer {
             font-size: 0.9em;
             color: #555;
+            word-break: break-word; /* Prevent long introducer names from overflowing */
         }
-         /* Remove default list styling from the outer ul within a group */
+        /* Remove default list styling from the outer ul within a group */
         .group > ul {
             padding-left: 0;
+            padding-top: 0; /* No top padding for the root ul in a group */
+            flex-direction: row; /* Arrange root nodes horizontally */
+            justify-content: center; /* Center root nodes */
+            align-items: flex-start; /* Align roots at the top */
         }
-         .group > ul > li::before {
-            content: none; /* Root nodes in a group have no line before */
-        }
+         .group > ul > li {
+             margin: 0 20px; /* Horizontal margin between root nodes */
+         }
+
+        .group > ul > li::before,
+        .group > ul > li::after {
+             content: none; /* Root nodes in a group have no connecting lines */
+         }
+
+         /* Style for the ul containing children of a root node */
+         .group > ul > li > ul {
+             padding-top: 20px; /* Space for the line connecting root to children */
+             border-top: 1px solid #ccc; /* Line connecting root to its children */
+             margin-top: 10px; /* Space between root node and its children's ul */
+             justify-content: center; /* Center the children's ul under the root */
+         }
+
+         .group > ul > li > ul > li::before {
+             top: -20px; /* Position the line correctly relative to the child node */
+             height: 20px;
+         }
+
     </style>
 </head>
 <body>
@@ -97,7 +161,7 @@
 
     <script>
         // ここをGitHubのRawtherapee URLに変更してください
-        const JSON_FILE_PATH = 'tree_data.json';
+        const JSON_FILE_PATH = 'tree_data.json'; // Replace with your actual GitHub Raw URL
 
         // Function to build the tree structure recursively
         function buildTree(data, parentId) {
@@ -107,6 +171,7 @@
             }
 
             const ul = document.createElement('ul');
+            ul.classList.add('tree'); // Add tree class to nested lists
             children.forEach(child => {
                 const li = document.createElement('li');
 
@@ -117,20 +182,20 @@
                     const img = document.createElement('img');
                     img.src = child.image;
                     img.alt = child.name;
-                     // Add error handling for image loading
+                    // Add error handling for image loading
                     img.onerror = function() {
                         this.style.display = 'none'; // Hide image if loading fails
                         // Optional: Replace with placeholder if image fails
                         const placeholder = document.createElement('div');
-                        placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                        placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
                         placeholder.textContent = child.name ? child.name.charAt(0) : '?';
                         this.parentNode.replaceChild(placeholder, this);
                     };
                     nodeDiv.appendChild(img);
                 } else {
-                     // Add a placeholder if no image is available
+                    // Add a placeholder if no image is available
                     const placeholder = document.createElement('div');
-                    placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                    placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
                     placeholder.textContent = child.name ? child.name.charAt(0) : '?';
                     nodeDiv.appendChild(placeholder);
                 }
@@ -186,10 +251,17 @@
                     const directChildren = jsonData.filter(item => item.introducerPageId === root.id);
                     let groupKey = root.name || 'その他'; // Default group key is root name or 'その他'
 
-                    if (directChildren.length > 0) {
-                        // Use the introduction_reason of the first direct child as the group key
-                        groupKey = directChildren[0].introduction_reason || 'その他';
-                    }
+                    if (directChildren.length > 0 && directChildren[0].introduction_reason) {
+                         // Use the introduction_reason of the first direct child as the group key if available
+                         groupKey = directChildren[0].introduction_reason;
+                     } else if (root.introduction_reason) {
+                         // If no direct children or no reason on children, use root's reason
+                         groupKey = root.introduction_reason;
+                     } else {
+                         // Fallback to root name or 'その他'
+                         groupKey = root.name || 'その他';
+                     }
+
 
                     // Build the tree structure starting from the root node
                     const rootLi = document.createElement('li');
@@ -201,20 +273,20 @@
                         const img = document.createElement('img');
                         img.src = root.image;
                         img.alt = root.name;
-                         // Add error handling for image loading
+                        // Add error handling for image loading
                         img.onerror = function() {
                             this.style.display = 'none'; // Hide image if loading fails
-                             // Optional: Replace with placeholder if image fails
+                            // Optional: Replace with placeholder if image fails
                             const placeholder = document.createElement('div');
-                            placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                            placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
                             placeholder.textContent = root.name ? root.name.charAt(0) : '?';
                             this.parentNode.replaceChild(placeholder, this);
                         };
                         nodeDiv.appendChild(img);
                     } else {
-                         // Add a placeholder if no image is available
+                        // Add a placeholder if no image is available
                         const placeholder = document.createElement('div');
-                        placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm');
+                        placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
                         placeholder.textContent = root.name ? root.name.charAt(0) : '?';
                         nodeDiv.appendChild(placeholder);
                     }
@@ -227,11 +299,12 @@
                     textDiv.appendChild(nameSpan);
 
                      if (root.introduction_reason) {
-                        const reasonDiv = document.createElement('div');
-                        reasonDiv.classList.add('introducer'); // Reusing introducer class for styling
-                        reasonDiv.textContent = `(${root.introduction_reason})`;
-                        textDiv.appendChild(reasonDiv);
-                    }
+                         const reasonDiv = document.createElement('div');
+                         reasonDiv.classList.add('introducer'); // Reusing introducer class for styling
+                         reasonDiv.textContent = `(${root.introduction_reason})`;
+                         textDiv.appendChild(reasonDiv);
+                     }
+
 
                     nodeDiv.appendChild(textDiv);
                     rootLi.appendChild(nodeDiv);
