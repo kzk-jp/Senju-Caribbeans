@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 縦型）</title>
+    <title>フットサルメンバー紹介ツリー（GitHubからJSON読み込み - 組織図風）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -11,6 +11,7 @@
             line-height: 1.6;
             padding: 20px;
             background-color: #f7f7f7;
+            overflow-x: auto; /* Allow horizontal scrolling if needed */
         }
         .group {
             margin-bottom: 40px; /* 各グループ間のスペース */
@@ -18,6 +19,7 @@
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow-x: auto; /* Allow horizontal scrolling within group if needed */
         }
         .group h2 {
             border-bottom: 2px solid #e2e2e2;
@@ -25,58 +27,94 @@
             margin-bottom: 20px;
             color: #333;
         }
-        /* --- Vertical Tree Styles --- */
+
+        /* --- Organizational Chart Styles --- */
         .tree ul {
-            padding-top: 20px; /* Space for vertical line */
-            margin: 0;
+            padding-top: 30px; /* Space for vertical line from parent */
             position: relative;
-            display: flex; /* Use flexbox for horizontal alignment of children */
-            flex-direction: column; /* Stack children vertically */
-            align-items: center; /* Center children horizontally */
-        }
-        .tree ul ul {
-             /* No border-left needed for vertical tree */
-             padding-top: 20px; /* Space for vertical line from parent */
-        }
-        .tree li {
-            list-style: none;
-            margin: 10px 0; /* Vertical margin between nodes */
-            position: relative;
-            text-align: center; /* Center the node content */
+            display: flex; /* Arrange children horizontally */
+            justify-content: center; /* Center children */
+            margin: 0; /* Remove default margin */
         }
 
-        /* Connecting lines */
+        .tree ul ul {
+             padding-top: 30px; /* Space for vertical line from parent */
+        }
+
+        .tree li {
+            list-style: none;
+            position: relative;
+            text-align: center; /* Center the node content */
+            flex-grow: 1; /* Allow list items to grow and take available space */
+            padding: 0 10px; /* Horizontal padding between nodes */
+        }
+
+        /* Lines connecting nodes */
         .tree ul li::before {
             content: '';
             position: absolute;
-            top: -10px; /* Position above the node */
+            top: 0; /* Position at the top of the li */
             left: 50%; /* Center horizontally */
             transform: translateX(-50%); /* Adjust for centering */
-            border-left: 1px solid #ccc; /* Vertical line from parent */
-            height: 10px; /* Height of the vertical line */
+            border-left: 1px solid #ccc; /* Vertical line up to parent */
+            height: 30px; /* Height of the vertical line */
             width: 0;
         }
 
          .tree ul ul > li::before {
-             top: -20px; /* Extend line further up for nested children */
-             height: 20px;
+             height: 30px; /* Consistent height for vertical line */
          }
 
-        .tree ul li:first-child::before {
-            /* No top line for the first child in a list */
-             content: none;
+        .tree ul::before {
+            content: '';
+            position: absolute;
+            top: 0; /* Position at the top of the ul */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Adjust for centering */
+            border-top: 1px solid #ccc; /* Horizontal line connecting siblings */
+            width: calc(100% - 20px); /* Width of the horizontal line, accounting for li padding */
+            height: 0;
         }
 
-        .tree ul li:not(:first-child)::after {
+        .tree ul > li:first-child::before {
+            /* Extend the horizontal line to the first child */
+             left: 50%;
+             transform: translateX(-50%);
+             width: calc(50% + 10px); /* Extend to the center of the first child */
+             border-top: 1px solid #ccc;
+             border-left: none; /* No vertical line up from the first child directly to ul::before */
+             height: 0; /* No vertical height */
+             top: 0; /* Position at the top of the ul */
+        }
+
+         .tree ul > li:last-child::before {
+             /* Extend the horizontal line to the last child */
+             left: auto;
+             right: 50%;
+             transform: translateX(50%);
+             width: calc(50% + 10px); /* Extend to the center of the last child */
+             border-top: 1px solid #ccc;
+             border-left: none; /* No vertical line up from the last child directly to ul::before */
+             height: 0; /* No vertical height */
+             top: 0; /* Position at the top of the ul */
+         }
+
+         .tree ul > li:only-child::before {
+             /* No horizontal line needed for a single child */
+             content: none;
+         }
+
+         .tree ul > li:only-child::after {
+             /* Vertical line down from parent to single child */
              content: '';
              position: absolute;
-             top: -10px; /* Position above the node */
-             left: 50%; /* Center horizontally */
-             transform: translateX(-50%); /* Adjust for centering */
-             border-top: 1px solid #ccc; /* Horizontal line connecting siblings */
-             width: 20px; /* Width of the horizontal line */
-             height: 0;
-        }
+             top: 0;
+             left: 50%;
+             transform: translateX(-50%);
+             border-left: 1px solid #ccc;
+             height: 30px;
+             width: 0;
+         }
 
 
         .tree li .node {
@@ -87,8 +125,9 @@
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 150px; /* Adjust max-width for vertical layout */
+            max-width: 150px; /* Adjust max-width for layout */
             text-align: center;
+            margin: 0 auto; /* Center the node within its li */
         }
         .tree li .node img {
             width: 40px;
@@ -105,9 +144,9 @@
              display: flex;
              align-items: center;
              justify-content: center;
-             text-gray-600;
-             font-bold;
-             text-sm;
+             color: #6b7280; /* text-gray-600 */
+             font-weight: bold; /* font-bold */
+             font-size: 0.875rem; /* text-sm */
              margin-bottom: 5px; /* Space below placeholder */
          }
         .tree li .node .name {
@@ -119,41 +158,58 @@
             color: #555;
             word-break: break-word; /* Prevent long introducer names from overflowing */
         }
-        /* Remove default list styling from the outer ul within a group */
+
+        /* Root node styling */
         .group > ul {
-            padding-left: 0;
             padding-top: 0; /* No top padding for the root ul in a group */
             flex-direction: row; /* Arrange root nodes horizontally */
             justify-content: center; /* Center root nodes */
             align-items: flex-start; /* Align roots at the top */
+            margin-bottom: 20px; /* Space below root nodes */
         }
+
          .group > ul > li {
-             margin: 0 20px; /* Horizontal margin between root nodes */
+             padding: 0 20px; /* Horizontal padding between root nodes */
+             flex-grow: 0; /* Root nodes don't need to grow */
          }
 
         .group > ul > li::before,
         .group > ul > li::after {
-             content: none; /* Root nodes in a group have no connecting lines */
+             content: none; /* Root nodes in a group have no connecting lines from above */
          }
 
          /* Style for the ul containing children of a root node */
          .group > ul > li > ul {
-             padding-top: 20px; /* Space for the line connecting root to children */
-             border-top: 1px solid #ccc; /* Line connecting root to its children */
-             margin-top: 10px; /* Space between root node and its children's ul */
+             padding-top: 30px; /* Space for the line connecting root to children */
+             /* border-top: 1px solid #ccc; /* Line connecting root to its children - handled by ul::before */
+             margin-top: 20px; /* Space between root node and its children's ul */
              justify-content: center; /* Center the children's ul under the root */
          }
 
-         .group > ul > li > ul > li::before {
-             top: -20px; /* Position the line correctly relative to the child node */
-             height: 20px;
+         .group > ul > li > ul::before {
+             /* Vertical line from root node down to the horizontal line of children */
+             content: '';
+             position: absolute;
+             top: 0;
+             left: 50%;
+             transform: translateX(-50%);
+             border-left: 1px solid #ccc;
+             height: 30px; /* Height of the vertical line */
+             width: 0;
+             border-top: none; /* No horizontal line here */
          }
+
+         .group > ul > li > ul > li::before {
+             top: 0; /* Position the line correctly relative to the child node */
+             height: 30px;
+         }
+
 
     </style>
 </head>
 <body>
 
-    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風）</h1>
 
     <div id="treeContainer">
         <p>データを読み込んでいます...</p>
