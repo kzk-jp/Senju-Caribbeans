@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（SVG線描画・線修正完了）</title>
+    <title>フットサルメンバー紹介ツリー（SVG線描画・最終修正）</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -52,7 +52,7 @@
 
         /* Adjust margin-top for nested lists to create space for lines */
         .tree ul ul {
-             margin-top: 50px; /* Increased space for vertical and horizontal lines */
+             margin-top: 60px; /* Increased space for vertical and horizontal lines */
         }
 
         .tree li {
@@ -141,7 +141,7 @@
 
          /* Style for the ul containing children of a root node */
          .group > ul > li > ul {
-             margin-top: 50px; /* Space between root node and its children's ul */
+             margin-top: 60px; /* Space between root node and its children's ul */
              justify-content: center; /* Center the children's ul under the root */
          }
 
@@ -161,7 +161,7 @@
 </head>
 <body>
 
-    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・線修正完了）</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・最終修正）</h1>
 
     <div id="treeContainer">
         <p>データを読み込んでいます...</p>
@@ -303,7 +303,7 @@
                 const parentY = parentRect.bottom - treeContainerRect.top;
 
                 // Calculate the Y coordinate for the horizontal line
-                const horizontalLineY = parentY + 25; // Vertical distance from parent to horizontal line
+                const horizontalLineY = parentY + 30; // Vertical distance from parent to horizontal line
 
                 // Draw vertical line from parent to the horizontal line
                 const parentToHorizontalPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -332,16 +332,10 @@
 
                 // Draw the horizontal line connecting the vertical lines from children
                 const horizontalPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                // The horizontal line should span from the leftmost child's X to the rightmost child's X
-                // and also connect to the vertical line from the parent.
-                // Draw from the parentX on the horizontal line to the min/max child X range.
-                 let horizontalPathData = `M ${parentX} ${horizontalLineY}`;
-                 if (childPositions.length > 0) {
-                     const minX = Math.min(parentX, ...childPositions.map(pos => pos.x));
-                     const maxX = Math.max(parentX, ...childPositions.map(pos => pos.x));
-                     horizontalPathData = `M ${minX} ${horizontalLineY} H ${maxX}`;
-                 }
 
+                // Draw from the leftmost child's X to the rightmost child's X at the horizontal line Y
+                // This ensures the horizontal line covers the spread of children.
+                const horizontalPathData = `M ${minChildX} ${horizontalLineY} H ${maxChildX}`;
 
                 horizontalPath.setAttribute('d', horizontalPathData);
                 horizontalPath.setAttribute('stroke', '#999');
