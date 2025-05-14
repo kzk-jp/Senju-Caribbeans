@@ -1,106 +1,77 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フットサルメンバー紹介ツリー（SVG線描画・最終修正）</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>フットサルメンバー紹介ツリー（D3.js版）</title>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            padding: 20px;
-            background-color: #f7f7f7;
-            overflow-x: auto; /* Allow horizontal scrolling if needed */
-        }
-
-        .group {
-            margin-bottom: 40px; /* 各グループ間のスペース */
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            overflow-x: auto; /* Allow horizontal scrolling within group if needed */
-            position: relative; /* Needed for positioning SVG correctly */
-        }
-        .group h2 {
-            border-bottom: 2px solid #e2e2e2;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            margin: 0;
+            font-family: "Helvetica Neue", sans-serif;
+            background-color: #f3f4f6;
             color: #333;
         }
 
-        /* --- SVG Container --- */
-        .tree-svg-container {
-            position: absolute; /* Position SVG relative to its parent (.group) */
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* Allow clicks to pass through the SVG */
-            z-index: 0; /* Ensure SVG is behind the nodes */
-        }
-
-        /* --- Node Styles --- */
-        .tree ul {
-            position: relative;
-            display: flex; /* Arrange children horizontally */
-            justify-content: center; /* Center children */
-            margin: 0; /* Remove default margin */
-            padding: 0; /* Remove default padding */
-        }
-
-        /* Adjust margin-top for nested lists to create space for lines */
-        .tree ul ul {
-             margin-top: 60px; /* Increased space for vertical and horizontal lines */
-        }
-
-        .tree li {
-            list-style: none;
-            position: relative; /* Position relative for positioning nodes */
-            text-align: center; /* Center the node content */
-            flex-grow: 1; /* Allow list items to grow and take available space */
-            padding: 0 10px; /* Horizontal padding between nodes */
-            display: flex; /* Use flexbox to center the node div */
-            justify-content: center;
-            align-items: flex-start; /* Align items to the top */
-        }
-
-        .tree li .node {
-            display: flex;
-            flex-direction: column; /* Stack image and text vertically */
-            align-items: center; /* Center content horizontally */
-            background-color: #fff;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 150px; /* Adjust max-width for layout */
+        h1 {
             text-align: center;
-            /* margin: 0 auto; /* Center the node within its li - handled by flexbox on li */
+            padding: 1rem;
+            margin: 0;
+            font-size: 1.4rem;
+            background: #2563eb; /* blue-700 */
+            color: white;
         }
 
-        .tree li .node a {
-            text-decoration: none; /* Remove underline from links */
-            color: inherit; /* Inherit text color */
-            display: flex; /* Use flexbox for link content */
-            flex-direction: column; /* Stack content vertically within link */
-            align-items: center; /* Center content horizontally within link */
+        #chart-container {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 1rem 0.5rem;
+            box-sizing: border-box; /* Include padding in width */
         }
 
-        .tree li .node img {
-            width: 40px;
-            height: 40px;
+        svg {
+            display: block; /* Remove extra space below svg */
+            margin: 0 auto; /* Center SVG if wider than container */
+        }
+
+        .node-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 12px; /* rounded-xl */
+            padding: 8px; /* Increased padding slightly */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            width: 120px; /* Increased width slightly */
+            box-sizing: border-box; /* Include padding and border in width */
+            text-align: center;
+        }
+
+        .node-card a {
+             text-decoration: none; /* Remove underline from links */
+             color: inherit; /* Inherit text color */
+             display: flex; /* Use flexbox for link content */
+             flex-direction: column; /* Stack content vertically within link */
+             align-items: center; /* Center content horizontally within link */
+             width: 100%; /* Make link fill the card width */
+        }
+
+
+        .node-image {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            margin-bottom: 5px; /* Space below image */
             object-fit: cover;
-            /* Center image within its container */
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
+            margin-bottom: 6px; /* Increased space below image */
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
         }
-         .tree li .node .placeholder {
-             width: 40px;
-             height: 40px;
+
+         .node-placeholder {
+             width: 50px;
+             height: 50px;
              border-radius: 50%;
              background-color: #d1d5db; /* bg-gray-300 */
              display: flex;
@@ -108,350 +79,228 @@
              justify-content: center;
              color: #4b5563; /* text-gray-600 */
              font-weight: bold; /* font-bold */
-             font-size: 0.875rem; /* text-sm */
-             margin-bottom: 5px; /* Space below placeholder */
-             /* Center placeholder within its container */
-             margin-left: auto;
-             margin-right: auto;
+             font-size: 1rem; /* Increased font size */
+             margin-bottom: 6px; /* Increased space below placeholder */
          }
-        .tree li .node .name {
-            font-weight: bold;
-            word-break: break-word; /* Prevent long names from overflowing */
-        }
-        .tree li .node .introducer {
-            font-size: 0.9em;
-            color: #555;
-            word-break: break-word; /* Prevent long introducer names from overflowing */
-        }
 
-        /* Root node styling */
-        .group > ul {
-            padding-top: 0; /* No top padding for the root ul in a group */
-            flex-direction: row; /* Arrange root nodes horizontally */
-            justify-content: center; /* Center root nodes */
-            align-items: flex-start; /* Align roots at the top */
-            margin-bottom: 20px; /* Space below root nodes */
+
+        .node-name {
+            font-size: 11px; /* Increased font size slightly */
+            text-align: center;
+            font-weight: 600; /* Increased font weight */
+            line-height: 1.3; /* Adjusted line height */
+            white-space: normal; /* Allow text to wrap */
+            word-break: break-word; /* Break long words */
+            max-width: 100%; /* Ensure name fits within card */
         }
 
-         .group > ul > li {
-             padding: 0 20px; /* Horizontal padding between root nodes */
-             flex-grow: 0; /* Root nodes don't need to grow */
-             position: relative; /* Position list items relative for node absolute positioning */
-         }
-
-         /* Style for the ul containing children of a root node */
-         .group > ul > li > ul {
-             margin-top: 60px; /* Space between root node and its children's ul */
-             justify-content: center; /* Center the children's ul under the root */
-         }
-
-         /* Hide CSS pseudo-element lines when using SVG */
-         .tree ul::before,
-         .tree ul::after,
-         .tree li::before,
-         .tree li::after,
-         .group > ul > li::before,
-         .group > ul > li::after,
-         .group > ul > li > ul::before {
-             content: none;
+         .node-introducer, .node-reason {
+             font-size: 9px; /* Smaller font for details */
+             color: #555;
+             text-align: center;
+             line-height: 1.2;
+             white-space: normal;
+             word-break: break-word;
+             max-width: 100%;
+             margin-top: 2px; /* Space above introducer/reason */
          }
 
 
+        .link {
+            fill: none;
+            stroke: #94a3b8; /* slate-400 */
+            stroke-width: 1.5px; /* Increased line thickness */
+        }
     </style>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-
-    <h1 class="text-2xl font-bold mb-6 text-center">フットサルメンバー紹介ツリー（組織図風・最終修正）</h1>
-
-    <div id="treeContainer">
-        <p>データを読み込んでいます...</p>
+    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
+    <div id="chart-container">
+        <svg id="tree-svg"></svg>
     </div>
 
     <script>
         // ここをGitHubのRawtherapee URLに変更してください
         const JSON_FILE_PATH = 'tree_data.json'; // Replace with your actual GitHub Raw URL
 
-        // Function to create a node element (image/placeholder + text)
-        function createNodeElement(member) {
-            const nodeDiv = document.createElement('div');
-            nodeDiv.classList.add('node');
-            nodeDiv.dataset.id = member.id; // Add data-id for easier identification
-
-            const content = document.createElement('div'); // Container for image/placeholder and text
-            content.classList.add('node-content');
-
-            if (member.image) {
-                const img = document.createElement('img');
-                img.src = member.image;
-                img.alt = member.name;
-                img.onerror = function() {
-                    this.style.display = 'none';
-                    const placeholder = document.createElement('div');
-                    placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-center', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
-                    placeholder.textContent = member.name ? member.name.charAt(0) : '?';
-                    this.parentNode.replaceChild(placeholder, this);
-                };
-                content.appendChild(img);
-            } else {
-                const placeholder = document.createElement('div');
-                placeholder.classList.add('w-10', 'h-10', 'rounded-full', 'bg-gray-300', 'flex', 'items-center', 'justify-content', 'text-gray-600', 'font-bold', 'text-sm', 'placeholder');
-                placeholder.textContent = member.name ? member.name.charAt(0) : '?';
-                content.appendChild(placeholder);
-            }
-
-            const textDiv = document.createElement('div');
-            const nameSpan = document.createElement('span');
-            nameSpan.classList.add('name');
-            nameSpan.textContent = member.name;
-            textDiv.appendChild(nameSpan);
-
-            if (member.introducer_name) {
-                const introducerDiv = document.createElement('div');
-                introducerDiv.classList.add('introducer');
-                introducerDiv.textContent = `紹介者: ${member.introducer_name}`;
-                textDiv.appendChild(introducerDiv);
-            }
-
-             if (member.introduction_reason) {
-                 const reasonDiv = document.createElement('div');
-                 reasonDiv.classList.add('introducer');
-                 reasonDiv.textContent = `(${member.introduction_reason})`;
-                 textDiv.appendChild(reasonDiv);
-             }
-
-            content.appendChild(textDiv);
-
-             // Wrap nodeElement in a link if URL exists
-             if (member.url) {
-                 const link = document.createElement('a');
-                 link.href = member.url;
-                 link.target = "_blank"; // Open link in a new tab
-                 link.appendChild(content); // Append the content (image+text) to the link
-                 nodeDiv.appendChild(link); // Append the link to the node div
-             } else {
-                 nodeDiv.appendChild(content); // Append content directly if no link
-             }
-
-
-            return nodeDiv;
-        }
-
-
-        // Function to build the tree structure recursively
-        function buildTree(data, parentId) {
-            const children = data.filter(item => item.introducerPageId === parentId);
-            if (children.length === 0) {
-                return null;
-            }
-
-            const ul = document.createElement('ul');
-            ul.classList.add('tree'); // Add tree class to nested lists
-            children.forEach(child => {
-                const li = document.createElement('li');
-                li.dataset.id = child.id; // Add data-id to list item
-
-                const nodeElement = createNodeElement(child); // Create node using the new function
-                li.appendChild(nodeElement);
-
-                const nestedUl = buildTree(data, child.id); // Pass data to recursive call
-                if (nestedUl) {
-                    li.appendChild(nestedUl);
-                }
-
-                ul.appendChild(li);
-            });
-            return ul;
-        }
-
-        // Function to draw SVG lines
-        function drawSVGLines(data) {
-            // Clear previous SVG
-            const existingSvg = document.querySelector('.tree-svg-container');
-            if (existingSvg) {
-                existingSvg.remove();
-            }
-
-            const treeContainer = document.getElementById('treeContainer');
-            const svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svgContainer.classList.add('tree-svg-container');
-
-            // Set SVG dimensions to cover the entire tree container's scrollable area
-            svgContainer.setAttribute('width', treeContainer.scrollWidth);
-            svgContainer.setAttribute('height', treeContainer.scrollHeight);
-
-            // Append SVG to the main container
-            treeContainer.appendChild(svgContainer);
-
-            // Get the offset of the tree container relative to the viewport
-            const treeContainerRect = treeContainer.getBoundingClientRect();
-
-
-            // Find all nodes that have children (potential parents)
-            const parents = data.filter(item => data.some(child => child.introducerPageId === item.id));
-
-            parents.forEach(parent => {
-                const parentNodeElement = document.querySelector(`[data-id="${parent.id}"] .node`);
-                if (!parentNodeElement) return; // Skip if parent node not found
-
-                const children = data.filter(child => child.introducerPageId === parent.id);
-                if (children.length === 0) return; // Skip if parent has no children
-
-                const parentRect = parentNodeElement.getBoundingClientRect();
-
-                // Calculate parent connection point (bottom center) relative to treeContainer
-                const parentX = parentRect.left + parentRect.width / 2 - treeContainerRect.left;
-                const parentY = parentRect.bottom - treeContainerRect.top;
-
-                // Calculate the Y coordinate for the horizontal line
-                const horizontalLineY = parentY + 30; // Vertical distance from parent to horizontal line
-
-                // Draw vertical line from parent to the horizontal line
-                const parentToHorizontalPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                parentToHorizontalPath.setAttribute('d', `M ${parentX} ${parentY} V ${horizontalLineY}`);
-                parentToHorizontalPath.setAttribute('stroke', '#999');
-                parentToHorizontalPath.setAttribute('stroke-width', '2');
-                parentToHorizontalPath.setAttribute('fill', 'none');
-                svgContainer.appendChild(parentToHorizontalPath);
-
-                // Collect child node positions
-                const childPositions = children.map(child => {
-                    const childNodeElement = document.querySelector(`[data-id="${child.id}"] .node`);
-                    if (!childNodeElement) return null;
-                    const childRect = childNodeElement.getBoundingClientRect();
-                    return {
-                        x: childRect.left + childRect.width / 2 - treeContainerRect.left, // Child center X
-                        y: childRect.top - treeContainerRect.top // Child top Y
-                    };
-                }).filter(pos => pos !== null); // Filter out any null positions
-
-                if (childPositions.length === 0) return; // Skip if no child nodes found
-
-                // Find the min and max X coordinates among children for the horizontal line
-                const minChildX = Math.min(...childPositions.map(pos => pos.x));
-                const maxChildX = Math.max(...childPositions.map(pos => pos.x));
-
-                // Draw the horizontal line connecting the vertical lines from children
-                const horizontalPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-
-                // Draw from the leftmost child's X to the rightmost child's X at the horizontal line Y
-                // This ensures the horizontal line covers the spread of children.
-                const horizontalPathData = `M ${minChildX} ${horizontalLineY} H ${maxChildX}`;
-
-                horizontalPath.setAttribute('d', horizontalPathData);
-                horizontalPath.setAttribute('stroke', '#999');
-                horizontalPath.setAttribute('stroke-width', '2');
-                horizontalPath.setAttribute('fill', 'none');
-                svgContainer.appendChild(horizontalPath);
-
-
-                 // Draw vertical lines from the horizontal line to each child
-                 childPositions.forEach(childPos => {
-                     const horizontalToChildPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                     horizontalToChildPath.setAttribute('d', `M ${childPos.x} ${horizontalLineY} V ${childPos.y}`);
-                     horizontalToChildPath.setAttribute('stroke', '#999');
-                     horizontalToChildPath.setAttribute('stroke-width', '2');
-                     horizontalToChildPath.setAttribute('fill', 'none');
-                     svgContainer.appendChild(horizontalToChildPath);
-                 });
-
-            });
-        }
-
-
-        // Fetch JSON data from GitHub
-        let treeData = []; // Store fetched data globally for redrawing
-        fetch(JSON_FILE_PATH)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(jsonData => {
-                treeData = jsonData; // Store data
-                const rootNodes = treeData.filter(item => item.introducerPageId === null);
-                const treeContainer = document.getElementById('treeContainer');
-                treeContainer.innerHTML = ''; // Remove loading message
-
-                const groupedTrees = {};
-
-                rootNodes.forEach(root => {
-                    const directChildren = treeData.filter(item => item.introducerPageId === root.id);
-                    let groupKey = root.name || 'その他';
-
-                    if (directChildren.length > 0 && directChildren[0].introduction_reason) {
-                         groupKey = directChildren[0].introduction_reason;
-                     } else if (root.introduction_reason) {
-                         groupKey = root.introduction_reason;
-                     } else {
-                         groupKey = root.name || 'その他';
-                     }
-
-                    const rootLi = document.createElement('li');
-                    rootLi.dataset.id = root.id; // Add data-id to root list item
-
-                    const rootNodeElement = createNodeElement(root);
-                    rootLi.appendChild(rootNodeElement);
-
-                    const nestedUl = buildTree(treeData, root.id);
-                    if (nestedUl) {
-                        rootLi.appendChild(nestedUl);
+        window.addEventListener("DOMContentLoaded", () => {
+            fetch(JSON_FILE_PATH)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(jsonData => {
+                    if (!Array.isArray(jsonData)) {
+                        document.getElementById("chart-container").innerHTML = "<p>データの形式が正しくありません。</p>";
+                        return;
                     }
 
-                    if (!groupedTrees[groupKey]) {
-                        groupedTrees[groupKey] = [];
-                    }
-                    groupedTrees[groupKey].push(rootLi);
+                    // Group data by introduction_reason for separate trees
+                    const groupedData = d3.group(jsonData, d => d.introduction_reason || "その他");
+
+                    const svg = d3.select("#tree-svg");
+                    const chartContainer = d3.select("#chart-container");
+                    const margin = {top: 40, right: 20, bottom: 40, left: 20}; // Adjusted margins
+                    const nodeWidth = 120; // Matches .node-card width
+                    const nodeHeight = 80; // Approximate height of .node-card content
+                    const verticalSpacing = 50; // Space between parent and child levels
+                    const horizontalSpacing = 20; // Minimum space between sibling nodes
+
+                    let currentYOffset = margin.top;
+                    let maxSvgWidth = 0;
+
+                    // Create a main group to hold all group subtrees
+                    const mainG = svg.append("g");
+
+                    groupedData.forEach((groupData, reason) => {
+                        // Find the root node(s) for this group (introducerPageId is null within this group's data)
+                        // Note: D3 hierarchy typically expects a single root. If a group has multiple
+                        // members with introducerPageId === null, they will be treated as separate roots
+                        // within this group's processing, but we'll append them sequentially.
+                         const rootNodesData = groupData.filter(d => d.introducerPageId === null);
+
+                         rootNodesData.forEach(rootData => {
+                             // Build the hierarchy for this root and its descendants
+                             const root = d3.hierarchy(rootData, d => jsonData.filter(item => item.introducerPageId === d.id));
+
+                             // Define the tree layout
+                             const treeLayout = d3.tree()
+                                 .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]); // [vertical, horizontal] spacing
+
+                             // Compute the layout
+                             treeLayout(root);
+
+                             // Calculate the extent of the subtree for positioning
+                             let x0 = Infinity, x1 = -Infinity;
+                             root.each(d => {
+                                 if (d.x < x0) x0 = d.x;
+                                 if (d.x > x1) x1 = d.x;
+                             });
+
+                             // Calculate the width of the subtree
+                             const subtreeWidth = x1 - x0 + nodeWidth + horizontalSpacing;
+                             if (subtreeWidth > maxSvgWidth) {
+                                 maxSvgWidth = subtreeWidth;
+                             }
+
+                             // Calculate the horizontal offset to center the subtree (initially)
+                             // This centering might be relative to the maxSvgWidth or the container width
+                             // Let's center relative to the potential max width for consistent horizontal alignment
+                             const offsetX = (maxSvgWidth / 2) - ((x1 + x0) / 2);
+
+
+                             // Create a group for the current subtree
+                             const subtreeG = mainG.append("g")
+                                 .attr("transform", `translate(${margin.left + offsetX}, ${currentYOffset})`); // Apply margin and calculated offset
+
+                             // Draw links
+                             subtreeG.append("g")
+                                 .attr("fill", "none")
+                                 .attr("stroke-linejoin", "round")
+                                 .attr("stroke-width", 1.5) /* Increased line thickness */
+                                 .selectAll("path")
+                                 .data(root.links())
+                                 .join("path")
+                                 .attr("class", "link")
+                                 .attr("d", d3.linkVertical()
+                                     .x(d => d.x)
+                                     .y(d => d.y)
+                                 );
+
+                             // Draw nodes
+                             const node = subtreeG.append("g")
+                                 .selectAll("g")
+                                 .data(root.descendants())
+                                 .join("g")
+                                 .attr("transform", d => `translate(${d.x},${d.y})`);
+
+                             // Append foreignObject for HTML content
+                             const nodeCard = node.append("foreignObject")
+                                 .attr("x", -(nodeWidth / 2)) // Center the foreignObject horizontally
+                                 .attr("y", -(nodeHeight / 2)) // Center the foreignObject vertically (approx)
+                                 .attr("width", nodeWidth)
+                                 .attr("height", nodeHeight)
+                                 .append("xhtml:div")
+                                 .attr("class", "node-card");
+
+                             // Add link wrapper if URL exists
+                             const linkWrapper = nodeCard.append("a")
+                                 .attr("href", d => d.data.url || "#") // Use 'url' field for link
+                                 .attr("target", "_blank"); // Open in new tab
+
+                             // Add image or placeholder
+                             linkWrapper.each(function(d) {
+                                 const container = d3.select(this);
+                                 if (d.data.image) {
+                                     container.append("img")
+                                         .attr("class", "node-image")
+                                         .attr("src", d.data.image)
+                                         .attr("alt", "photo");
+                                 } else {
+                                     container.append("div")
+                                         .attr("class", "node-placeholder")
+                                         .text(d.data.name ? d.data.name.charAt(0) : '?');
+                                 }
+                             });
+
+
+                             // Add text content (name, introducer, reason)
+                             const textContent = linkWrapper.append("div"); // Put text inside the link
+                             textContent.append("div")
+                                 .attr("class", "node-name")
+                                 .text(d => d.data.name);
+
+                             textContent.each(function(d) {
+                                 const container = d3.select(this);
+                                 if (d.data.introducer_name) {
+                                     container.append("div")
+                                         .attr("class", "node-introducer")
+                                         .text(`紹介者: ${d.data.introducer_name}`);
+                                 }
+                                 // Reason is used for grouping title, might not be needed on every card
+                                 /*
+                                 if (d.data.introduction_reason) {
+                                      container.append("div")
+                                          .attr("class", "node-reason")
+                                          .text(`(${d.data.introduction_reason})`);
+                                  }
+                                  */
+                             });
+
+
+                             // Add space for the next subtree
+                             currentYOffset += root.height * (nodeHeight + verticalSpacing) + margin.bottom + verticalSpacing; // Calculate height based on subtree depth
+
+                         }); // End rootNodesData.forEach
+                    }); // End groupedData.forEach
+
+                    // Adjust SVG width and height based on content
+                    svg.attr("width", maxSvgWidth + margin.left + margin.right);
+                    svg.attr("height", currentYOffset + margin.bottom);
+
+
+                    // 🌟 中央に自動スクロールする処理を追加
+                    const containerElement = document.getElementById("chart-container");
+                    // Use a slight delay to ensure rendering is complete before scrolling
+                     setTimeout(() => {
+                         containerElement.scrollLeft = (svg.attr("width") - containerElement.clientWidth) / 2;
+                     }, 100);
+
+
+                })
+                .catch(error => {
+                    console.error('Error fetching JSON data:', error);
+                    document.getElementById("chart-container").innerHTML = "<p>データの読み込みに失敗しました。GitHubのRawtherapee URLが正しいか、またはCORSの問題がないか確認してください。</p>";
                 });
+        });
 
-                for (const groupKey in groupedTrees) {
-                    if (groupedTrees.hasOwnProperty(groupKey)) {
-                        const groupDiv = document.createElement('div');
-                        groupDiv.classList.add('group');
-
-                        const groupTitle = document.createElement('h2');
-                        groupTitle.classList.add('text-xl', 'font-semibold', 'mb-4');
-                        groupTitle.textContent = groupKey || 'その他';
-
-                        groupDiv.appendChild(groupTitle);
-
-                        const groupUl = document.createElement('ul');
-                         groupUl.classList.add('tree');
-
-                        groupedTrees[groupKey].forEach(rootLi => {
-                            groupUl.appendChild(rootLi);
-                        });
-
-                        groupDiv.appendChild(groupUl);
-                        treeContainer.appendChild(groupDiv);
-                    }
-                }
-
-                // After the HTML nodes are rendered, draw the SVG lines
-                // Use a slight delay to ensure layout is complete
-                 setTimeout(() => {
-                     drawSVGLines(treeData);
-                 }, 100);
-
-
-            })
-            .catch(error => {
-                console.error('Error fetching JSON data:', error);
-                document.getElementById('treeContainer').innerHTML = '<p>データの読み込みに失敗しました。GitHubのRawtherapee URLが正しいか、またはCORSの問題がないか確認してください。</p>';
-            });
-
-            // Redraw SVG lines on window resize
-            window.addEventListener('resize', () => {
-                if (treeData.length > 0) {
-                    // Use a slight delay for resize as well
-                    setTimeout(() => {
-                        drawSVGLines(treeData);
-                    }, 100);
-                }
-            });
-
+         // Optional: Redraw on window resize (more complex with D3 layout)
+         // For simplicity, we'll skip full redraw on resize for this example.
+         // A robust solution would recalculate layout and redraw SVG on resize.
 
     </script>
-
 </body>
 </html>
