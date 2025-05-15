@@ -29,7 +29,7 @@
             -webkit-overflow-scrolling: touch;
             padding: 1rem 0.5rem;
             box-sizing: border-box; /* Include padding in width */
-            touch-action: pan-x pan-y; /* Enable panning, disable default pinch-zoom */
+            /* touch-action: pan-x pan-y; /* Removed to allow default click behavior */
         }
 
         svg {
@@ -61,6 +61,8 @@
             flex-direction: column; /* Stack content vertically within link */
             align-items: center; /* Center content horizontally within link */
             width: 100%; /* Make link fill the card width */
+            /* Prevent touch actions on links specifically if needed, but general SVG handling is better */
+            /* touch-action: manipulation; */
         }
 
 
@@ -297,29 +299,32 @@
                     // --- Pinch-to-Zoom and Pan Functionality ---
                     let initialPinchDistance = 0;
                     let currentScale = 1;
-                    let initialTranslateX = 0;
-                    let initialTranslateY = 0;
                     let lastTranslateX = 0;
                     let lastTranslateY = 0;
                     let isPanning = false;
                     let lastTouchX = 0;
                     let lastTouchY = 0;
+                    let initialTouchX = 0; // Added to track initial touch position
+                    let initialTouchY = 0; // Added to track initial touch position
+                    const tapThreshold = 5; // Pixels: how far a touch can move and still be considered a tap
 
                     // Get the bounding box of the SVG for coordinate calculations
                     const svgRect = svg.node().getBoundingClientRect();
 
                     svg.on("touchstart", (event) => {
-                        event.preventDefault(); // Prevent default touch behavior like scrolling
-
                         if (event.touches.length === 2) {
                             // Pinch start
                             initialPinchDistance = getPinchDistance(event.touches);
                             isPanning = false; // Not panning when pinching
+                            // Prevent default only for pinch start to avoid scrolling interference
+                            event.preventDefault();
                         } else if (event.touches.length === 1) {
-                            // Pan start
-                            isPanning = true;
+                            // Pan or Tap start
+                            isPanning = false; // Assume not panning initially
                             lastTouchX = event.touches[0].clientX;
                             lastTouchY = event.touches[0].clientY;
+                            initialTouchX = lastTouchX; // Record initial position
+                            initialTouchY = lastTouchY; // Record initial position
 
                             // Get current transform for smooth panning start
                             const transform = mainG.attr("transform");
@@ -336,14 +341,15 @@
                                 lastTranslateX = 0;
                                 lastTranslateY = 0;
                             }
+                            // Do NOT preventDefault here to allow potential link clicks
                         }
                     });
 
                     svg.on("touchmove", (event) => {
-                        event.preventDefault(); // Prevent default touch behavior
-
                         if (event.touches.length === 2) {
                             // Pinch move
+                            event.preventDefault(); // Prevent default touch behavior like scrolling/zooming
+
                             const currentPinchDistance = getPinchDistance(event.touches);
                             if (initialPinchDistance === 0) {
                                 initialPinchDistance = currentPinchDistance; // Handle case where touchstart missed
@@ -363,29 +369,61 @@
 
                             initialPinchDistance = currentPinchDistance; // Update initial distance for next move event
 
-                        } else if (event.touches.length === 1 && isPanning) {
+                        } else if (event.touches.length === 1) {
                             // Pan move
                             const touch = event.touches[0];
                             const deltaX = touch.clientX - lastTouchX;
                             const deltaY = touch.clientY - lastTouchY;
 
-                            lastTranslateX += deltaX;
-                            lastTranslateY += deltaY;
+                            // Check if touch has moved beyond tap threshold
+                            const moveDistance = Math.sqrt(
+                                Math.pow(touch.clientX - initialTouchX, 2) +
+                                Math.pow(touch.clientY - initialTouchY, 2)
+                            );
 
-                            // Apply pan transformation to the main group, maintaining current scale
-                            mainG.attr("transform", `translate(${lastTranslateX}, ${lastTranslateY}) scale(${currentScale})`);
+                            if (moveDistance > tapThreshold) {
+                                isPanning = true; // It's a pan, not a tap
+                                event.preventDefault(); // Prevent default behavior (like scrolling)
+                            }
 
-                            lastTouchX = touch.clientX;
-                            lastTouchY = touch.clientY;
+                            if (isPanning) {
+                                lastTranslateX += deltaX;
+                                lastTranslateY += deltaY;
+
+                                // Apply pan transformation to the main group, maintaining current scale
+                                mainG.attr("transform", `translate(${lastTranslateX}, ${lastTranslateY}) scale(${currentScale})`);
+
+                                lastTouchX = touch.clientX;
+                                lastTouchY = touch.clientY;
+                            }
                         }
                     });
 
                     svg.on("touchend", (event) => {
                         // Reset state when touches end
                         initialPinchDistance = 0;
-                        isPanning = false;
-                        // The lastTranslateX/Y and currentScale are maintained for the next interaction
+                        // isPanning state is used in touchmove to decide preventDefault
+
+                        // If it was a pan, prevent default to stop potential click after drag
+                        if (isPanning) {
+                             // Check if there are still touches left from other fingers (for multi-touch)
+                             if (event.touches.length === 0) {
+                                // Only prevent default if all touches have ended and it was a pan
+                                // This is tricky, as preventDefault in touchend can prevent clicks.
+                                // A better approach is to preventDefault only in touchmove if it's a drag.
+                                // Let's rely on the touchmove logic to set isPanning and preventDefault there.
+                             }
+                        }
+                         isPanning = false; // Reset for the next interaction
+                         // Do NOT preventDefault here unconditionally, let default click happen if it was a tap
                     });
+
+                     svg.on("touchcancel", (event) => {
+                        // Handle cases where touch is interrupted (e.g., call incoming)
+                        initialPinchDistance = 0;
+                        isPanning = false;
+                     });
+
 
                     // Helper function to calculate distance between two touch points
                     function getPinchDistance(touches) {
