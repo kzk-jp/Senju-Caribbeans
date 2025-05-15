@@ -50,13 +50,14 @@
             text-align: center;
         }
 
+        /* Add styles for the link wrapper inside the node card */
         .node-card a {
-             text-decoration: none; /* Remove underline from links */
-             color: inherit; /* Inherit text color */
-             display: flex; /* Use flexbox for link content */
-             flex-direction: column; /* Stack content vertically within link */
-             align-items: center; /* Center content horizontally within link */
-             width: 100%; /* Make link fill the card width */
+            text-decoration: none; /* Remove underline from links */
+            color: inherit; /* Inherit text color */
+            display: flex; /* Use flexbox for link content */
+            flex-direction: column; /* Stack content vertically within link */
+            align-items: center; /* Center content horizontally within link */
+            width: 100%; /* Make link fill the card width */
         }
 
 
@@ -70,17 +71,17 @@
         }
 
          .node-placeholder {
-             width: 50px;
-             height: 50px;
-             border-radius: 50%;
-             background-color: #d1d5db; /* bg-gray-300 */
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             color: #4b5563; /* text-gray-600 */
-             font-weight: bold; /* font-bold */
-             font-size: 1rem; /* Increased font size */
-             margin-bottom: 6px; /* Increased space below placeholder */
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #d1d5db; /* bg-gray-300 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4b5563; /* text-gray-600 */
+            font-weight: bold; /* font-bold */
+            font-size: 1rem; /* Increased font size */
+            margin-bottom: 6px; /* Increased space below placeholder */
          }
 
 
@@ -95,14 +96,14 @@
         }
 
          .node-introducer, .node-reason {
-             font-size: 9px; /* Smaller font for details */
-             color: #555;
-             text-align: center;
-             line-height: 1.2;
-             white-space: normal;
-             word-break: break-word;
-             max-width: 100%;
-             margin-top: 2px; /* Space above introducer/reason */
+            font-size: 9px; /* Smaller font for details */
+            color: #555;
+            text-align: center;
+            line-height: 1.2;
+            white-space: normal;
+            word-break: break-word;
+            max-width: 100%;
+            margin-top: 2px; /* Space above introducer/reason */
          }
 
 
@@ -115,7 +116,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版 リンク修正）</h1>
     <div id="chart-container">
         <svg id="tree-svg"></svg>
     </div>
@@ -160,121 +161,130 @@
                         // Note: D3 hierarchy typically expects a single root. If a group has multiple
                         // members with introducerPageId === null, they will be treated as separate roots
                         // within this group's processing, but we'll append them sequentially.
-                         const rootNodesData = groupData.filter(d => d.introducerPageId === null);
+                        const rootNodesData = groupData.filter(d => d.introducerPageId === null);
 
-                         rootNodesData.forEach(rootData => {
-                             // Build the hierarchy for this root and its descendants
-                             const root = d3.hierarchy(rootData, d => jsonData.filter(item => item.introducerPageId === d.id));
+                        rootNodesData.forEach(rootData => {
+                            // Build the hierarchy for this root and its descendants
+                            const root = d3.hierarchy(rootData, d => jsonData.filter(item => item.introducerPageId === d.id));
 
-                             // Define the tree layout
-                             const treeLayout = d3.tree()
-                                 .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]); // [vertical, horizontal] spacing
+                            // Define the tree layout
+                            const treeLayout = d3.tree()
+                                .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]); // [vertical, horizontal] spacing
 
-                             // Compute the layout
-                             treeLayout(root);
+                            // Compute the layout
+                            treeLayout(root);
 
-                             // Calculate the extent of the subtree for positioning
-                             let x0 = Infinity, x1 = -Infinity;
-                             root.each(d => {
-                                 if (d.x < x0) x0 = d.x;
-                                 if (d.x > x1) x1 = d.x;
-                             });
+                            // Calculate the extent of the subtree for positioning
+                            let x0 = Infinity, x1 = -Infinity;
+                            root.each(d => {
+                                if (d.x < x0) x0 = d.x;
+                                if (d.x > x1) x1 = d.x;
+                            });
 
-                             // Calculate the width of the subtree
-                             const subtreeWidth = x1 - x0 + nodeWidth + horizontalSpacing;
-                             if (subtreeWidth > maxSvgWidth) {
-                                 maxSvgWidth = subtreeWidth;
-                             }
+                            // Calculate the width of the subtree
+                            const subtreeWidth = x1 - x0 + nodeWidth + horizontalSpacing;
+                            if (subtreeWidth > maxSvgWidth) {
+                                maxSvgWidth = subtreeWidth;
+                            }
 
-                             // Calculate the horizontal offset to center the subtree (initially)
-                             // This centering might be relative to the maxSvgWidth or the container width
-                             // Let's center relative to the potential max width for consistent horizontal alignment
-                             const offsetX = (maxSvgWidth / 2) - ((x1 + x0) / 2);
-
-
-                             // Create a group for the current subtree
-                             const subtreeG = mainG.append("g")
-                                 .attr("transform", `translate(${margin.left + offsetX}, ${currentYOffset})`); // Apply margin and calculated offset
-
-                             // Draw links
-                             subtreeG.append("g")
-                                 .attr("fill", "none")
-                                 .attr("stroke-linejoin", "round")
-                                 .attr("stroke-width", 1.5) /* Increased line thickness */
-                                 .selectAll("path")
-                                 .data(root.links())
-                                 .join("path")
-                                 .attr("class", "link")
-                                 .attr("d", d3.linkVertical()
-                                     .x(d => d.x)
-                                     .y(d => d.y)
-                                 );
-
-                             // Draw nodes
-                             const node = subtreeG.append("g")
-                                 .selectAll("g")
-                                 .data(root.descendants())
-                                 .join("g")
-                                 .attr("transform", d => `translate(${d.x},${d.y})`);
-
-                             // Append foreignObject for HTML content
-                             const nodeCard = node.append("foreignObject")
-                                 .attr("x", -(nodeWidth / 2)) // Center the foreignObject horizontally
-                                 .attr("y", -(nodeHeight / 2)) // Center the foreignObject vertically (approx)
-                                 .attr("width", nodeWidth)
-                                 .attr("height", nodeHeight)
-                                 .append("xhtml:div")
-                                 .attr("class", "node-card");
-
-                             // Add link wrapper if URL exists
-                             const linkWrapper = nodeCard.append("a")
-                                 .attr("href", d => d.data.url || "#") // Use 'url' field for link
-                                 .attr("target", "_blank"); // Open in new tab
-
-                             // Add image or placeholder
-                             linkWrapper.each(function(d) {
-                                 const container = d3.select(this);
-                                 if (d.data.image) {
-                                     container.append("img")
-                                         .attr("class", "node-image")
-                                         .attr("src", d.data.image)
-                                         .attr("alt", "photo");
-                                 } else {
-                                     container.append("div")
-                                         .attr("class", "node-placeholder")
-                                         .text(d.data.name ? d.data.name.charAt(0) : '?');
-                                 }
-                             });
+                            // Calculate the horizontal offset to center the subtree (initially)
+                            // This centering might be relative to the maxSvgWidth or the container width
+                            // Let's center relative to the potential max width for consistent horizontal alignment
+                            const offsetX = (maxSvgWidth / 2) - ((x1 + x0) / 2);
 
 
-                             // Add text content (name, introducer, reason)
-                             const textContent = linkWrapper.append("div"); // Put text inside the link
-                             textContent.append("div")
-                                 .attr("class", "node-name")
-                                 .text(d => d.data.name);
+                            // Create a group for the current subtree
+                            const subtreeG = mainG.append("g")
+                                .attr("transform", `translate(${margin.left + offsetX}, ${currentYOffset})`); // Apply margin and calculated offset
 
-                             textContent.each(function(d) {
-                                 const container = d3.select(this);
-                                 if (d.data.introducer_name) {
-                                     container.append("div")
-                                         .attr("class", "node-introducer")
-                                         .text(`紹介者: ${d.data.introducer_name}`);
-                                 }
-                                 // Reason is used for grouping title, might not be needed on every card
-                                 /*
-                                 if (d.data.introduction_reason) {
-                                      container.append("div")
-                                          .attr("class", "node-reason")
-                                          .text(`(${d.data.introduction_reason})`);
-                                  }
-                                  */
-                             });
+                            // Draw links
+                            subtreeG.append("g")
+                                .attr("fill", "none")
+                                .attr("stroke-linejoin", "round")
+                                .attr("stroke-width", 1.5) /* Increased line thickness */
+                                .selectAll("path")
+                                .data(root.links())
+                                .join("path")
+                                .attr("class", "link")
+                                .attr("d", d3.linkVertical()
+                                    .x(d => d.x)
+                                    .y(d => d.y)
+                                );
+
+                            // Draw nodes
+                            const node = subtreeG.append("g")
+                                .selectAll("g")
+                                .data(root.descendants())
+                                .join("g")
+                                .attr("transform", d => `translate(${d.x},${d.y})`);
+
+                            // Append foreignObject for HTML content
+                            const nodeForeignObject = node.append("foreignObject")
+                                .attr("x", -(nodeWidth / 2)) // Center the foreignObject horizontally
+                                .attr("y", -(nodeHeight / 2)) // Center the foreignObject vertically (approx)
+                                .attr("width", nodeWidth)
+                                .attr("height", nodeHeight);
+
+                            const nodeCard = nodeForeignObject.append("xhtml:div")
+                                .attr("class", "node-card");
+
+                            // Add link wrapper if page_url exists - MODIFIED HERE
+                            const linkWrapper = nodeCard.append("a")
+                                .attr("href", d => d.data.page_url || "#") // Use 'page_url' field for link
+                                .attr("target", "_blank") // Open in new tab
+                                // Add styles directly or via CSS class if preferred
+                                .style("text-decoration", "none") // Remove underline
+                                .style("color", "inherit") // Inherit text color
+                                .style("display", "flex") // Use flexbox for layout
+                                .style("flex-direction", "column") // Stack content vertically
+                                .style("align-items", "center") // Center content horizontally
+                                .style("width", "100%"); // Make link fill the card width
 
 
-                             // Add space for the next subtree
-                             currentYOffset += root.height * (nodeHeight + verticalSpacing) + margin.bottom + verticalSpacing; // Calculate height based on subtree depth
+                            // Add image or placeholder inside the link wrapper - MODIFIED HERE
+                            linkWrapper.each(function(d) {
+                                const container = d3.select(this);
+                                if (d.data.image) {
+                                    container.append("img")
+                                        .attr("class", "node-image")
+                                        .attr("src", d.data.image)
+                                        .attr("alt", "photo");
+                                } else {
+                                    container.append("div")
+                                        .attr("class", "node-placeholder")
+                                        .text(d.data.name ? d.data.name.charAt(0) : '?');
+                                }
+                            });
 
-                         }); // End rootNodesData.forEach
+
+                            // Add text content (name, introducer, reason) inside the link wrapper - MODIFIED HERE
+                            const textContent = linkWrapper.append("div"); // Put text inside the link
+                            textContent.append("div")
+                                .attr("class", "node-name")
+                                .text(d => d.data.name);
+
+                            textContent.each(function(d) {
+                                const container = d3.select(this);
+                                if (d.data.introducer_name) {
+                                    container.append("div")
+                                        .attr("class", "node-introducer")
+                                        .text(`紹介者: ${d.data.introducer_name}`);
+                                }
+                                // Reason is used for grouping title, might not be needed on every card
+                                /*
+                                if (d.data.introduction_reason) {
+                                    container.append("div")
+                                        .attr("class", "node-reason")
+                                        .text(`(${d.data.introduction_reason})`);
+                                }
+                                */
+                            });
+
+
+                            // Add space for the next subtree
+                            currentYOffset += root.height * (nodeHeight + verticalSpacing) + margin.bottom + verticalSpacing; // Calculate height based on subtree depth
+
+                        }); // End rootNodesData.forEach
                     }); // End groupedData.forEach
 
                     // Adjust SVG width and height based on content
@@ -297,9 +307,9 @@
                 });
         });
 
-         // Optional: Redraw on window resize (more complex with D3 layout)
-         // For simplicity, we'll skip full redraw on resize for this example.
-         // A robust solution would recalculate layout and redraw SVG on resize.
+        // Optional: Redraw on window resize (more complex with D3 layout)
+        // For simplicity, we'll skip full redraw on resize for this example.
+        // A robust solution would recalculate layout and redraw SVG on resize.
 
     </script>
 </body>
