@@ -1,22 +1,12 @@
 [
   {
-    "id": "1f4ad9ab-bc86-8129-96b8-d299efdc1d32",
-    "name": "あああ",
-    "introducerPageId": "1f2ad9ab-bc86-81b7-b8e7-de91fce2357b",
-    "introducer_name": "サトウ　シオリ",
-    "introducer_url": "https://www.notion.so/1f2ad9abbc8681b7b8e7de91fce2357b",
-    "page_url": "https://www.notion.so/1f4ad9abbc86812996b8d299efdc1d32",
-    "image": "",
-    "introduction_reason": "紹介"
-  },
-  {
-    "id": "1f4ad9ab-bc86-811c-b8cd-c7f63e7e97e5",
-    "name": "dadada",
-    "introducerPageId": "1f2ad9ab-bc86-8132-b5b7-e3916bad5ae9",
-    "introducer_name": "オカダ　マサキ",
-    "introducer_url": "https://www.notion.so/1f2ad9abbc868132b5b7e3916bad5ae9",
-    "page_url": "https://www.notion.so/dadada-1f4ad9abbc86811cb8cdc7f63e7e97e5",
-    "image": "",
+    "id": "1f4ad9ab-bc86-8145-ba58-e75cb096a961",
+    "name": "リンカ",
+    "introducerPageId": "1f2ad9ab-bc86-8168-a3a7-f1893e36820d",
+    "introducer_name": "イチハラ　ハヤト",
+    "introducer_url": "https://www.notion.so/1f2ad9abbc868168a3a7f1893e36820d",
+    "page_url": "https://www.notion.so/1f4ad9abbc868145ba58e75cb096a961",
+    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/IMG_20250507_155145%20-%20kzk.jpg",
     "introduction_reason": "紹介"
   },
   {
@@ -38,16 +28,6 @@
     "page_url": "https://www.notion.so/1f2ad9abbc8681a4bd83d07c92c64005",
     "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/ty_main%20-%20kzk.webp",
     "introduction_reason": "紹介"
-  },
-  {
-    "id": "1f2ad9ab-bc86-8184-95ad-d1788349ad43",
-    "name": "コジマ　カズキ",
-    "introducerPageId": "1f1ad9ab-bc86-8160-bfba-c52965d67400",
-    "introducer_name": "＊SNS",
-    "introducer_url": "https://www.notion.so/1f1ad9abbc868160bfbac52965d67400",
-    "page_url": "https://www.notion.so/1f2ad9abbc86818495add1788349ad43",
-    "image": "",
-    "introduction_reason": "SNS"
   },
   {
     "id": "1f2ad9ab-bc86-81dc-8917-faf6e32876e4",
@@ -107,16 +87,6 @@
     "introducer_url": "https://www.notion.so/1f2ad9abbc868168a3a7f1893e36820d",
     "page_url": "https://www.notion.so/1f2ad9abbc8681758d65d284db2b452e",
     "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/nakanotaiga_sen01.jpg",
-    "introduction_reason": "紹介"
-  },
-  {
-    "id": "1f2ad9ab-bc86-81f2-91ba-f0bae00d3518",
-    "name": "トウコ",
-    "introducerPageId": "1f2ad9ab-bc86-8168-a3a7-f1893e36820d",
-    "introducer_name": "イチハラ　ハヤト",
-    "introducer_url": "https://www.notion.so/1f2ad9abbc868168a3a7f1893e36820d",
-    "page_url": "https://www.notion.so/1f2ad9abbc8681f291baf0bae00d3518",
-    "image": "https://raw.githubusercontent.com/kzk-jp/Senju-Caribbeans/refs/heads/main/images/4444411PXL_20250511_111704140.MP%20-%20kzk.jpg",
     "introduction_reason": "紹介"
   },
   {
