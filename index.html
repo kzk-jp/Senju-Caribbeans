@@ -23,16 +23,19 @@
 
         #chart-container {
             width: 100%;
+            /* Allow vertical overflow for scrolling if tree is very tall */
             overflow-x: auto;
-            overflow-y: hidden;
+            overflow-y: auto; /* Changed to auto to allow vertical scrolling */
             -webkit-overflow-scrolling: touch;
             padding: 1rem 0.5rem;
             box-sizing: border-box; /* Include padding in width */
+            touch-action: pan-x pan-y; /* Enable panning, disable default pinch-zoom */
         }
 
         svg {
             display: block; /* Remove extra space below svg */
-            margin: 0 auto; /* Center SVG if wider than container */
+            /* margin: 0 auto; /* Removed auto margin for better control with zoom/pan */
+            /* Set initial width and height dynamically */
         }
 
         .node-card {
@@ -116,7 +119,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版 リンク修正）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
     <div id="chart-container">
         <svg id="tree-svg"></svg>
     </div>
@@ -152,56 +155,50 @@
 
                     let currentYOffset = margin.top;
                     let maxSvgWidth = 0;
+                    let totalSvgHeight = 0; // Track total height needed
 
-                    // Create a main group to hold all group subtrees
+                    // Create a main group to hold all group subtrees - This group will be zoomed/panned
                     const mainG = svg.append("g");
 
+                    // Add a background rectangle to the main group to make panning easier
+                    mainG.append("rect")
+                        .attr("width", "100%") // Initial width, will be updated
+                        .attr("height", "100%") // Initial height, will be updated
+                        .attr("fill", "transparent"); // Make it invisible
+
                     groupedData.forEach((groupData, reason) => {
-                        // Find the root node(s) for this group (introducerPageId is null within this group's data)
-                        // Note: D3 hierarchy typically expects a single root. If a group has multiple
-                        // members with introducerPageId === null, they will be treated as separate roots
-                        // within this group's processing, but we'll append them sequentially.
                         const rootNodesData = groupData.filter(d => d.introducerPageId === null);
 
                         rootNodesData.forEach(rootData => {
-                            // Build the hierarchy for this root and its descendants
                             const root = d3.hierarchy(rootData, d => jsonData.filter(item => item.introducerPageId === d.id));
 
-                            // Define the tree layout
                             const treeLayout = d3.tree()
-                                .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]); // [vertical, horizontal] spacing
+                                .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]);
 
-                            // Compute the layout
                             treeLayout(root);
 
-                            // Calculate the extent of the subtree for positioning
                             let x0 = Infinity, x1 = -Infinity;
                             root.each(d => {
                                 if (d.x < x0) x0 = d.x;
                                 if (d.x > x1) x1 = d.x;
                             });
 
-                            // Calculate the width of the subtree
                             const subtreeWidth = x1 - x0 + nodeWidth + horizontalSpacing;
                             if (subtreeWidth > maxSvgWidth) {
                                 maxSvgWidth = subtreeWidth;
                             }
 
-                            // Calculate the horizontal offset to center the subtree (initially)
-                            // This centering might be relative to the maxSvgWidth or the container width
-                            // Let's center relative to the potential max width for consistent horizontal alignment
                             const offsetX = (maxSvgWidth / 2) - ((x1 + x0) / 2);
 
-
-                            // Create a group for the current subtree
+                            // Create a group for the current subtree within the main group
                             const subtreeG = mainG.append("g")
-                                .attr("transform", `translate(${margin.left + offsetX}, ${currentYOffset})`); // Apply margin and calculated offset
+                                .attr("transform", `translate(${margin.left + offsetX}, ${currentYOffset})`);
 
                             // Draw links
                             subtreeG.append("g")
                                 .attr("fill", "none")
                                 .attr("stroke-linejoin", "round")
-                                .attr("stroke-width", 1.5) /* Increased line thickness */
+                                .attr("stroke-width", 1.5)
                                 .selectAll("path")
                                 .data(root.links())
                                 .join("path")
@@ -218,30 +215,26 @@
                                 .join("g")
                                 .attr("transform", d => `translate(${d.x},${d.y})`);
 
-                            // Append foreignObject for HTML content
                             const nodeForeignObject = node.append("foreignObject")
-                                .attr("x", -(nodeWidth / 2)) // Center the foreignObject horizontally
-                                .attr("y", -(nodeHeight / 2)) // Center the foreignObject vertically (approx)
+                                .attr("x", -(nodeWidth / 2))
+                                .attr("y", -(nodeHeight / 2))
                                 .attr("width", nodeWidth)
                                 .attr("height", nodeHeight);
 
                             const nodeCard = nodeForeignObject.append("xhtml:div")
                                 .attr("class", "node-card");
 
-                            // Add link wrapper if page_url exists - MODIFIED HERE
                             const linkWrapper = nodeCard.append("a")
-                                .attr("href", d => d.data.page_url || "#") // Use 'page_url' field for link
-                                .attr("target", "_blank") // Open in new tab
-                                // Add styles directly or via CSS class if preferred
-                                .style("text-decoration", "none") // Remove underline
-                                .style("color", "inherit") // Inherit text color
-                                .style("display", "flex") // Use flexbox for layout
-                                .style("flex-direction", "column") // Stack content vertically
-                                .style("align-items", "center") // Center content horizontally
-                                .style("width", "100%"); // Make link fill the card width
+                                .attr("href", d => d.data.page_url || "#")
+                                .attr("target", "_blank")
+                                .style("text-decoration", "none")
+                                .style("color", "inherit")
+                                .style("display", "flex")
+                                .style("flex-direction", "column")
+                                .style("align-items", "center")
+                                .style("width", "100%");
 
 
-                            // Add image or placeholder inside the link wrapper - MODIFIED HERE
                             linkWrapper.each(function(d) {
                                 const container = d3.select(this);
                                 if (d.data.image) {
@@ -256,9 +249,7 @@
                                 }
                             });
 
-
-                            // Add text content (name, introducer, reason) inside the link wrapper - MODIFIED HERE
-                            const textContent = linkWrapper.append("div"); // Put text inside the link
+                            const textContent = linkWrapper.append("div");
                             textContent.append("div")
                                 .attr("class", "node-name")
                                 .text(d => d.data.name);
@@ -270,34 +261,140 @@
                                         .attr("class", "node-introducer")
                                         .text(`紹介者: ${d.data.introducer_name}`);
                                 }
-                                // Reason is used for grouping title, might not be needed on every card
-                                /*
-                                if (d.data.introduction_reason) {
-                                    container.append("div")
-                                        .attr("class", "node-reason")
-                                        .text(`(${d.data.introduction_reason})`);
-                                }
-                                */
                             });
 
-
                             // Add space for the next subtree
-                            currentYOffset += root.height * (nodeHeight + verticalSpacing) + margin.bottom + verticalSpacing; // Calculate height based on subtree depth
+                            const subtreeHeight = root.height * (nodeHeight + verticalSpacing);
+                            currentYOffset += subtreeHeight + margin.bottom + verticalSpacing;
+                            totalSvgHeight += subtreeHeight + margin.bottom + verticalSpacing;
 
                         }); // End rootNodesData.forEach
                     }); // End groupedData.forEach
 
                     // Adjust SVG width and height based on content
-                    svg.attr("width", maxSvgWidth + margin.left + margin.right);
-                    svg.attr("height", currentYOffset + margin.bottom);
+                    const finalSvgWidth = maxSvgWidth + margin.left + margin.right;
+                    const finalSvgHeight = totalSvgHeight + margin.top + margin.bottom; // Use totalSvgHeight
+                    svg.attr("width", finalSvgWidth);
+                    svg.attr("height", finalSvgHeight);
+
+                    // Update background rect size
+                    mainG.select("rect")
+                        .attr("width", finalSvgWidth)
+                        .attr("height", finalSvgHeight);
 
 
                     // 🌟 中央に自動スクロールする処理を追加
                     const containerElement = document.getElementById("chart-container");
                     // Use a slight delay to ensure rendering is complete before scrolling
                      setTimeout(() => {
-                         containerElement.scrollLeft = (svg.attr("width") - containerElement.clientWidth) / 2;
+                         // Scroll to center horizontally
+                         containerElement.scrollLeft = (finalSvgWidth - containerElement.clientWidth) / 2;
+                         // Scroll to top vertically (or a little bit down if needed)
+                         containerElement.scrollTop = 0; // Or a small offset like margin.top
                      }, 100);
+
+
+                    // --- Pinch-to-Zoom and Pan Functionality ---
+                    let initialPinchDistance = 0;
+                    let currentScale = 1;
+                    let initialTranslateX = 0;
+                    let initialTranslateY = 0;
+                    let lastTranslateX = 0;
+                    let lastTranslateY = 0;
+                    let isPanning = false;
+                    let lastTouchX = 0;
+                    let lastTouchY = 0;
+
+                    // Get the bounding box of the SVG for coordinate calculations
+                    const svgRect = svg.node().getBoundingClientRect();
+
+                    svg.on("touchstart", (event) => {
+                        event.preventDefault(); // Prevent default touch behavior like scrolling
+
+                        if (event.touches.length === 2) {
+                            // Pinch start
+                            initialPinchDistance = getPinchDistance(event.touches);
+                            isPanning = false; // Not panning when pinching
+                        } else if (event.touches.length === 1) {
+                            // Pan start
+                            isPanning = true;
+                            lastTouchX = event.touches[0].clientX;
+                            lastTouchY = event.touches[0].clientY;
+
+                            // Get current transform for smooth panning start
+                            const transform = mainG.attr("transform");
+                            if (transform) {
+                                const translateMatch = transform.match(/translate\(([^,]+),([^)]+)\)/);
+                                if (translateMatch) {
+                                    lastTranslateX = parseFloat(translateMatch[1]);
+                                    lastTranslateY = parseFloat(translateMatch[2]);
+                                } else {
+                                     lastTranslateX = 0;
+                                     lastTranslateY = 0;
+                                }
+                            } else {
+                                lastTranslateX = 0;
+                                lastTranslateY = 0;
+                            }
+                        }
+                    });
+
+                    svg.on("touchmove", (event) => {
+                        event.preventDefault(); // Prevent default touch behavior
+
+                        if (event.touches.length === 2) {
+                            // Pinch move
+                            const currentPinchDistance = getPinchDistance(event.touches);
+                            if (initialPinchDistance === 0) {
+                                initialPinchDistance = currentPinchDistance; // Handle case where touchstart missed
+                                return;
+                            }
+
+                            // Calculate scale change
+                            const scaleChange = currentPinchDistance / initialPinchDistance;
+                            currentScale *= scaleChange;
+
+                            // Optional: Clamp scale to a reasonable range (e.g., 0.5 to 3)
+                            currentScale = Math.max(0.5, Math.min(currentScale, 3));
+
+                            // Apply scale transformation to the main group
+                            // We need to maintain the current translation as well
+                            mainG.attr("transform", `translate(${lastTranslateX}, ${lastTranslateY}) scale(${currentScale})`);
+
+                            initialPinchDistance = currentPinchDistance; // Update initial distance for next move event
+
+                        } else if (event.touches.length === 1 && isPanning) {
+                            // Pan move
+                            const touch = event.touches[0];
+                            const deltaX = touch.clientX - lastTouchX;
+                            const deltaY = touch.clientY - lastTouchY;
+
+                            lastTranslateX += deltaX;
+                            lastTranslateY += deltaY;
+
+                            // Apply pan transformation to the main group, maintaining current scale
+                            mainG.attr("transform", `translate(${lastTranslateX}, ${lastTranslateY}) scale(${currentScale})`);
+
+                            lastTouchX = touch.clientX;
+                            lastTouchY = touch.clientY;
+                        }
+                    });
+
+                    svg.on("touchend", (event) => {
+                        // Reset state when touches end
+                        initialPinchDistance = 0;
+                        isPanning = false;
+                        // The lastTranslateX/Y and currentScale are maintained for the next interaction
+                    });
+
+                    // Helper function to calculate distance between two touch points
+                    function getPinchDistance(touches) {
+                        const dx = touches[0].clientX - touches[1].clientX;
+                        const dy = touches[0].clientY - touches[1].clientY;
+                        return Math.sqrt(dx * dx + dy * dy);
+                    }
+
+                    // --- End Pinch-to-Zoom and Pan Functionality ---
 
 
                 })
