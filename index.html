@@ -25,12 +25,18 @@
 
         /* Search container styling */
         #search-container {
-            text-align: center;
+            /* フローティング表示 */
+            position: fixed; /* 画面に固定 */
+            top: 10px; /* 上から10px */
+            right: 10px; /* 右から10px */
             padding: 10px;
             background-color: #e5e7eb; /* Tailwind gray-200 */
-            border-bottom: 1px solid #d1d5db; /* Tailwind gray-300 */
-            position: relative; /* Needed for absolute positioning of suggestions */
-            z-index: 10; /* Ensure search bar is above the SVG */
+            border: 1px solid #d1d5db; /* Tailwind gray-300 */
+            border-radius: 8px; /* 角を少し丸く */
+            z-index: 100; /* ツリーより前面に表示 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* 影を追加 */
+            text-align: left; /* テキストを左寄せに */
+            width: 250px; /* 検索コンテナの幅 */
         }
 
         #search-container input[type="text"] {
@@ -39,7 +45,8 @@
             border: 1px solid #d1d5db;
             border-radius: 4px;
             font-size: 1rem;
-            width: 200px; /* Adjust width as needed */
+            width: calc(100% - 75px); /* ボタンの幅とマージンを考慮して計算 */
+            box-sizing: border-box; /* Paddingとborderを幅に含める */
         }
 
         #search-container button {
@@ -60,10 +67,9 @@
         /* Search suggestions dropdown */
         #suggestions-list {
             position: absolute;
-            top: 100%; /* Position below the search container */
-            left: 50%;
-            transform: translateX(-50%); /* Center horizontally */
-            width: 200px; /* Match input width */
+            top: calc(100% + 5px); /* 検索コンテナの下に少し隙間を開けて配置 */
+            left: 0; /* コンテナの左端に合わせる */
+            width: 100%; /* コンテナの幅に合わせる */
             max-height: 150px; /* Limit height and add scroll */
             overflow-y: auto;
             background-color: white;
@@ -96,10 +102,11 @@
         /* Container for the chart, allows scrolling */
         #chart-container {
             width: 100%;
-            /* Adjust height to fit viewport, subtracting header and search height */
-            height: calc(100vh - 60px - 50px); /* Header approx 60px, Search approx 50px */
+            /* ヘッダーの高さだけ考慮 */
+            height: calc(100vh - 60px);
             overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
-            padding: 0; /* Remove padding as zoom will handle positioning */
+            /* 検索バーが重ならないように上部にパディングを追加 */
+            padding-top: 70px; /* 検索バーの高さ＋少しの隙間 */
             box-sizing: border-box;
         }
 
