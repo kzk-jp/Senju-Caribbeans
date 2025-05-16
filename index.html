@@ -11,6 +11,9 @@
             font-family: "Helvetica Neue", sans-serif;
             background-color: #f3f4f6; /* Light gray background */
             color: #333; /* Dark gray text */
+            display: flex; /* Use flexbox for layout */
+            flex-direction: column; /* Stack children vertically */
+            height: 100vh; /* Full viewport height */
         }
 
         /* Header styling */
@@ -21,6 +24,7 @@
             font-size: 1.4rem;
             background: #2563eb; /* Tailwind blue-700 */
             color: white;
+            flex-shrink: 0; /* Prevent header from shrinking */
         }
 
         /* Search container styling */
@@ -29,6 +33,7 @@
             padding: 10px;
             background-color: #e5e7eb; /* Tailwind gray-200 */
             border-bottom: 1px solid #d1d5db; /* Tailwind gray-300 */
+            flex-shrink: 0; /* Prevent search bar from shrinking */
         }
 
         #search-container input[type="text"] {
@@ -54,21 +59,22 @@
             background-color: #2563eb; /* Tailwind blue-700 */
         }
 
-        /* Container for the chart, allows scrolling */
+        /* Container for the chart, allows zoom/pan handled by D3 */
         #chart-container {
             width: 100%;
-            /* Adjust height to fit viewport, subtracting header and search height */
-            height: calc(100vh - 60px - 50px); /* Header approx 60px, Search approx 50px */
-            overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
-            padding: 0; /* Remove padding as zoom will handle positioning */
+            flex-grow: 1; /* Allow container to grow and fill remaining space */
+            overflow: hidden; /* Hide default scrollbars */
+            padding: 0;
             box-sizing: border-box;
+            /* touch-action: none; /* Optional: Prevent default touch actions like swipe navigation */
         }
 
         /* SVG element styling */
         svg {
             display: block; /* Remove extra space below svg */
-            width: 100%;
-            height: 100%;
+            width: 100%; /* Fill container width */
+            height: 100%; /* Fill container height */
+            /* Initial content size will be set dynamically by JS and handled by D3 zoom */
         }
 
         /* Styling for the node card (using foreignObject) */
@@ -178,7 +184,8 @@
         const JSON_FILE_PATH = 'tree_data.json';
 
         let allNodesData = []; // Store flattened node data for searching
-        let currentZoom = null; // Store the current zoom behavior
+        let currentZoomBehavior = null; // Store the current zoom behavior instance
+        let nodeElementsMap = new Map(); // Store node elements keyed by ID
 
         // Wait for the DOM to be fully loaded
         window.addEventListener("DOMContentLoaded", () => {
@@ -223,9 +230,6 @@
                     // Create a main group to hold all group subtrees - This group will be zoomed/panned
                     const mainG = svg.append("g");
 
-                    // Store node elements keyed by ID for easy access during search
-                    const nodeElements = new Map();
-
                     // Iterate through each group (based on introduction_reason)
                     groupedData.forEach((groupData, reason) => {
                         // Find the root nodes for this group (nodes with no introducer)
@@ -258,7 +262,7 @@
                                 maxSvgWidth = subtreeWidth;
                             }
 
-                            // Calculate the horizontal offset needed to center the subtree
+                            // Calculate the horizontal offset needed to center the subtree relative to maxSvgWidth
                             const offsetX = (maxSvgWidth / 2) - ((x1 + x0) / 2);
 
                             // Create a group for the current subtree within the main group
@@ -275,8 +279,8 @@
                                 .join("path")
                                 .attr("class", "link")
                                 .attr("d", d3.linkVertical() // Use vertical links
-                                    .x(d => d.x) // X coordinate of the node
-                                    .y(d => d.y) // Y coordinate of the node
+                                    .x(d => d.x) // X coordinate of the node (relative to subtreeG)
+                                    .y(d => d.y) // Y coordinate of the node (relative to subtreeG)
                                 );
 
                             // Draw nodes (groups containing foreignObject for HTML content)
@@ -284,18 +288,18 @@
                                 .selectAll("g")
                                 .data(root.descendants()) // Get all nodes from the hierarchy
                                 .join("g")
-                                .attr("transform", d => `translate(${d.x},${d.y})"); // Position the node group
+                                .attr("transform", d => `translate(${d.x},${d.y})`); // Position the node group (relative to subtreeG)
 
                             // Store a reference to the node element by its data ID
                             node.each(function(d) {
-                                nodeElements.set(d.data.id, d3.select(this));
+                                nodeElementsMap.set(d.data.id, d3.select(this));
                             });
 
 
                             // Append foreignObject to each node group to embed HTML
                             const nodeForeignObject = node.append("foreignObject")
-                                .attr("x", -(nodeWidth / 2)) // Center the foreignObject horizontally
-                                .attr("y", -(nodeHeight / 2)) // Center the foreignObject vertically
+                                .attr("x", -(nodeWidth / 2)) // Center the foreignObject horizontally relative to node origin
+                                .attr("y", -(nodeHeight / 2)) // Center the foreignObject vertically relative to node origin
                                 .attr("width", nodeWidth)
                                 .attr("height", nodeHeight);
 
@@ -366,7 +370,8 @@
                     }); // End groupedData.forEach
 
                     // Adjust SVG width and height based on the calculated maximum width and total height
-                    // Set SVG dimensions large enough to contain all content initially
+                    // Set SVG dimensions large enough to contain all content
+                    // D3 zoom will handle fitting this content into the container
                     const finalSvgWidth = maxSvgWidth + margin.left + margin.right;
                     const finalSvgHeight = totalSvgHeight + margin.top + margin.bottom;
                     svg.attr("width", finalSvgWidth);
@@ -376,18 +381,17 @@
 
                     // Create a zoom behavior
                     const zoom = d3.zoom()
-                        // Set the extent of the zoomable area to the calculated SVG dimensions
-                        .extent([[0, 0], [finalSvgWidth, finalSvgHeight]])
-                        // Set the zoom scale limits
-                        .scaleExtent([0.5, 3]) // Allow zooming between 0.5x and 3x
+                         // No need to set extent if SVG size matches content size.
+                         // D3 zoom uses the element's dimensions by default.
+                        .scaleExtent([0.1, 3]) // Allow a wider range of zooming (e.g., zoom out more)
                         // Define the function to call when zooming occurs
                         .on("zoom", zoomed);
 
                     // Apply the zoom behavior to the SVG element
                     svg.call(zoom);
 
-                    // Store the zoom behavior for later use in the search function
-                    currentZoom = zoom;
+                    // Store the zoom behavior for later use
+                    currentZoomBehavior = zoom;
 
                     // Zoom event handler function
                     function zoomed(event) {
@@ -395,30 +399,33 @@
                         mainG.attr("transform", event.transform);
                     }
 
-                     // --- Initial centering using zoom transform ---
-                    const containerElement = document.getElementById("chart-container");
-                    const containerWidth = containerElement.clientWidth;
-                    const containerHeight = containerElement.clientHeight;
+                     // --- Initial centering and fitting using zoom transform ---
+                    // Use a slight delay to ensure container dimensions are correct
+                    setTimeout(() => {
+                         const containerWidth = chartContainer.node().clientWidth;
+                         const containerHeight = chartContainer.node().clientHeight;
 
-                    // Calculate initial scale to fit the content if it's larger than the container
-                    // Or just use scale 1 if the content is smaller
-                    const initialScale = 1.0; // Start with 1x scale
+                         // Calculate scale to fit the entire tree into the container
+                         const scaleX = containerWidth / finalSvgWidth;
+                         const scaleY = containerHeight / finalSvgHeight;
+                         const initialScale = Math.min(scaleX, scaleY); // Use the smaller scale to fit both dimensions
 
-                    // Calculate initial translation to center the content
-                    const initialTranslateX = (containerWidth - finalSvgWidth * initialScale) / 2;
-                    const initialTranslateY = (containerHeight - finalSvgHeight * initialScale) / 2;
+                         // Cap the initial scale at 1.0 so it doesn't zoom in if the tree is small
+                         const clampedInitialScale = Math.min(1.0, initialScale);
 
+                         // Calculate initial translation to center the content at the clamped scale
+                         const initialTranslateX = (containerWidth - finalSvgWidth * clampedInitialScale) / 2;
+                         const initialTranslateY = (containerHeight - finalSvgHeight * clampedInitialScale) / 2;
 
-                    // Create the initial transform
-                    const initialTransform = d3.zoomIdentity
-                        .translate(initialTranslateX, initialTranslateY)
-                        .scale(initialScale);
+                         // Create the initial transform
+                         const initialTransform = d3.zoomIdentity
+                             .translate(initialTranslateX, initialTranslateY)
+                             .scale(clampedInitialScale);
 
-                    // Apply the initial transform with a smooth transition
-                    svg.transition().duration(750).call(zoom.transform, initialTransform);
+                         // Apply the initial transform with a smooth transition
+                         svg.transition().duration(750).call(zoom.transform, initialTransform);
+                    }, 100); // Small delay
 
-
-                    // --- End D3 Zoom and Pan Functionality ---
 
                     // --- Search Functionality ---
                     const searchInput = document.getElementById("search-input");
@@ -426,9 +433,12 @@
 
                     searchButton.addEventListener("click", () => {
                         const searchTerm = searchInput.value.trim().toLowerCase();
+
+                        // Remove previous highlights
+                        mainG.selectAll(".node-highlight").classed("node-highlight", false);
+
                         if (!searchTerm) {
-                            // Clear highlight if search term is empty
-                            mainG.selectAll(".node-highlight").classed("node-highlight", false);
+                            // If search term is empty, just remove highlight
                             return;
                         }
 
@@ -436,87 +446,106 @@
                         const foundNodeData = allNodesData.find(d => d.name.toLowerCase().includes(searchTerm));
 
                         if (foundNodeData) {
-                            // Find the corresponding D3 node element
-                            const foundNodeElement = nodeElements.get(foundNodeData.id);
+                            // Find the corresponding D3 hierarchy node to get its layout position
+                            let foundHierarchyNode = null;
+                            // We need to iterate through the *drawn* nodes within the mainG group
+                            // to find the one corresponding to foundNodeData.id
+                            mainG.selectAll("g").each(function(d) {
+                                if (d && d.data && d.data.id === foundNodeData.id) {
+                                    foundHierarchyNode = d;
+                                }
+                            });
 
-                            if (foundNodeElement) {
-                                // Remove previous highlights
-                                mainG.selectAll(".node-highlight").classed("node-highlight", false);
-                                // Add highlight to the found node
-                                foundNodeElement.classed("node-highlight", true);
-
-                                // Calculate the target position for zooming
-                                // Get the current transform
-                                const currentTransform = d3.zoomTransform(svg.node());
-                                // Calculate the center of the container
-                                const centerX = containerWidth / 2;
-                                const centerY = containerHeight / 2;
-
-                                // Get the position of the found node in the SVG coordinate system
-                                // The node's position is relative to its subtree group, which is relative to mainG
-                                // We need its position relative to the SVG origin (0,0) before any transforms
-                                // This requires traversing up the transform hierarchy, or ideally,
-                                // using the layout coordinates which are relative to the subtree origin.
-
-                                // Let's assume the layout coordinates (d.x, d.y) are what we need,
-                                // relative to the top-left of their subtree group.
-                                // We need to find which subtree group this node belongs to.
-                                // A simpler approach is to calculate the target translation
-                                // based on the node's position relative to the *entire* SVG content area.
-
-                                // Find the D3 hierarchy node for the found data
-                                let foundHierarchyNode = null;
-                                // Iterate through all nodes in the hierarchy to find the match
-                                mainG.selectAll("g.link").data().forEach(link => { // Links have source/target nodes
-                                    if (link.source.data.id === foundNodeData.id) foundHierarchyNode = link.source;
-                                    if (link.target.data.id === foundNodeData.id) foundHierarchyNode = link.target;
-                                });
-                                // Also check root nodes directly
-                                mainG.selectAll("g").data().forEach(d => {
-                                     if (d.data && d.data.id === foundNodeData.id) foundHierarchyNode = d;
-                                });
-
-
-                                if (foundHierarchyNode) {
-                                     // Get the layout coordinates (x, y) of the found node
-                                     const targetX = foundHierarchyNode.x;
-                                     const targetY = foundHierarchyNode.y;
-
-                                     // Calculate the required translation to center the target node
-                                     // The target translation is the negative of the target node's position,
-                                     // plus half the container dimensions, divided by the current scale.
-                                     // This centers the *point* (targetX, targetY) in the container.
-                                     // We need to adjust for the current transform.
-
-                                     // Calculate the new transform to center the node
-                                     const newTranslateX = centerX - targetX * currentTransform.k;
-                                     const newTranslateY = centerY - targetY * currentTransform.k;
-
-                                     // Create the new transform object
-                                     const newTransform = d3.zoomIdentity
-                                         .translate(newTranslateX, newTranslateY)
-                                         .scale(currentTransform.k); // Keep the current scale
-
-                                     // Apply the new transform with a smooth transition
-                                     svg.transition().duration(750).call(currentZoom.transform, newTransform);
-
-                                } else {
-                                     console.warn("Could not find hierarchy node for data:", foundNodeData);
-                                     // Handle case where hierarchy node isn't found (shouldn't happen if data is consistent)
-                                     alert("検索されたメンバーのノードが見つかりませんでした。");
+                            if (foundHierarchyNode) {
+                                // Highlight the found node's element
+                                const foundNodeElement = nodeElementsMap.get(foundNodeData.id);
+                                if (foundNodeElement) {
+                                     foundNodeElement.classed("node-highlight", true);
                                 }
 
+
+                                // Get the position of the found node in the original layout coordinates
+                                // These coordinates are relative to the top-left of its subtree group,
+                                // which is translated within the mainG.
+                                // To get the position relative to the mainG origin, we need the subtree group's transform.
+                                // However, D3 zoom transform handles the entire mainG.
+                                // A simpler approach is to calculate the transformation needed to bring
+                                // the node's original layout coordinates (before any zoom transform)
+                                // to the center of the container.
+
+                                const containerWidth = chartContainer.node().clientWidth;
+                                const containerHeight = chartContainer.node().clientHeight;
+                                const currentTransform = d3.zoomTransform(svg.node());
+
+                                // Target position in the original unscaled SVG coordinate space (relative to mainG origin)
+                                // This is the node's layout position PLUS the subtree group's translation.
+                                // We need to find the subtree group containing this node.
+                                // Let's refine finding the node's *actual* position relative to mainG's origin (0,0)
+                                // The node's position relative to the mainG origin is d.x + subtree_translate_x, d.y + subtree_translate_y
+                                // We can get the node's transformed position directly from D3's transform object if we apply it to the node's layout position.
+                                // However, the target for zoom.transform is usually the *content* coordinate to bring to the center.
+
+                                // Let's use the node's layout coordinates (foundHierarchyNode.x, foundHierarchyNode.y)
+                                // relative to its subtree's translated origin within mainG.
+                                // The target position we want to move to the center of the container is
+                                // (foundHierarchyNode.x, foundHierarchyNode.y) within its subtree group.
+
+                                // Get the transform of the subtree group containing the node
+                                let subtreeTransform = d3.zoomIdentity;
+                                // Find the parent subtree group of the node
+                                mainG.selectAll("g").each(function(d) {
+                                    // Check if this group is a subtree group (has translate transform and contains the node)
+                                    const transformAttr = d3.select(this).attr("transform");
+                                     if (transformAttr && transformAttr.includes("translate(")) {
+                                         // Check if this group contains the found node
+                                         const descendants = d3.select(this).selectAll("g").data(); // Get nodes within this group
+                                         if (descendants.some(nodeD => nodeD.data && nodeD.data.id === foundNodeData.id)) {
+                                             const translateMatch = transformAttr.match(/translate\(([^,]+),([^)]+)\)/);
+                                             if (translateMatch) {
+                                                subtreeTransform = d3.zoomIdentity.translate(parseFloat(translateMatch[1]), parseFloat(translateMatch[2]));
+                                                // Found the subtree, break the loop (or use .find)
+                                                return false; // Stop .each iteration
+                                             }
+                                         }
+                                     }
+                                });
+
+
+                                // The node's position relative to the mainG origin is (subtreeTransform.x + foundHierarchyNode.x, subtreeTransform.y + foundHierarchyNode.y)
+                                const targetMainGX = subtreeTransform.x + foundHierarchyNode.x;
+                                const targetMainGY = subtreeTransform.y + foundHierarchyNode.y;
+
+
+                                // Calculate the transform to center this point (targetMainGX, targetMainGY)
+                                // at the center of the container (containerWidth / 2, containerHeight / 2)
+                                // while maintaining the current scale (currentTransform.k).
+                                const newTransform = d3.zoomIdentity
+                                    .translate(containerWidth / 2, containerHeight / 2) // Move the origin to the container center
+                                    .scale(currentTransform.k) // Apply the current scale
+                                    .translate(-targetMainGX, -targetMainGY); // Translate so the target point is at the origin
+
+                                // Apply the new transform with a smooth transition
+                                svg.transition().duration(750).call(currentZoomBehavior.transform, newTransform);
+
+
                             } else {
-                                console.warn("Could not find SVG element for node data:", foundNodeData);
-                                // Handle case where SVG element isn't found
-                                alert("検索されたメンバーのノードが見つかりませんでした。");
-                            }
+                                 console.warn("Could not find hierarchy node for data:", foundNodeData);
+                                 alert("検索されたメンバーのノードが見つかりませんでした。");
+                             }
+
                         } else {
                             // Member not found
                             alert("「" + searchTerm + "」という名前のメンバーは見つかりませんでした。");
-                            // Remove previous highlights
-                            mainG.selectAll(".node-highlight").classed("node-highlight", false);
+                            // Highlight is already cleared at the beginning
                         }
+                    });
+
+                    // Allow pressing Enter in the input field to trigger search
+                    searchInput.addEventListener("keypress", function(event) {
+                         if (event.key === "Enter") {
+                            event.preventDefault(); // Prevent default form submission if any
+                            searchButton.click(); // Simulate button click
+                         }
                     });
                     // --- End Search Functionality ---
 
