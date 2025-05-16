@@ -430,6 +430,21 @@
                             textContent.append("div")
                                 .attr("class", "node-name")
                                 .text(d => d.data.name); // Display the member's name
+
+                            // Add introducer name if it exists
+                            textContent.each(function(d) {
+                                const container = d3.select(this);
+                                if (d.data.introducer_name) {
+                                    container.append("div")
+                                        .attr("class", "node-introducer")
+                                        .text(`紹介者: ${d.data.introducer_name}`);
+                                }
+                                // Add introduction reason if it exists and is not the default "その他"
+                                if (d.data.introduction_reason && d.data.introduction_reason !== "その他") {
+                                     container.append("div")
+                                        .attr("class", "node-reason")
+                                        .text(`理由: ${d.data.introduction_reason}`);
+                                }
                             });
 
 
