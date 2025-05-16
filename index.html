@@ -29,6 +29,8 @@
             padding: 10px;
             background-color: #e5e7eb; /* Tailwind gray-200 */
             border-bottom: 1px solid #d1d5db; /* Tailwind gray-300 */
+            position: relative; /* Needed for absolute positioning of suggestions */
+            z-index: 10; /* Ensure search bar is above the SVG */
         }
 
         #search-container input[type="text"] {
@@ -37,6 +39,7 @@
             border: 1px solid #d1d5db;
             border-radius: 4px;
             font-size: 1rem;
+            width: 200px; /* Adjust width as needed */
         }
 
         #search-container button {
@@ -53,6 +56,42 @@
         #search-container button:hover {
             background-color: #2563eb; /* Tailwind blue-700 */
         }
+
+        /* Search suggestions dropdown */
+        #suggestions-list {
+            position: absolute;
+            top: 100%; /* Position below the search container */
+            left: 50%;
+            transform: translateX(-50%); /* Center horizontally */
+            width: 200px; /* Match input width */
+            max-height: 150px; /* Limit height and add scroll */
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: none; /* Hidden by default */
+        }
+
+        #suggestions-list li {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        #suggestions-list li:last-child {
+            border-bottom: none;
+        }
+
+        #suggestions-list li:hover {
+            background-color: #f3f4f6;
+        }
+
 
         /* Container for the chart, allows scrolling */
         #chart-container {
@@ -164,9 +203,9 @@
     <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
 
     <div id="search-container">
-        <input type="text" id="search-input" placeholder="メンバーの名前で検索" />
+        <input type="text" id="search-input" placeholder="メンバーの名前で検索" autocomplete="off" />
         <button id="search-button">検索</button>
-    </div>
+        <ul id="suggestions-list"></ul> </div>
 
     <div id="chart-container">
         <svg id="tree-svg"></svg>
@@ -182,6 +221,15 @@
         let currentZoomBehavior = null; // Store the current zoom behavior
         let svgElement = null; // Reference to the SVG DOM element
         let mainGElement = null; // Reference to the main group DOM element
+        let chartContainerElement = null; // Reference to the chart container DOM element
+
+        // Function to convert Hiragana to Katakana
+        function hiraToKata(str) {
+            return str.replace(/[\u3041-\u3096]/g, function(match) {
+                const chr = match.charCodeAt(0) + 0x60;
+                return String.fromCharCode(chr);
+            });
+        }
 
         // Wait for the DOM to be fully loaded
         window.addEventListener("DOMContentLoaded", () => {
@@ -212,8 +260,9 @@
                     const svg = d3.select("#tree-svg");
                     svgElement = svg.node(); // Store reference to the DOM element
                     const chartContainer = d3.select("#chart-container");
-                    const containerWidth = chartContainer.node().clientWidth;
-                    const containerHeight = chartContainer.node().clientHeight;
+                    chartContainerElement = chartContainer.node(); // Store reference to the DOM element
+                    const containerWidth = chartContainerElement.clientWidth;
+                    const containerHeight = chartContainerElement.clientHeight;
 
 
                     // Define margins and node dimensions
@@ -408,20 +457,12 @@
                     if (firstRootData) {
                         const firstRootHierarchyNode = nodeHierarchyMap.get(firstRootData.id);
                          if (firstRootHierarchyNode) {
-                            const targetX = firstRootHierarchyNode.x;
-                            const targetY = firstRootHierarchyNode.y;
-
-                            // Calculate the transform to center the first root node
-                            const initialScale = 1.0; // Start with 1x scale
-                            const initialTranslateX = containerWidth / 2 - targetX * initialScale;
-                            const initialTranslateY = containerHeight / 2 - targetY * initialScale;
-
-                            const initialTransform = d3.zoomIdentity
-                                .translate(initialTranslateX, initialTranslateY)
-                                .scale(initialScale);
-
-                            // Apply the initial transform with a smooth transition
-                            svg.transition().duration(750).call(zoom.transform, initialTransform);
+                            // Use translateTo to center the first root node
+                            svg.transition().duration(750).call(
+                                zoom.translateTo,
+                                firstRootHierarchyNode.x,
+                                firstRootHierarchyNode.y
+                            );
                          }
                     } else {
                          console.warn("No root node found for initial centering.");
@@ -432,17 +473,27 @@
                     // --- Search Functionality ---
                     const searchInput = document.getElementById("search-input");
                     const searchButton = document.getElementById("search-button");
+                    const suggestionsList = document.getElementById("suggestions-list");
 
-                    searchButton.addEventListener("click", () => {
-                        const searchTerm = searchInput.value.trim().toLowerCase();
-                        if (!searchTerm) {
+                    // Function to perform the search and zoom
+                    function performSearch(searchTerm) {
+                         if (!searchTerm) {
                             // Clear highlight if search term is empty
                             mainG.selectAll(".node-highlight").classed("node-highlight", false);
                             return;
                         }
 
-                        // Find the node data that matches the search term (case-insensitive)
-                        const foundNodeData = allNodesData.find(d => d.name.toLowerCase().includes(searchTerm));
+                        // Convert search term to Katakana for fuzzy matching
+                        const searchTermKata = hiraToKata(searchTerm).toLowerCase();
+
+                        // Find the node data that matches the search term (case-insensitive, using Katakana)
+                        const foundNodeData = allNodesData.find(d => {
+                            // Convert node name to Katakana for comparison if it's not already
+                            const nodeName = d.name || "";
+                            const nodeNameKata = hiraToKata(nodeName).toLowerCase();
+                            return nodeNameKata.includes(searchTermKata);
+                        });
+
 
                         if (foundNodeData) {
                             // Find the corresponding D3 hierarchy node using the map
@@ -459,31 +510,12 @@
                                     .classed("node-highlight", true);
 
 
-                                // Get the layout coordinates (x, y) of the found node
-                                const targetX = foundHierarchyNode.x;
-                                const targetY = foundHierarchyNode.y;
-
-                                // Get the current transform
-                                const currentTransform = d3.zoomTransform(svgElement);
-
-                                // Calculate the new transform to center the node
-                                // The target position in the container is (centerX, centerY)
-                                // The current position of the target node in the SVG is (targetX, targetY)
-                                // We want to translate the view so that (targetX, targetY) moves to (centerX, centerY)
-                                // NewTx = CurrentTx + (centerX - (CurrentTx + targetX * CurrentScale)) / CurrentScale
-                                // Simplified: NewTx = centerX - targetX * CurrentScale
-                                // NewTy = centerY - targetY * CurrentScale
-
-                                const newTranslateX = containerWidth / 2 - targetX * currentTransform.k;
-                                const newTranslateY = containerHeight / 2 - targetY * currentTransform.k;
-
-                                // Create the new transform object
-                                const newTransform = d3.zoomIdentity
-                                    .translate(newTranslateX, newTranslateY)
-                                    .scale(currentTransform.k); // Keep the current scale
-
-                                // Apply the new transform with a smooth transition
-                                svg.transition().duration(750).call(currentZoomBehavior.transform, newTransform);
+                                // Use translateTo to center the found node
+                                svg.transition().duration(750).call(
+                                    currentZoomBehavior.translateTo,
+                                    foundHierarchyNode.x,
+                                    foundHierarchyNode.y
+                                );
 
                             } else {
                                 console.warn("Could not find hierarchy node in map for data:", foundNodeData);
@@ -495,15 +527,74 @@
                             // Remove previous highlights
                             mainG.selectAll(".node-highlight").classed("node-highlight", false);
                         }
+                    }
+
+
+                    searchButton.addEventListener("click", () => {
+                        const searchTerm = searchInput.value.trim();
+                        performSearch(searchTerm);
+                        suggestionsList.style.display = 'none'; // Hide suggestions after search
                     });
+
                     // Allow searching by pressing Enter in the input field
                     searchInput.addEventListener("keypress", (event) => {
                         if (event.key === "Enter") {
                             event.preventDefault(); // Prevent default form submission if any
-                            searchButton.click(); // Trigger the search button click
+                            const searchTerm = searchInput.value.trim();
+                            performSearch(searchTerm);
+                            suggestionsList.style.display = 'none'; // Hide suggestions after search
                         }
                     });
-                    // --- End Search Functionality ---
+
+                    // --- Search Suggestion Functionality ---
+
+                    searchInput.addEventListener("input", () => {
+                        const searchTerm = searchInput.value.trim().toLowerCase();
+                        suggestionsList.innerHTML = ''; // Clear previous suggestions
+
+                        if (searchTerm.length > 0) {
+                            // Convert search term to Katakana for matching
+                            const searchTermKata = hiraToKata(searchTerm);
+
+                            // Filter nodes whose names contain the search term (case-insensitive, using Katakana)
+                            const matchingNodes = allNodesData.filter(d => {
+                                const nodeName = d.name || "";
+                                const nodeNameKata = hiraToKata(nodeName).toLowerCase();
+                                return nodeNameKata.includes(searchTermKata);
+                            });
+
+                            // Display suggestions
+                            if (matchingNodes.length > 0) {
+                                matchingNodes.forEach(node => {
+                                    const li = document.createElement("li");
+                                    li.textContent = node.name;
+                                    li.addEventListener("click", () => {
+                                        searchInput.value = node.name; // Put selected suggestion in input
+                                        performSearch(node.name); // Perform search for the selected name
+                                        suggestionsList.style.display = 'none'; // Hide suggestions
+                                    });
+                                    suggestionsList.appendChild(li);
+                                });
+                                suggestionsList.style.display = 'block'; // Show suggestions list
+                            } else {
+                                suggestionsList.style.display = 'none'; // Hide if no matches
+                            }
+                        } else {
+                            suggestionsList.style.display = 'none'; // Hide if input is empty
+                            // Clear highlight when input is cleared
+                            mainG.selectAll(".node-highlight").classed("node-highlight", false);
+                        }
+                    });
+
+                    // Hide suggestions when clicking outside the input/suggestions
+                    document.addEventListener("click", (event) => {
+                        const isClickInsideSearchContainer = document.getElementById("search-container").contains(event.target);
+                        if (!isClickInsideSearchContainer) {
+                            suggestionsList.style.display = 'none';
+                        }
+                    });
+
+                    // --- End Search Suggestion Functionality ---
 
 
                 })
