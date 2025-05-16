@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>フットサルメンバー紹介ツリー（D3.js版）</title>
+    <title>フットサルメンバー紹介ツリー（D3.js版1）</title>
     <style>
         /* Basic body styling */
         body {
@@ -471,50 +471,28 @@
                              current = current.parent;
                          }
                          const subtreeRootData = current.data;
-                         const subtreeRootNode = mainG.select(`g[transform*="translate(${margin.left + ((maxSvgWidth / 2) - ((d3.extent(current.descendants(), n => n.x)[0] + d3.extent(current.descendants(), n => n.x)[1]) / 2))}, ${d3.select(current.parent ? current.parent : mainG).datum() ? d3.select(current.parent ? current.parent : mainG).datum().y : margin.top})"]`); // This is getting complicated
+                         // The previous approach to find subtree translation was overly complex.
+                         // Let's use the layout coordinates directly, assuming they are relative
+                         // to the top-left of the entire SVG content area (after initial subtree translations).
 
-                        // Let's use the simpler approach: calculate bounds from all hierarchy nodes' layout coordinates
-                        // and the overall size. The layout is designed to fit within finalSvgWidth/Height.
-                        // The center of the overall tree should be roughly the center of the finalSvgWidth/Height.
-
-                        minX = Math.min(minX, d.x);
-                        maxX = Math.max(maxX, d.x);
-                        minY = Math.min(minY, d.y);
-                        maxY = Math.max(maxY, d.y);
+                        minX = Math.min(minX, d.x + (d.parent ? d.parent.x : 0)); // Rough estimate including parent x for subtree offset
+                        maxX = Math.max(maxX, d.x + (d.parent ? d.parent.x : 0));
+                        minY = Math.min(minY, d.y + (d.parent ? d.parent.y : 0)); // Rough estimate including parent y for subtree offset
+                        maxY = Math.max(maxY, d.y + (d.parent ? d.parent.y : 0));
                     });
 
-                    // Calculate the center of the overall tree based on layout coordinates
-                    const treeCenterX = (minX + maxX) / 2;
-                    const treeCenterY = (minY + maxY) / 2;
-
-                    // Calculate the overall horizontal offset applied to subtrees
-                    // Assuming the first root's offset is representative
-                    const firstRootDataForOffset = allNodesData.find(d => d.introducerPageId === null);
-                    let overallOffsetX = 0;
-                    if (firstRootDataForOffset) {
-                         const firstRootHierarchyNodeForOffset = nodeHierarchyMap.get(firstRootDataForOffset.id);
-                         if (firstRootHierarchyNodeForOffset) {
-                              let x0_offset = Infinity, x1_offset = -Infinity;
-                              firstRootHierarchyNodeForOffset.each(d => {
-                                  if (d.x < x0_offset) x0_offset = d.x;
-                                  if (d.x > x1_offset) x1_offset = d.x;
-                              });
-                              overallOffsetX = (maxSvgWidth / 2) - ((x1_offset + x0_offset) / 2);
-                         }
-                    }
-
-
-                    // Calculate the target center coordinates in the SVG's coordinate system
-                    // This is the center of the tree layout plus the overall offset and left margin
-                    const targetCenterX = margin.left + overallOffsetX + treeCenterX;
-                    const targetCenterY = margin.top + treeCenterY;
+                    // A more accurate way to get the overall bounds might be to get the bounding box of the main group
+                     const mainGBounds = mainGElement.getBBox();
+                     const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
+                     const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
 
 
                     // Use translateTo to center the overall tree
+                    // Use the calculated center of the main group's bounding box
                     svg.transition().duration(750).call(
                         zoom.translateTo,
-                        targetCenterX,
-                        targetCenterY
+                        treeCenterX,
+                        treeCenterY
                     );
 
                     // --- End Initial centering ---
@@ -561,19 +539,12 @@
 
 
                                 // Use translateTo to center the found node
+                                // Pass the node's layout coordinates directly
                                 svg.transition().duration(750).call(
                                     currentZoomBehavior.translateTo,
-                                    foundHierarchyNode.x + (mainG.node().getBBox().x), // Adjust for main group's current translation
-                                    foundHierarchyNode.y + (mainG.node().getBBox().y) // Adjust for main group's current translation
+                                    foundHierarchyNode.x,
+                                    foundHierarchyNode.y
                                 );
-                                 // Note: getBBox().x/y might not be the correct way to get the current translation
-                                 // A more reliable way is to parse the transform attribute or use d3.zoomTransform
-                                 const currentTransform = d3.zoomTransform(svgElement);
-                                 svg.transition().duration(750).call(
-                                     currentZoomBehavior.translateTo,
-                                     currentTransform.applyX(foundHierarchyNode.x), // Apply current transform to node's x
-                                     currentTransform.applyY(foundHierarchyNode.y)  // Apply current transform to node's y
-                                 );
 
 
                             } else {
