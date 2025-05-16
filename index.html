@@ -224,6 +224,7 @@
         let svgElement = null; // Reference to the SVG DOM element
         let mainGElement = null; // Reference to the main group DOM element
         let chartContainerElement = null; // Reference to the chart container DOM element
+        let nodeElements = new Map(); // Store D3 selection of node elements by data ID
 
         // Function to convert Hiragana to Katakana
         function hiraToKata(str) {
@@ -351,6 +352,11 @@
                             node.each(function(d) {
                                 nodeHierarchyMap.set(d.data.id, d);
                                 allHierarchyNodes.push(d); // Add to the list of all hierarchy nodes
+                            });
+
+                            // Store the D3 selection of the node element by data ID
+                            node.each(function(d) {
+                                nodeElements.set(d.data.id, d3.select(this));
                             });
 
 
@@ -507,28 +513,39 @@
                         if (foundNodeData) {
                             // Find the corresponding D3 hierarchy node using the map
                             const foundHierarchyNode = nodeHierarchyMap.get(foundNodeData.id);
+                            // Find the actual SVG group element for the found node
+                            const foundNodeElement = nodeElements.get(foundNodeData.id);
 
-                            if (foundHierarchyNode) {
+
+                            if (foundHierarchyNode && foundNodeElement) {
                                 // Remove previous highlights
                                 mainG.selectAll(".node-highlight").classed("node-highlight", false);
 
-                                // Find the actual SVG group element for highlighting
-                                // We need to select the group based on the data bound to it
-                                mainG.selectAll("g")
-                                    .filter(d => d && d.data && d.data.id === foundNodeData.id)
-                                    .classed("node-highlight", true);
+                                // Add highlight to the found node's SVG group element
+                                foundNodeElement.classed("node-highlight", true);
 
-                                // Calculate the target translation to center the node at the searchZoomScale
-                                // The target node's coordinates in the original SVG space are foundHierarchyNode.x, foundHierarchyNode.y
-                                // We want to center this point at the center of the container (containerWidth/2, containerHeight/2)
-                                // at the searchZoomScale.
-                                // The new transform (translate, scale) should map the target node's position
-                                // to the container's center.
-                                // newX = oldX * scale + translateX  => translateX = newX - oldX * scale
-                                // newY = oldY * scale + translateY  => translateY = newY - oldY * scale
+                                // Get the bounding box of the found node's SVG element
+                                const nodeBBox = foundNodeElement.node().getBBox();
+                                // Calculate the center of the node's bounding box in its local coordinate system
+                                const nodeCenterX_local = nodeBBox.x + nodeBBox.width / 2;
+                                const nodeCenterY_local = nodeBBox.y + nodeBBox.height / 2;
+
+                                // We need to find the absolute position of this local center within the SVG.
+                                // The layout coordinates (foundHierarchyNode.x, foundHierarchyNode.y)
+                                // are the center of the node relative to its subtree's origin.
+                                // The subtree's origin is translated within mainG.
+                                // A simpler approach is to use the layout coordinates directly,
+                                // as translateTo works with the original SVG coordinate system.
 
                                 const targetX = foundHierarchyNode.x;
                                 const targetY = foundHierarchyNode.y;
+
+                                // Calculate the new transform to center the node at the searchZoomScale
+                                // The target node's coordinates in the original SVG space are targetX, targetY
+                                // We want to center this point at the center of the container (containerWidth/2, containerHeight/2)
+                                // at the searchZoomScale.
+                                // newX = oldX * scale + translateX  => translateX = newX - oldX * scale
+                                // newY = oldY * scale + translateY  => translateY = newY - oldY * scale
 
                                 const newTranslateX = containerWidth / 2 - targetX * searchZoomScale;
                                 const newTranslateY = containerHeight / 2 - targetY * searchZoomScale;
@@ -544,7 +561,7 @@
 
 
                             } else {
-                                console.warn("Could not find hierarchy node in map for data:", foundNodeData);
+                                console.warn("Could not find hierarchy node or SVG element in map for data:", foundNodeData);
                                 alert("検索されたメンバーのノード情報が見つかりませんでした。");
                             }
                         } else {
