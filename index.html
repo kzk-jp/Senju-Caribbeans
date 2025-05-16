@@ -195,6 +195,7 @@
         .node-highlight .node-card {
             border-color: #f59e0b; /* Tailwind amber-500 */
             box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); /* Amber shadow */
+            background-color: #fcd34d; /* Tailwind amber-300 - Highlight background color */
         }
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -216,7 +217,7 @@
         // IMPORTANT: Replace with your actual GitHub Raw URL or local path
         const JSON_FILE_PATH = 'tree_data.json';
 
-        const searchZoomScale = 2.0; // Define the fixed zoom scale for search results
+        // const searchZoomScale = 2.0; // 検索時のズーム率は使用しないためコメントアウト
 
         let allNodesData = []; // Store flattened node data for searching
         let nodeHierarchyMap = new Map(); // Store hierarchy nodes keyed by data ID
@@ -490,11 +491,12 @@
                     const searchButton = document.getElementById("search-button");
                     const suggestionsList = document.getElementById("suggestions-list");
 
-                    // Function to perform the search and zoom
+                    // Function to perform the search and highlight
                     function performSearch(searchTerm) {
+                         // Remove previous highlights
+                         mainG.selectAll(".node-highlight").classed("node-highlight", false);
+
                          if (!searchTerm) {
-                            // Clear highlight if search term is empty
-                            mainG.selectAll(".node-highlight").classed("node-highlight", false);
                             return;
                         }
 
@@ -511,64 +513,22 @@
 
 
                         if (foundNodeData) {
-                            // Find the corresponding D3 hierarchy node using the map
-                            const foundHierarchyNode = nodeHierarchyMap.get(foundNodeData.id);
                             // Find the actual SVG group element for the found node
                             const foundNodeElement = nodeElements.get(foundNodeData.id);
 
-
-                            if (foundHierarchyNode && foundNodeElement) {
-                                // Remove previous highlights
-                                mainG.selectAll(".node-highlight").classed("node-highlight", false);
-
+                            if (foundNodeElement) {
                                 // Add highlight to the found node's SVG group element
                                 foundNodeElement.classed("node-highlight", true);
 
-                                // Get the bounding box of the found node's SVG element
-                                const nodeBBox = foundNodeElement.node().getBBox();
-                                // Calculate the center of the node's bounding box in its local coordinate system
-                                const nodeCenterX_local = nodeBBox.x + nodeBBox.width / 2;
-                                const nodeCenterY_local = nodeBBox.y + nodeBBox.height / 2;
-
-                                // We need to find the absolute position of this local center within the SVG.
-                                // The layout coordinates (foundHierarchyNode.x, foundHierarchyNode.y)
-                                // are the center of the node relative to its subtree's origin.
-                                // The subtree's origin is translated within mainG.
-                                // A simpler approach is to use the layout coordinates directly,
-                                // as translateTo works with the original SVG coordinate system.
-
-                                const targetX = foundHierarchyNode.x;
-                                const targetY = foundHierarchyNode.y;
-
-                                // Calculate the new transform to center the node at the searchZoomScale
-                                // The target node's coordinates in the original SVG space are targetX, targetY
-                                // We want to center this point at the center of the container (containerWidth/2, containerHeight/2)
-                                // at the searchZoomScale.
-                                // newX = oldX * scale + translateX  => translateX = newX - oldX * scale
-                                // newY = oldY * scale + translateY  => translateY = newY - oldY * scale
-
-                                const newTranslateX = containerWidth / 2 - targetX * searchZoomScale;
-                                const newTranslateY = containerHeight / 2 - targetY * searchZoomScale;
-
-
-                                // Create the new transform object with the desired scale and translation
-                                const newTransform = d3.zoomIdentity
-                                    .translate(newTranslateX, newTranslateY)
-                                    .scale(searchZoomScale); // Use the fixed search zoom scale
-
-                                // Apply the new transform with a smooth transition
-                                svg.transition().duration(750).call(currentZoomBehavior.transform, newTransform);
-
-
+                                // *** 自動移動のコードを削除 ***
+                                // 検索時の移動は行わない
                             } else {
-                                console.warn("Could not find hierarchy node or SVG element in map for data:", foundNodeData);
+                                console.warn("Could not find SVG element in map for data:", foundNodeData);
                                 alert("検索されたメンバーのノード情報が見つかりませんでした。");
                             }
                         } else {
                             // Member not found
                             alert("「" + searchTerm + "」という名前のメンバーは見つかりませんでした。");
-                            // Remove previous highlights
-                            mainG.selectAll(".node-highlight").classed("node-highlight", false);
                         }
                     }
 
@@ -594,6 +554,14 @@
                     searchInput.addEventListener("input", () => {
                         const searchTerm = searchInput.value.trim().toLowerCase();
                         suggestionsList.innerHTML = ''; // Clear previous suggestions
+
+                        // 入力が空になったらハイライトをクリア
+                        if (searchTerm.length === 0) {
+                             mainG.selectAll(".node-highlight").classed("node-highlight", false);
+                             suggestionsList.style.display = 'none';
+                             return;
+                        }
+
 
                         if (searchTerm.length > 0) {
                             // Convert search term to Katakana for matching
