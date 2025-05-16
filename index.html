@@ -279,7 +279,7 @@
                     let totalSvgHeight = 0; // Track total height needed for all subtrees
 
 
-                    // Create a main group to hold all group subtrees - This group will be zoomed/panned
+                    // Create a main group to hold all group subtrees - This group will be zoomed/panne d
                     const mainG = svg.append("g");
                     mainGElement = mainG.node(); // Store reference to the DOM element
 
@@ -519,16 +519,20 @@
                                     .classed("node-highlight", true);
 
                                 // Calculate the target translation to center the node at the searchZoomScale
-                                const centerX = chartContainerElement.clientWidth / 2;
-                                const centerY = chartContainerElement.clientHeight / 2;
-
                                 // The target node's coordinates in the original SVG space are foundHierarchyNode.x, foundHierarchyNode.y
-                                // We want to center this point at (centerX, centerY) at the searchZoomScale
-                                // NewTx = centerX - targetX * NewScale
-                                // NewTy = centerY - targetY * NewScale
+                                // We want to center this point at the center of the container (containerWidth/2, containerHeight/2)
+                                // at the searchZoomScale.
+                                // The new transform (translate, scale) should map the target node's position
+                                // to the container's center.
+                                // newX = oldX * scale + translateX  => translateX = newX - oldX * scale
+                                // newY = oldY * scale + translateY  => translateY = newY - oldY * scale
 
-                                const newTranslateX = centerX - foundHierarchyNode.x * searchZoomScale;
-                                const newTranslateY = centerY - foundHierarchyNode.y * searchZoomScale;
+                                const targetX = foundHierarchyNode.x;
+                                const targetY = foundHierarchyNode.y;
+
+                                const newTranslateX = containerWidth / 2 - targetX * searchZoomScale;
+                                const newTranslateY = containerHeight / 2 - targetY * searchZoomScale;
+
 
                                 // Create the new transform object with the desired scale and translation
                                 const newTransform = d3.zoomIdentity
