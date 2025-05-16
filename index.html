@@ -34,14 +34,24 @@
             background-color: #e5e7eb; /* Tailwind gray-200 */
             border-bottom: 1px solid #d1d5db; /* Tailwind gray-300 */
             flex-shrink: 0; /* Prevent search bar from shrinking */
+            position: relative; /* For suggestion box positioning */
+        }
+
+        /* Wrapper for input and suggestions for better layout control */
+        .search-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 280px; /* Adjust width as needed */
+            vertical-align: middle; /* Align with button */
         }
 
         #search-container input[type="text"] {
             padding: 8px;
-            margin-right: 5px;
             border: 1px solid #d1d5db;
             border-radius: 4px;
             font-size: 1rem;
+            width: 100%; /* Fill the wrapper */
+            box-sizing: border-box;
         }
 
         #search-container button {
@@ -53,11 +63,42 @@
             cursor: pointer;
             font-size: 1rem;
             transition: background-color 0.2s ease;
+            margin-left: 5px; /* Space between input wrapper and button */
+            vertical-align: middle; /* Align with input wrapper */
         }
 
         #search-container button:hover {
             background-color: #2563eb; /* Tailwind blue-700 */
         }
+
+        /* Suggestions container styling */
+        #suggestions-container {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #d1d5db; /* Tailwind gray-300 */
+            border-top: none;
+            z-index: 1000;
+            max-height: 150px;
+            overflow-y: auto;
+            width: 100%; /* Match wrapper width */
+            left: 0;
+            top: 100%; /* Position it right below the input */
+            box-sizing: border-box;
+            display: none; /* Initially hidden */
+            text-align: left; /* Align text to the left for readability */
+        }
+
+        .suggestion-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .suggestion-item:hover {
+            background-color: #e0e0e0; /* Lighter gray for hover */
+        }
+
 
         /* Container for the chart, allows zoom/pan handled by D3 */
         #chart-container {
@@ -66,7 +107,6 @@
             overflow: hidden; /* Hide default scrollbars */
             padding: 0;
             box-sizing: border-box;
-            /* touch-action: none; /* Optional: Prevent default touch actions like swipe navigation */
         }
 
         /* SVG element styling */
@@ -74,7 +114,6 @@
             display: block; /* Remove extra space below svg */
             width: 100%; /* Fill container width */
             height: 100%; /* Fill container height */
-            /* Initial content size will be set dynamically by JS and handled by D3 zoom */
         }
 
         /* Styling for the node card (using foreignObject) */
@@ -86,91 +125,91 @@
             background-color: white;
             border: 1px solid #d1d5db; /* Tailwind gray-300 border */
             border-radius: 12px; /* Tailwind rounded-xl */
-            padding: 8px; /* Increased padding */
+            padding: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* Subtle shadow */
             width: 120px; /* Fixed width for the card */
-            box-sizing: border-box; /* Include padding and border in width */
+            height: 100%; /* Make card fill foreignObject height */
+            box-sizing: border-box; /* Include padding and border in width/height */
             text-align: center;
+            transition: background-color 0.3s ease, border-color 0.3s ease; /* Smooth transition for highlight */
         }
 
-        /* Styling for the link wrapper inside the node card */
         .node-card a {
-            text-decoration: none; /* Remove underline from links */
-            color: inherit; /* Inherit text color */
-            display: flex; /* Use flexbox for link content */
-            flex-direction: column; /* Stack content vertically within link */
-            align-items: center; /* Center content horizontally within link */
-            width: 100%; /* Make link fill the card width */
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
 
-        /* Styling for the node image */
         .node-image {
             width: 50px;
             height: 50px;
-            border-radius: 50%; /* Circular image */
-            object-fit: cover; /* Crop image to fit */
-            margin-bottom: 6px; /* Space below image */
-            box-shadow: 0 0 3px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 6px;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
         }
 
-        /* Styling for the placeholder when no image is available */
         .node-placeholder {
             width: 50px;
             height: 50px;
-            border-radius: 50%; /* Circular placeholder */
-            background-color: #d1d5db; /* Tailwind gray-300 */
+            border-radius: 50%;
+            background-color: #d1d5db;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #4b5563; /* Tailwind gray-600 */
+            color: #4b5563;
             font-weight: bold;
-            font-size: 1rem; /* Increased font size */
-            margin-bottom: 6px; /* Space below placeholder */
+            font-size: 1rem;
+            margin-bottom: 6px;
         }
 
-        /* Styling for the node name */
         .node-name {
-            font-size: 11px; /* Increased font size */
+            font-size: 11px;
             text-align: center;
-            font-weight: 600; /* Semi-bold */
-            line-height: 1.3; /* Adjusted line height */
-            white-space: normal; /* Allow text to wrap */
-            word-break: break-word; /* Break long words */
-            max-width: 100%; /* Ensure name fits within card */
+            font-weight: 600;
+            line-height: 1.3;
+            white-space: normal;
+            word-break: break-word;
+            max-width: 100%;
         }
 
-        /* Styling for introducer and reason text */
         .node-introducer, .node-reason {
-            font-size: 9px; /* Smaller font for details */
+            font-size: 9px;
             color: #555;
             text-align: center;
             line-height: 1.2;
             white-space: normal;
             word-break: break-word;
             max-width: 100%;
-            margin-top: 2px; /* Space above introducer/reason */
+            margin-top: 2px;
         }
 
-        /* Styling for the links between nodes */
         .link {
             fill: none;
             stroke: #94a3b8; /* Tailwind slate-400 */
-            stroke-width: 1.5px; /* Increased line thickness */
+            stroke-width: 1.5px;
         }
 
         /* Styling for highlighting the searched node */
         .node-highlight .node-card {
-            border-color: #f59e0b; /* Tailwind amber-500 */
-            box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); /* Amber shadow */
+            background-color: #fef3c7; /* Tailwind amber-100 for background highlight */
+            border-color: #f59e0b; /* Tailwind amber-500 for border emphasis */
+            /* box-shadow: 0 0 10px rgba(245, 158, 11, 0.7); */ /* Optional: stronger shadow */
         }
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版）あ</h1>
 
     <div id="search-container">
-        <input type="text" id="search-input" placeholder="メンバーの名前で検索" />
+        <div class="search-input-wrapper">
+            <input type="text" id="search-input" placeholder="メンバーの名前で検索" autocomplete="off" />
+            <div id="suggestions-container"></div>
+        </div>
         <button id="search-button">検索</button>
     </div>
 
@@ -180,389 +219,317 @@
 
     <script>
         // Define the path to your JSON data file
-        // IMPORTANT: Replace with your actual GitHub Raw URL or local path
-        const JSON_FILE_PATH = 'tree_data.json';
+        const JSON_FILE_PATH = 'tree_data.json'; // このファイルパスが正しいことを確認してください
 
-        let allNodesData = []; // Store flattened node data for searching
+        let allNodesData = []; // Store flattened node data for searching and suggestions
         let currentZoomBehavior = null; // Store the current zoom behavior instance
-        let nodeElementsMap = new Map(); // Store node elements keyed by ID
+        let nodeElementsMap = new Map(); // Store node D3 selections keyed by ID
+        let hierarchyNodeMap = new Map(); // Store D3 hierarchy nodes keyed by ID
+
+        // Variables to store overall SVG dimensions, calculated once after all subtrees are processed
+        let finalSvgWidth = 0;
+        let finalSvgHeight = 0;
+        let mainG; // Main group for all chart elements
 
         // Wait for the DOM to be fully loaded
         window.addEventListener("DOMContentLoaded", () => {
-            // Fetch the JSON data
+            const searchInput = document.getElementById("search-input");
+            const searchButton = document.getElementById("search-button");
+            const suggestionsContainer = document.getElementById("suggestions-container");
+            const svg = d3.select("#tree-svg");
+            const chartContainer = d3.select("#chart-container");
+            mainG = svg.append("g"); // Define mainG here to be accessible globally within this scope
+
             fetch(JSON_FILE_PATH)
                 .then(response => {
-                    // Check if the response was successful
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    // Parse the JSON data
                     return response.json();
                 })
                 .then(jsonData => {
-                    // Validate the data format
                     if (!Array.isArray(jsonData)) {
                         document.getElementById("chart-container").innerHTML = "<p>データの形式が正しくありません。</p>";
                         return;
                     }
+                    allNodesData = jsonData;
 
-                    allNodesData = jsonData; // Store the fetched data
+                    // Populate suggestions initially if needed, or just prepare for input handling
+                    // (Suggestions will be built on input)
 
-                    // Group data by introduction_reason to potentially draw separate trees
-                    // If introduction_reason is null or undefined, group under "その他" (Other)
                     const groupedData = d3.group(jsonData, d => d.introduction_reason || "その他");
-
-                    // Select the SVG element and the container
-                    const svg = d3.select("#tree-svg");
-                    const chartContainer = d3.select("#chart-container");
-
-                    // Define margins and node dimensions
                     const margin = {top: 40, right: 20, bottom: 40, left: 20};
-                    const nodeWidth = 120; // Matches .node-card width
-                    const nodeHeight = 80; // Approximate height of .node-card content
-                    const verticalSpacing = 50; // Space between parent and child levels
-                    const horizontalSpacing = 20; // Minimum space between sibling nodes
+                    const nodeWidth = 120;
+                    const nodeHeight = 90; // Adjusted slightly for potentially more text
+                    const verticalSpacing = 60; // Increased for more space
+                    const horizontalSpacing = 30; // Increased for more space
 
-                    let currentYOffset = margin.top; // Vertical offset for placing subtrees
-                    let maxSvgWidth = 0; // Track maximum width needed for all subtrees
-                    let totalSvgHeight = 0; // Track total height needed for all subtrees
+                    let tempMaxTreeWidth = 0; // Max width among individual trees
+                    let currentYOffset = margin.top;
+                    let allRootsLayouts = []; // Store layout info for second pass
 
-                    // Create a main group to hold all group subtrees - This group will be zoomed/panned
-                    const mainG = svg.append("g");
-
-                    // Iterate through each group (based on introduction_reason)
+                    // First pass: Calculate layout for each tree and determine overall dimensions
                     groupedData.forEach((groupData, reason) => {
-                        // Find the root nodes for this group (nodes with no introducer)
                         const rootNodesData = groupData.filter(d => d.introducerPageId === null);
-
-                        // For each root node, draw a separate tree
                         rootNodesData.forEach(rootData => {
-                            // Create a D3 hierarchy from the root data
                             const root = d3.hierarchy(rootData, d => jsonData.filter(item => item.introducerPageId === d.id));
-
-                            // Define the tree layout
-                            const treeLayout = d3.tree()
-                                // nodeSize sets the fixed dimensions for each node cell in the layout
-                                .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]);
-
-                            // Apply the tree layout to the hierarchy
+                            const treeLayout = d3.tree().nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]);
                             treeLayout(root);
 
-                            // Calculate the horizontal extent of the current subtree
                             let x0 = Infinity, x1 = -Infinity;
                             root.each(d => {
                                 if (d.x < x0) x0 = d.x;
                                 if (d.x > x1) x1 = d.x;
                             });
-
-                            // Calculate the width of the current subtree
-                            const subtreeWidth = x1 - x0 + nodeWidth + horizontalSpacing;
-                            // Update maxSvgWidth if the current subtree is wider
-                            if (subtreeWidth > maxSvgWidth) {
-                                maxSvgWidth = subtreeWidth;
+                            const treeWidth = (x1 - x0) + nodeWidth; // Width of this specific tree
+                            if (treeWidth > tempMaxTreeWidth) {
+                                tempMaxTreeWidth = treeWidth;
                             }
+                            const treeHeight = root.height * (nodeHeight + verticalSpacing) + nodeHeight;
 
-                            // Calculate the horizontal offset needed to center the subtree relative to maxSvgWidth
-                            const offsetX = (maxSvgWidth / 2) - ((x1 + x0) / 2);
+                            allRootsLayouts.push({ root, reason, x0, x1, treeWidth, treeHeight, startY: currentYOffset });
+                            currentYOffset += treeHeight + margin.bottom; // Spacing for next tree group
 
-                            // Create a group for the current subtree within the main group
-                            const subtreeG = mainG.append("g")
-                                .attr("transform", `translate(${margin.left + offsetX}, ${currentYOffset})`);
-
-                            // Draw links (paths) between nodes
-                            subtreeG.append("g")
-                                .attr("fill", "none")
-                                .attr("stroke-linejoin", "round")
-                                .attr("stroke-width", 1.5)
-                                .selectAll("path")
-                                .data(root.links()) // Get link data from the hierarchy
-                                .join("path")
-                                .attr("class", "link")
-                                .attr("d", d3.linkVertical() // Use vertical links
-                                    .x(d => d.x) // X coordinate of the node (relative to subtreeG)
-                                    .y(d => d.y) // Y coordinate of the node (relative to subtreeG)
-                                );
-
-                            // Draw nodes (groups containing foreignObject for HTML content)
-                            const node = subtreeG.append("g")
-                                .selectAll("g")
-                                .data(root.descendants()) // Get all nodes from the hierarchy
-                                .join("g")
-                                .attr("transform", d => `translate(${d.x},${d.y})`); // Position the node group (relative to subtreeG)
-
-                            // Store a reference to the node element by its data ID
-                            node.each(function(d) {
-                                nodeElementsMap.set(d.data.id, d3.select(this));
-                            });
-
-
-                            // Append foreignObject to each node group to embed HTML
-                            const nodeForeignObject = node.append("foreignObject")
-                                .attr("x", -(nodeWidth / 2)) // Center the foreignObject horizontally relative to node origin
-                                .attr("y", -(nodeHeight / 2)) // Center the foreignObject vertically relative to node origin
-                                .attr("width", nodeWidth)
-                                .attr("height", nodeHeight);
-
-                            // Append the HTML div (.node-card) inside the foreignObject
-                            const nodeCard = nodeForeignObject.append("xhtml:div")
-                                .attr("class", "node-card");
-
-                            // Append an anchor tag (link) inside the card
-                            const linkWrapper = nodeCard.append("a")
-                                .attr("href", d => d.data.page_url || "#") // Link to page_url or '#' if none
-                                .attr("target", "_blank") // Open link in a new tab
-                                // Apply necessary styles to the anchor tag to make it behave like a container
-                                .style("text-decoration", "none")
-                                .style("color", "inherit")
-                                .style("display", "flex")
-                                .style("flex-direction", "column")
-                                .style("align-items", "center")
-                                .style("width", "100%");
-
-                            // Add image or placeholder to the link wrapper
-                            linkWrapper.each(function(d) {
-                                const container = d3.select(this);
-                                if (d.data.image) {
-                                    // If image URL exists, add an image element
-                                    container.append("img")
-                                        .attr("class", "node-image")
-                                        .attr("src", d.data.image)
-                                        .attr("alt", "photo");
-                                } else {
-                                    // If no image, add a placeholder div with the first letter of the name
-                                    container.append("div")
-                                        .attr("class", "node-placeholder")
-                                        .text(d.data.name ? d.data.name.charAt(0) : '?');
+                            // Populate hierarchyNodeMap
+                            root.descendants().forEach(dNode => {
+                                if (dNode.data && dNode.data.id) {
+                                    hierarchyNodeMap.set(dNode.data.id, dNode);
                                 }
                             });
+                        });
+                    });
 
-                            // Add text content (name, introducer, reason) below the image/placeholder
-                            const textContent = linkWrapper.append("div"); // Container for text elements
-                            textContent.append("div")
-                                .attr("class", "node-name")
-                                .text(d => d.data.name); // Display the member's name
+                    finalSvgWidth = tempMaxTreeWidth + margin.left + margin.right;
+                    finalSvgHeight = currentYOffset - margin.bottom + margin.top; // Total height based on last Y offset
 
-                            // Add introducer name if it exists
-                            textContent.each(function(d) {
-                                const container = d3.select(this);
-                                if (d.data.introducer_name) {
-                                    container.append("div")
-                                        .attr("class", "node-introducer")
-                                        .text(`紹介者: ${d.data.introducer_name}`);
-                                }
-                                // Add introduction reason if it exists and is not the default "その他"
-                                if (d.data.introduction_reason && d.data.introduction_reason !== "その他") {
-                                     container.append("div")
-                                        .attr("class", "node-reason")
-                                        .text(`理由: ${d.data.introduction_reason}`);
-                                }
-                            });
+                    // Second pass: Draw the trees now that we have final max width
+                    allRootsLayouts.forEach(({ root, reason, x0, x1, treeWidth, startY }) => {
+                        const offsetX = (finalSvgWidth / 2) - ((x1 + x0 + nodeWidth) / 2) ; // Centering calculation
+
+                        const subtreeG = mainG.append("g")
+                            .attr("transform", `translate(${offsetX}, ${startY})`);
+
+                        subtreeG.append("g")
+                            .attr("fill", "none")
+                            .attr("stroke-linejoin", "round")
+                            .attr("stroke-width", 1.5)
+                            .selectAll("path")
+                            .data(root.links())
+                            .join("path")
+                            .attr("class", "link")
+                            .attr("d", d3.linkVertical()
+                                .x(d => d.x)
+                                .y(d => d.y)
+                            );
+
+                        const node = subtreeG.append("g")
+                            .selectAll("g")
+                            .data(root.descendants())
+                            .join("g")
+                            .attr("transform", d => `translate(${d.x},${d.y})`)
+                            .attr("id", d => `node-${d.data.id}`); // Assign an ID to the node group
+
+                        node.each(function(d) {
+                            nodeElementsMap.set(d.data.id, d3.select(this));
+                        });
+
+                        const nodeForeignObject = node.append("foreignObject")
+                            .attr("x", -(nodeWidth / 2))
+                            .attr("y", -(nodeHeight / 2))
+                            .attr("width", nodeWidth)
+                            .attr("height", nodeHeight);
+
+                        const nodeCard = nodeForeignObject.append("xhtml:div")
+                            .attr("class", "node-card");
+
+                        const linkWrapper = nodeCard.append("a")
+                            .attr("href", d => d.data.page_url || "#")
+                            .attr("target", "_blank");
+
+                        linkWrapper.each(function(d) {
+                            const container = d3.select(this);
+                            if (d.data.image) {
+                                container.append("img")
+                                    .attr("class", "node-image")
+                                    .attr("src", d.data.image)
+                                    .attr("alt", d.data.name + " photo");
+                            } else {
+                                container.append("div")
+                                    .attr("class", "node-placeholder")
+                                    .text(d.data.name ? d.data.name.charAt(0).toUpperCase() : '?');
+                            }
+                        });
+
+                        const textContent = linkWrapper.append("div");
+                        textContent.append("div")
+                            .attr("class", "node-name")
+                            .text(d => d.data.name);
+
+                        textContent.each(function(d) {
+                            const container = d3.select(this);
+                            if (d.data.introducer_name) {
+                                container.append("div")
+                                    .attr("class", "node-introducer")
+                                    .text(`紹介者: ${d.data.introducer_name}`);
+                            }
+                            if (d.data.introduction_reason && d.data.introduction_reason !== "その他") {
+                                 container.append("div")
+                                    .attr("class", "node-reason")
+                                    .text(`理由: ${d.data.introduction_reason}`);
+                            }
+                        });
+                    });
 
 
-                            // Calculate the height of the current subtree
-                            const subtreeHeight = root.height * (nodeHeight + verticalSpacing);
-                            // Update the vertical offset for the next subtree
-                            currentYOffset += subtreeHeight + margin.bottom + verticalSpacing;
-                            // Add subtree height to the total height needed
-                            totalSvgHeight += subtreeHeight + margin.bottom + verticalSpacing;
+                    svg.attr("viewBox", `0 0 ${finalSvgWidth} ${finalSvgHeight}`)
+                       .attr("preserveAspectRatio", "xMidYMid meet");
 
-                        }); // End rootNodesData.forEach
-                    }); // End groupedData.forEach
 
-                    // Adjust SVG width and height based on the calculated maximum width and total height
-                    // Set SVG dimensions large enough to contain all content
-                    // D3 zoom will handle fitting this content into the container
-                    const finalSvgWidth = maxSvgWidth + margin.left + margin.right;
-                    const finalSvgHeight = totalSvgHeight + margin.top + margin.bottom;
-                    svg.attr("width", finalSvgWidth);
-                    svg.attr("height", finalSvgHeight);
-
-                    // --- D3 Zoom and Pan Functionality ---
-
-                    // Create a zoom behavior
-                    const zoom = d3.zoom()
-                         // No need to set extent if SVG size matches content size.
-                         // D3 zoom uses the element's dimensions by default.
-                        .scaleExtent([0.1, 3]) // Allow a wider range of zooming (e.g., zoom out more)
-                        // Define the function to call when zooming occurs
+                    currentZoomBehavior = d3.zoom()
+                        .scaleExtent([0.05, 3]) // Wider zoom range
                         .on("zoom", zoomed);
 
-                    // Apply the zoom behavior to the SVG element
-                    svg.call(zoom);
+                    svg.call(currentZoomBehavior);
 
-                    // Store the zoom behavior for later use
-                    currentZoomBehavior = zoom;
-
-                    // Zoom event handler function
                     function zoomed(event) {
-                        // Apply the transform from the zoom event to the main group
                         mainG.attr("transform", event.transform);
                     }
-
-                     // --- Initial centering and fitting using zoom transform ---
-                    // Use a slight delay to ensure container dimensions are correct
+                    
+                    // Initial fit and center
                     setTimeout(() => {
-                         const containerWidth = chartContainer.node().clientWidth;
-                         const containerHeight = chartContainer.node().clientHeight;
+                        const containerNode = chartContainer.node();
+                        if (!containerNode) return;
+                        const containerWidth = containerNode.clientWidth;
+                        const containerHeight = containerNode.clientHeight;
 
-                         // Calculate scale to fit the entire tree into the container
-                         const scaleX = containerWidth / finalSvgWidth;
-                         const scaleY = containerHeight / finalSvgHeight;
-                         const initialScale = Math.min(scaleX, scaleY); // Use the smaller scale to fit both dimensions
+                        if (finalSvgWidth === 0 || finalSvgHeight === 0) return; // Avoid division by zero
 
-                         // Cap the initial scale at 1.0 so it doesn't zoom in if the tree is small
-                         const clampedInitialScale = Math.min(1.0, initialScale);
+                        const scaleX = containerWidth / finalSvgWidth;
+                        const scaleY = containerHeight / finalSvgHeight;
+                        const initialScale = Math.min(scaleX, scaleY, 1.0); // Cap at 1.0
 
-                         // Calculate initial translation to center the content at the clamped scale
-                         const initialTranslateX = (containerWidth - finalSvgWidth * clampedInitialScale) / 2;
-                         const initialTranslateY = (containerHeight - finalSvgHeight * clampedInitialScale) / 2;
+                        const initialTranslateX = (containerWidth - finalSvgWidth * initialScale) / 2;
+                        const initialTranslateY = (containerHeight - finalSvgHeight * initialScale) / 2;
+                        
+                        const initialTransform = d3.zoomIdentity
+                            .translate(initialTranslateX, initialTranslateY)
+                            .scale(initialScale);
+                        
+                        svg.transition().duration(750).call(currentZoomBehavior.transform, initialTransform);
+                    }, 100);
 
-                         // Create the initial transform
-                         const initialTransform = d3.zoomIdentity
-                             .translate(initialTranslateX, initialTranslateY)
-                             .scale(clampedInitialScale);
 
-                         // Apply the initial transform with a smooth transition
-                         svg.transition().duration(750).call(zoom.transform, initialTransform);
-                    }, 100); // Small delay
+                    // --- Search Input Suggestions ---
+                    searchInput.addEventListener("input", function() {
+                        const term = this.value.trim().toLowerCase();
+                        suggestionsContainer.innerHTML = ""; // Clear previous suggestions
+                        if (!term) {
+                            suggestionsContainer.style.display = "none";
+                            return;
+                        }
+
+                        const matches = allNodesData.filter(d => d.name && d.name.toLowerCase().includes(term)).slice(0, 10); // Limit suggestions
+
+                        if (matches.length > 0) {
+                            matches.forEach(match => {
+                                const item = document.createElement("div");
+                                item.classList.add("suggestion-item");
+                                item.textContent = match.name;
+                                item.addEventListener("click", () => {
+                                    searchInput.value = match.name;
+                                    suggestionsContainer.style.display = "none";
+                                    searchButton.click(); // Trigger search
+                                });
+                                suggestionsContainer.appendChild(item);
+                            });
+                            suggestionsContainer.style.display = "block";
+                        } else {
+                            suggestionsContainer.style.display = "none";
+                        }
+                    });
+
+                    // Hide suggestions when clicking outside
+                    document.addEventListener("click", function(event) {
+                        if (!searchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
+                            suggestionsContainer.style.display = "none";
+                        }
+                    });
 
 
                     // --- Search Functionality ---
-                    const searchInput = document.getElementById("search-input");
-                    const searchButton = document.getElementById("search-button");
-
                     searchButton.addEventListener("click", () => {
-                        const searchTerm = searchInput.value.trim().toLowerCase();
+                        const searchTerm = searchInput.value.trim();
+                        suggestionsContainer.style.display = "none"; // Hide suggestions
 
                         // Remove previous highlights
                         mainG.selectAll(".node-highlight").classed("node-highlight", false);
 
-                        if (!searchTerm) {
-                            // If search term is empty, just remove highlight
-                            return;
-                        }
+                        if (!searchTerm) return;
 
-                        // Find the node data that matches the search term (case-insensitive)
-                        const foundNodeData = allNodesData.find(d => d.name.toLowerCase().includes(searchTerm));
+                        const foundNodeData = allNodesData.find(d => d.name && d.name.toLowerCase() === searchTerm.toLowerCase()); // Exact match for search, suggestions are includes based
 
                         if (foundNodeData) {
-                            // Find the corresponding D3 hierarchy node to get its layout position
-                            let foundHierarchyNode = null;
-                            // We need to iterate through the *drawn* nodes within the mainG group
-                            // to find the one corresponding to foundNodeData.id
-                            mainG.selectAll("g").each(function(d) {
-                                if (d && d.data && d.data.id === foundNodeData.id) {
-                                    foundHierarchyNode = d;
+                            const foundHierarchyNode = hierarchyNodeMap.get(foundNodeData.id);
+                            const foundNodeElement = nodeElementsMap.get(foundNodeData.id);
+
+                            if (foundHierarchyNode && foundNodeElement) {
+                                foundNodeElement.classed("node-highlight", true);
+
+                                const containerNode = chartContainer.node();
+                                if (!containerNode) return;
+                                const containerWidth = containerNode.clientWidth;
+                                const containerHeight = containerNode.clientHeight;
+
+                                // Get the absolute position of the node within the mainG's unscaled coordinate system
+                                let targetMainGX = foundHierarchyNode.x;
+                                let targetMainGY = foundHierarchyNode.y;
+
+                                let parent = foundNodeElement.node().parentNode; // This is the <g> for nodes
+                                parent = parent.parentNode; // This should be the subtreeG
+                                
+                                const subtreeTransformString = d3.select(parent).attr("transform");
+                                if (subtreeTransformString) {
+                                    const match = subtreeTransformString.match(/translate\(([^,]+),([^)]+)\)/);
+                                    if (match) {
+                                        targetMainGX += parseFloat(match[1]);
+                                        targetMainGY += parseFloat(match[2]);
+                                    }
                                 }
-                            });
+                                
+                                // Calculate scale to fit the entire tree
+                                const scaleX = containerWidth / finalSvgWidth;
+                                const scaleY = containerHeight / finalSvgHeight;
+                                const fitAllScale = Math.min(scaleX, scaleY, 1.0); // Cap at 1.0, ensure it fits
 
-                            if (foundHierarchyNode) {
-                                // Highlight the found node's element
-                                const foundNodeElement = nodeElementsMap.get(foundNodeData.id);
-                                if (foundNodeElement) {
-                                     foundNodeElement.classed("node-highlight", true);
-                                }
-
-
-                                // Get the position of the found node in the original layout coordinates
-                                // These coordinates are relative to the top-left of its subtree group,
-                                // which is translated within the mainG.
-                                // To get the position relative to the mainG origin, we need the subtree group's transform.
-                                // However, D3 zoom transform handles the entire mainG.
-                                // A simpler approach is to calculate the transformation needed to bring
-                                // the node's original layout coordinates (before any zoom transform)
-                                // to the center of the container.
-
-                                const containerWidth = chartContainer.node().clientWidth;
-                                const containerHeight = chartContainer.node().clientHeight;
-                                const currentTransform = d3.zoomTransform(svg.node());
-
-                                // Target position in the original unscaled SVG coordinate space (relative to mainG origin)
-                                // This is the node's layout position PLUS the subtree group's translation.
-                                // We need to find the subtree group containing this node.
-                                // Let's refine finding the node's *actual* position relative to mainG's origin (0,0)
-                                // The node's position relative to the mainG origin is d.x + subtree_translate_x, d.y + subtree_translate_y
-                                // We can get the node's transformed position directly from D3's transform object if we apply it to the node's layout position.
-                                // However, the target for zoom.transform is usually the *content* coordinate to bring to the center.
-
-                                // Let's use the node's layout coordinates (foundHierarchyNode.x, foundHierarchyNode.y)
-                                // relative to its subtree's translated origin within mainG.
-                                // The target position we want to move to the center of the container is
-                                // (foundHierarchyNode.x, foundHierarchyNode.y) within its subtree group.
-
-                                // Get the transform of the subtree group containing the node
-                                let subtreeTransform = d3.zoomIdentity;
-                                // Find the parent subtree group of the node
-                                mainG.selectAll("g").each(function(d) {
-                                    // Check if this group is a subtree group (has translate transform and contains the node)
-                                    const transformAttr = d3.select(this).attr("transform");
-                                     if (transformAttr && transformAttr.includes("translate(")) {
-                                         // Check if this group contains the found node
-                                         const descendants = d3.select(this).selectAll("g").data(); // Get nodes within this group
-                                         if (descendants.some(nodeD => nodeD.data && nodeD.data.id === foundNodeData.id)) {
-                                             const translateMatch = transformAttr.match(/translate\(([^,]+),([^)]+)\)/);
-                                             if (translateMatch) {
-                                                subtreeTransform = d3.zoomIdentity.translate(parseFloat(translateMatch[1]), parseFloat(translateMatch[2]));
-                                                // Found the subtree, break the loop (or use .find)
-                                                return false; // Stop .each iteration
-                                             }
-                                         }
-                                     }
-                                });
-
-
-                                // The node's position relative to the mainG origin is (subtreeTransform.x + foundHierarchyNode.x, subtreeTransform.y + foundHierarchyNode.y)
-                                const targetMainGX = subtreeTransform.x + foundHierarchyNode.x;
-                                const targetMainGY = subtreeTransform.y + foundHierarchyNode.y;
-
-
-                                // Calculate the transform to center this point (targetMainGX, targetMainGY)
-                                // at the center of the container (containerWidth / 2, containerHeight / 2)
-                                // while maintaining the current scale (currentTransform.k).
                                 const newTransform = d3.zoomIdentity
-                                    .translate(containerWidth / 2, containerHeight / 2) // Move the origin to the container center
-                                    .scale(currentTransform.k) // Apply the current scale
-                                    .translate(-targetMainGX, -targetMainGY); // Translate so the target point is at the origin
+                                    .translate(containerWidth / 2, containerHeight / 2)
+                                    .scale(fitAllScale)
+                                    .translate(-targetMainGX, -targetMainGY);
 
-                                // Apply the new transform with a smooth transition
                                 svg.transition().duration(750).call(currentZoomBehavior.transform, newTransform);
 
-
                             } else {
-                                 console.warn("Could not find hierarchy node for data:", foundNodeData);
-                                 alert("検索されたメンバーのノードが見つかりませんでした。");
-                             }
-
+                                console.warn("Could not find hierarchy node or element for data:", foundNodeData);
+                                alert("検索されたメンバーのノードが見つかりませんでした。");
+                            }
                         } else {
-                            // Member not found
                             alert("「" + searchTerm + "」という名前のメンバーは見つかりませんでした。");
-                            // Highlight is already cleared at the beginning
                         }
                     });
 
-                    // Allow pressing Enter in the input field to trigger search
                     searchInput.addEventListener("keypress", function(event) {
-                         if (event.key === "Enter") {
-                            event.preventDefault(); // Prevent default form submission if any
-                            searchButton.click(); // Simulate button click
-                         }
+                        if (event.key === "Enter") {
+                            event.preventDefault();
+                            searchButton.click();
+                        }
                     });
-                    // --- End Search Functionality ---
-
 
                 })
                 .catch(error => {
-                    // Log any errors during data fetching or processing
-                    console.error('Error fetching JSON data:', error);
-                    // Display an error message to the user
-                    document.getElementById("chart-container").innerHTML = "<p>データの読み込みに失敗しました。GitHubのRawtherapee URLが正しいか、またはCORSの問題がないか確認してください。</p>";
+                    console.error('Error processing data:', error);
+                    document.getElementById("chart-container").innerHTML = `<p>データの処理中にエラーが発生しました: ${error.message}</p>`;
                 });
         });
-
-        // Optional: Add a resize handler if you need the layout to recalculate
-        // on window resize. This is more complex with D3 layout and pan/zoom.
-        // For simplicity, this example does not include a full redraw on resize.
-
     </script>
 </body>
 </html>
