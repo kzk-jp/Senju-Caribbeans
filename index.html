@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>フットサルメンバー紹介ツリー（D3.js版）</title>
+    <title>フットサルメンバー紹介ツリー</title>
     <style>
         /* Basic body styling */
         body {
@@ -219,7 +219,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版a）</h1>
+    <h1>フットサルメンバー紹介ツリー</h1>
 
     <div id="search-container">
         <div class="input-container">
@@ -430,21 +430,6 @@
                             textContent.append("div")
                                 .attr("class", "node-name")
                                 .text(d => d.data.name); // Display the member's name
-
-                            // Add introducer name if it exists
-                            textContent.each(function(d) {
-                                const container = d3.select(this);
-                                if (d.data.introducer_name) {
-                                    container.append("div")
-                                        .attr("class", "node-introducer")
-                                        .text(`紹介者: ${d.data.introducer_name}`);
-                                }
-                                // Add introduction reason if it exists and is not the default "その他"
-                                if (d.data.introduction_reason && d.data.introduction_reason !== "その他") {
-                                     container.append("div")
-                                        .attr("class", "node-reason")
-                                        .text(`理由: ${d.data.introduction_reason}`);
-                                }
                             });
 
 
