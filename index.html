@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>フットサルメンバー紹介ツリー（D3.js版1）</title>
+    <title>フットサルメンバー紹介ツリー（D3.js版）</title>
     <style>
         /* Basic body styling */
         body {
@@ -200,7 +200,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版1）</h1>
 
     <div id="search-container">
         <input type="text" id="search-input" placeholder="メンバーの名前で検索" autocomplete="off" />
@@ -215,6 +215,8 @@
         // Define the path to your JSON data file
         // IMPORTANT: Replace with your actual GitHub Raw URL or local path
         const JSON_FILE_PATH = 'tree_data.json';
+
+        const searchZoomScale = 2.0; // Define the fixed zoom scale for search results
 
         let allNodesData = []; // Store flattened node data for searching
         let nodeHierarchyMap = new Map(); // Store hierarchy nodes keyed by data ID
@@ -275,6 +277,7 @@
                     let currentYOffset = margin.top; // Vertical offset for placing subtrees
                     let maxSvgWidth = 0; // Track maximum width needed for all subtrees
                     let totalSvgHeight = 0; // Track total height needed for all subtrees
+
 
                     // Create a main group to hold all group subtrees - This group will be zoomed/panned
                     const mainG = svg.append("g");
@@ -456,36 +459,10 @@
                     }
 
                      // --- Initial centering using zoom transform ---
-                    // Calculate the overall bounds of the tree
-                    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-                    allHierarchyNodes.forEach(d => {
-                        // Use layout coordinates (d.x, d.y) which are relative to the subtree origin
-                        // Need to consider the subtree's translation to get absolute position
-                        // This is complex with multiple subtrees. A simpler approach is to use
-                        // the bounding box of the main group *after* all elements are appended.
-
-                        // Alternative: Calculate bounds based on layout coordinates and subtree offsets
-                         const subtreeRoot = d; // Find the root of the subtree this node belongs to
-                         let current = d;
-                         while(current.parent && current.parent.depth > 0) {
-                             current = current.parent;
-                         }
-                         const subtreeRootData = current.data;
-                         // The previous approach to find subtree translation was overly complex.
-                         // Let's use the layout coordinates directly, assuming they are relative
-                         // to the top-left of the entire SVG content area (after initial subtree translations).
-
-                        minX = Math.min(minX, d.x + (d.parent ? d.parent.x : 0)); // Rough estimate including parent x for subtree offset
-                        maxX = Math.max(maxX, d.x + (d.parent ? d.parent.x : 0));
-                        minY = Math.min(minY, d.y + (d.parent ? d.parent.y : 0)); // Rough estimate including parent y for subtree offset
-                        maxY = Math.max(maxY, d.y + (d.parent ? d.parent.y : 0));
-                    });
-
-                    // A more accurate way to get the overall bounds might be to get the bounding box of the main group
+                    // Calculate the overall bounds of the tree using the main group's bounding box
                      const mainGBounds = mainGElement.getBBox();
                      const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
                      const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
-
 
                     // Use translateTo to center the overall tree
                     // Use the calculated center of the main group's bounding box
@@ -537,14 +514,25 @@
                                     .filter(d => d && d.data && d.data.id === foundNodeData.id)
                                     .classed("node-highlight", true);
 
+                                // Calculate the target translation to center the node at the searchZoomScale
+                                const centerX = chartContainerElement.clientWidth / 2;
+                                const centerY = chartContainerElement.clientHeight / 2;
 
-                                // Use translateTo to center the found node
-                                // Pass the node's layout coordinates directly
-                                svg.transition().duration(750).call(
-                                    currentZoomBehavior.translateTo,
-                                    foundHierarchyNode.x,
-                                    foundHierarchyNode.y
-                                );
+                                // The target node's coordinates in the original SVG space are foundHierarchyNode.x, foundHierarchyNode.y
+                                // We want to center this point at (centerX, centerY) at the searchZoomScale
+                                // NewTx = centerX - targetX * NewScale
+                                // NewTy = centerY - targetY * NewScale
+
+                                const newTranslateX = centerX - foundHierarchyNode.x * searchZoomScale;
+                                const newTranslateY = centerY - foundHierarchyNode.y * searchZoomScale;
+
+                                // Create the new transform object with the desired scale and translation
+                                const newTransform = d3.zoomIdentity
+                                    .translate(newTranslateX, newTranslateY)
+                                    .scale(searchZoomScale); // Use the fixed search zoom scale
+
+                                // Apply the new transform with a smooth transition
+                                svg.transition().duration(750).call(currentZoomBehavior.transform, newTransform);
 
 
                             } else {
