@@ -25,38 +25,26 @@
 
         /* Search container styling */
         #search-container {
-            position: static; /* 元の位置に戻す */
-            top: auto;
-            right: auto;
-            padding: 8px; /* 縦幅を小さくするためにpaddingを調整 */
+            text-align: center;
+            padding: 10px;
             background-color: #e5e7eb; /* Tailwind gray-200 */
             border-bottom: 1px solid #d1d5db; /* Tailwind gray-300 */
-            border-radius: 0; /* 角丸を解除 */
-            z-index: auto; /* z-indexを解除 */
-            box-shadow: none; /* 影を解除 */
-            text-align: center; /* 中央寄せに戻す */
-            width: auto; /* 幅の固定を解除 */
         }
 
         #search-container input[type="text"] {
-            padding: 6px; /* 入力フィールドのpaddingも小さく */
+            padding: 8px;
             margin-right: 5px;
             border: 1px solid #d1d5db;
             border-radius: 4px;
             font-size: 1rem;
-            width: 200px; /* 入力フィールドの幅を固定（必要に応じて調整）*/
-            box-sizing: border-box;
-            /* サジェストリストの基準位置にするためにrelativeを追加 */
-            position: relative;
-            display: inline-block; /* 中央寄せのためにinline-block */
         }
 
         #search-container button {
-            padding: 6px 12px; /* ボタンのpaddingも小さく */
+            padding: 8px 15px;
             background-color: #3b82f6; /* Tailwind blue-500 */
             color: white;
             border: none;
-            border-radius: 4px; /* ボタンの角を丸く */
+            border-radius: 4px;
             cursor: pointer;
             font-size: 1rem;
             transition: background-color 0.2s ease;
@@ -66,58 +54,13 @@
             background-color: #2563eb; /* Tailwind blue-700 */
         }
 
-        /* Search suggestions dropdown */
-        #suggestions-list {
-            position: absolute;
-            /* 検索入力ボックスの左端に合わせる */
-            left: 50%; /* 親要素の中央に */
-            transform: translateX(-50%); /* 要素自体の幅の半分だけ左に移動 */
-            top: 100%; /* 検索入力ボックスの直下に配置 */
-            width: 200px; /* 入力フィールドの幅に合わせる */
-            max-height: 150px; /* Limit height and add scroll */
-            overflow-y: auto;
-            background-color: white;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            text-align: left;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            display: none; /* Hidden by default */
-            z-index: 10; /* ツリーより前面に表示 */
-        }
-
-         /* input要素を基準にするための調整 */
-        #search-container .input-container {
-            position: relative; /* このコンテナ内で絶対配置 */
-            display: inline-block; /* 中央寄せのためにinline-block */
-        }
-
-
-        #suggestions-list li {
-            padding: 8px 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
-            font-size: 0.9rem;
-        }
-
-        #suggestions-list li:last-child {
-            border-bottom: none;
-        }
-
-        #suggestions-list li:hover {
-            background-color: #f3f4f6;
-        }
-
-
         /* Container for the chart, allows scrolling */
         #chart-container {
             width: 100%;
-            /* ヘッダーと検索バーの高さだけ考慮 */
-            height: calc(100vh - 60px - 40px); /* ヘッダー約60px, 検索バー約40px */
+            /* Adjust height to fit viewport, subtracting header and search height */
+            height: calc(100vh - 60px - 50px); /* Header approx 60px, Search approx 50px */
             overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
-            padding-top: 0; /* パディングを解除 */
+            padding: 0; /* Remove padding as zoom will handle positioning */
             box-sizing: border-box;
         }
 
@@ -213,18 +156,15 @@
         .node-highlight .node-card {
             border-color: #f59e0b; /* Tailwind amber-500 */
             box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); /* Amber shadow */
-            background-color: #fcd34d; /* Tailwind amber-300 - Highlight background color */
         }
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版）1</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
 
     <div id="search-container">
-        <div class="input-container">
-            <input type="text" id="search-input" placeholder="メンバーの名前で検索" autocomplete="off" />
-            <ul id="suggestions-list"></ul> </div>
+        <input type="text" id="search-input" placeholder="メンバーの名前で検索" />
         <button id="search-button">検索</button>
     </div>
 
@@ -238,65 +178,7 @@
         const JSON_FILE_PATH = 'tree_data.json';
 
         let allNodesData = []; // Store flattened node data for searching
-        let nodeHierarchyMap = new Map(); // Store hierarchy nodes keyed by data ID
-        let currentZoomBehavior = null; // Store the current zoom behavior
-        let svgElement = null; // Reference to the SVG DOM element
-        let mainGElement = null; // Reference to the main group DOM element
-        let chartContainerElement = null; // Reference to the chart container DOM element
-        let nodeElements = new Map(); // Store D3 selection of node elements by data ID
-
-        // Function to convert Hiragana to Katakana
-        function hiraToKata(str) {
-            return str.replace(/[\u3041-\u3096]/g, function(match) {
-                const chr = match.charCodeAt(0) + 0x60;
-                return String.fromCharCode(chr);
-            });
-        }
-
-        // Function to zoom and pan to a specific transform
-        function zoomToTransform(transform) {
-             svg.transition().duration(750).call(currentZoomBehavior.transform, transform);
-        }
-
-        // Function to zoom to the maximum zoom out level (min scale)
-        function zoomToMaxZoomOut() {
-             // Get the bounding box of the main group (which contains the entire tree)
-             const mainGBounds = mainGElement.getBBox();
-
-             // Check if the bounding box is valid (width and height > 0)
-             if (mainGBounds.width <= 0 || mainGBounds.height <= 0) {
-                 console.warn("Main group bounding box is invalid. Cannot zoom to max zoom out.");
-                 return;
-             }
-
-             const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
-             const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
-
-             const containerWidth = chartContainerElement.clientWidth;
-             const containerHeight = chartContainerElement.clientHeight;
-
-             // Get the minimum allowed scale from the zoom behavior
-             const minScale = currentZoomBehavior.scaleExtent()[0];
-
-             // Calculate the translation to center the tree at the minimum scale
-             // The target position in the container is (containerWidth/2, containerHeight/2)
-             // The tree's center in the original SVG space is (treeCenterX, treeCenterY)
-             // We want to apply a transform (translate, scale) such that
-             // (treeCenterX, treeCenterY) * scale + translate = (containerWidth/2, containerHeight/2)
-             // translate = (containerWidth/2, containerHeight/2) - (treeCenterX, treeCenterY) * scale
-
-             const translateX = containerWidth / 2 - treeCenterX * minScale;
-             const translateY = containerHeight / 2 - treeCenterY * minScale;
-
-             // Create the new transform with the minimum scale and calculated translation
-             const newTransform = d3.zoomIdentity
-                .translate(translateX, translateY)
-                .scale(minScale); // Use the minimum scale for max zoom out
-
-             // Apply the transform
-             zoomToTransform(newTransform);
-        }
-
+        let currentZoom = null; // Store the current zoom behavior
 
         // Wait for the DOM to be fully loaded
         window.addEventListener("DOMContentLoaded", () => {
@@ -323,14 +205,9 @@
                     // If introduction_reason is null or undefined, group under "その他" (Other)
                     const groupedData = d3.group(jsonData, d => d.introduction_reason || "その他");
 
-                    // Select the SVG element and its container
+                    // Select the SVG element and the container
                     const svg = d3.select("#tree-svg");
-                    svgElement = svg.node(); // Store reference to the DOM element
                     const chartContainer = d3.select("#chart-container");
-                    chartContainerElement = chartContainer.node(); // Store reference to the DOM element
-                    const containerWidth = chartContainerElement.clientWidth;
-                    const containerHeight = chartContainerElement.clientHeight;
-
 
                     // Define margins and node dimensions
                     const margin = {top: 40, right: 20, bottom: 40, left: 20};
@@ -343,14 +220,11 @@
                     let maxSvgWidth = 0; // Track maximum width needed for all subtrees
                     let totalSvgHeight = 0; // Track total height needed for all subtrees
 
-
-                    // Create a main group to hold all group subtrees - This group will be zoomed/panne d
+                    // Create a main group to hold all group subtrees - This group will be zoomed/panned
                     const mainG = svg.append("g");
-                    mainGElement = mainG.node(); // Store reference to the DOM element
 
-                    // Store all hierarchy nodes to calculate the overall bounds later
-                    const allHierarchyNodes = [];
-
+                    // Store node elements keyed by ID for easy access during search
+                    const nodeElements = new Map();
 
                     // Iterate through each group (based on introduction_reason)
                     groupedData.forEach((groupData, reason) => {
@@ -410,15 +284,9 @@
                                 .selectAll("g")
                                 .data(root.descendants()) // Get all nodes from the hierarchy
                                 .join("g")
-                                .attr("transform", d => `translate(${d.x},${d.y})`); // Position the node group
+                                .attr("transform", d => `translate(${d.x},${d.y})"); // Position the node group
 
-                            // Store the hierarchy node object keyed by its data ID
-                            node.each(function(d) {
-                                nodeHierarchyMap.set(d.data.id, d);
-                                allHierarchyNodes.push(d); // Add to the list of all hierarchy nodes
-                            });
-
-                            // Store the D3 selection of the node element by data ID
+                            // Store a reference to the node element by its data ID
                             node.each(function(d) {
                                 nodeElements.set(d.data.id, d3.select(this));
                             });
@@ -504,7 +372,6 @@
                     svg.attr("width", finalSvgWidth);
                     svg.attr("height", finalSvgHeight);
 
-
                     // --- D3 Zoom and Pan Functionality ---
 
                     // Create a zoom behavior
@@ -520,7 +387,7 @@
                     svg.call(zoom);
 
                     // Store the zoom behavior for later use in the search function
-                    currentZoomBehavior = zoom;
+                    currentZoom = zoom;
 
                     // Zoom event handler function
                     function zoomed(event) {
@@ -529,16 +396,20 @@
                     }
 
                      // --- Initial centering using zoom transform ---
-                    // Calculate the overall bounds of the tree using the main group's bounding box
-                     const mainGBounds = mainGElement.getBBox();
-                     const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
-                     const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
+                    const containerElement = document.getElementById("chart-container");
+                    const containerWidth = containerElement.clientWidth;
+                    const containerHeight = containerElement.clientHeight;
 
-                    // Calculate the transform to center the overall tree
+                    // Calculate initial scale to fit the content if it's larger than the container
+                    // Or just use scale 1 if the content is smaller
                     const initialScale = 1.0; // Start with 1x scale
-                    const initialTranslateX = containerWidth / 2 - treeCenterX * initialScale;
-                    const initialTranslateY = containerHeight / 2 - treeCenterY * initialScale;
 
+                    // Calculate initial translation to center the content
+                    const initialTranslateX = (containerWidth - finalSvgWidth * initialScale) / 2;
+                    const initialTranslateY = (containerHeight - finalSvgHeight * initialScale) / 2;
+
+
+                    // Create the initial transform
                     const initialTransform = d3.zoomIdentity
                         .translate(initialTranslateX, initialTranslateY)
                         .scale(initialScale);
@@ -546,170 +417,108 @@
                     // Apply the initial transform with a smooth transition
                     svg.transition().duration(750).call(zoom.transform, initialTransform);
 
-                    // --- End Initial centering ---
 
+                    // --- End D3 Zoom and Pan Functionality ---
 
                     // --- Search Functionality ---
                     const searchInput = document.getElementById("search-input");
                     const searchButton = document.getElementById("search-button");
-                    const suggestionsList = document.getElementById("suggestions-list");
 
-                    // Function to perform the search and highlight
-                    function performSearch(searchTerm) {
-                         // Remove previous highlights
-                         mainG.selectAll(".node-highlight").classed("node-highlight", false);
-
-                         // 検索されたら最大ズームアウト
-                         zoomToMaxZoomOut();
-
-                         if (!searchTerm) {
+                    searchButton.addEventListener("click", () => {
+                        const searchTerm = searchInput.value.trim().toLowerCase();
+                        if (!searchTerm) {
+                            // Clear highlight if search term is empty
+                            mainG.selectAll(".node-highlight").classed("node-highlight", false);
                             return;
                         }
 
-                        // Convert search term to Katakana for fuzzy matching
-                        const searchTermKata = hiraToKata(searchTerm).toLowerCase();
-
-                        // Find the node data that matches the search term (case-insensitive, using Katakana)
-                        const foundNodeData = allNodesData.find(d => {
-                            // Convert node name to Katakana for comparison if it's not already
-                            const nodeName = d.name || "";
-                            const nodeNameKata = hiraToKata(nodeName).toLowerCase();
-                            return nodeNameKata.includes(searchTermKata);
-                        });
-
+                        // Find the node data that matches the search term (case-insensitive)
+                        const foundNodeData = allNodesData.find(d => d.name.toLowerCase().includes(searchTerm));
 
                         if (foundNodeData) {
-                            // Find the actual SVG group element for the found node
+                            // Find the corresponding D3 node element
                             const foundNodeElement = nodeElements.get(foundNodeData.id);
 
                             if (foundNodeElement) {
-                                // Add highlight to the found node's SVG group element
+                                // Remove previous highlights
+                                mainG.selectAll(".node-highlight").classed("node-highlight", false);
+                                // Add highlight to the found node
                                 foundNodeElement.classed("node-highlight", true);
 
+                                // Calculate the target position for zooming
+                                // Get the current transform
+                                const currentTransform = d3.zoomTransform(svg.node());
+                                // Calculate the center of the container
+                                const centerX = containerWidth / 2;
+                                const centerY = containerHeight / 2;
+
+                                // Get the position of the found node in the SVG coordinate system
+                                // The node's position is relative to its subtree group, which is relative to mainG
+                                // We need its position relative to the SVG origin (0,0) before any transforms
+                                // This requires traversing up the transform hierarchy, or ideally,
+                                // using the layout coordinates which are relative to the subtree origin.
+
+                                // Let's assume the layout coordinates (d.x, d.y) are what we need,
+                                // relative to the top-left of their subtree group.
+                                // We need to find which subtree group this node belongs to.
+                                // A simpler approach is to calculate the target translation
+                                // based on the node's position relative to the *entire* SVG content area.
+
+                                // Find the D3 hierarchy node for the found data
+                                let foundHierarchyNode = null;
+                                // Iterate through all nodes in the hierarchy to find the match
+                                mainG.selectAll("g.link").data().forEach(link => { // Links have source/target nodes
+                                    if (link.source.data.id === foundNodeData.id) foundHierarchyNode = link.source;
+                                    if (link.target.data.id === foundNodeData.id) foundHierarchyNode = link.target;
+                                });
+                                // Also check root nodes directly
+                                mainG.selectAll("g").data().forEach(d => {
+                                     if (d.data && d.data.id === foundNodeData.id) foundHierarchyNode = d;
+                                });
+
+
+                                if (foundHierarchyNode) {
+                                     // Get the layout coordinates (x, y) of the found node
+                                     const targetX = foundHierarchyNode.x;
+                                     const targetY = foundHierarchyNode.y;
+
+                                     // Calculate the required translation to center the target node
+                                     // The target translation is the negative of the target node's position,
+                                     // plus half the container dimensions, divided by the current scale.
+                                     // This centers the *point* (targetX, targetY) in the container.
+                                     // We need to adjust for the current transform.
+
+                                     // Calculate the new transform to center the node
+                                     const newTranslateX = centerX - targetX * currentTransform.k;
+                                     const newTranslateY = centerY - targetY * currentTransform.k;
+
+                                     // Create the new transform object
+                                     const newTransform = d3.zoomIdentity
+                                         .translate(newTranslateX, newTranslateY)
+                                         .scale(currentTransform.k); // Keep the current scale
+
+                                     // Apply the new transform with a smooth transition
+                                     svg.transition().duration(750).call(currentZoom.transform, newTransform);
+
+                                } else {
+                                     console.warn("Could not find hierarchy node for data:", foundNodeData);
+                                     // Handle case where hierarchy node isn't found (shouldn't happen if data is consistent)
+                                     alert("検索されたメンバーのノードが見つかりませんでした。");
+                                }
+
                             } else {
-                                console.warn("Could not find SVG element in map for data:", foundNodeData);
-                                alert("検索されたメンバーのノード情報が見つかりませんでした。");
+                                console.warn("Could not find SVG element for node data:", foundNodeData);
+                                // Handle case where SVG element isn't found
+                                alert("検索されたメンバーのノードが見つかりませんでした。");
                             }
                         } else {
                             // Member not found
                             alert("「" + searchTerm + "」という名前のメンバーは見つかりませんでした。");
-                        }
-                    }
-
-                    // Function to zoom to the maximum zoom out level (min scale)
-                    function zoomToMaxZoomOut() {
-                         // Get the bounding box of the main group (which contains the entire tree)
-                         const mainGBounds = mainGElement.getBBox();
-
-                         // Check if the bounding box is valid (width and height > 0)
-                         if (mainGBounds.width <= 0 || mainGBounds.height <= 0) {
-                             console.warn("Main group bounding box is invalid. Cannot zoom to max zoom out.");
-                             return;
-                         }
-
-                         const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
-                         const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
-
-                         const containerWidth = chartContainerElement.clientWidth;
-                         const containerHeight = chartContainerElement.clientHeight;
-
-                         // Get the minimum allowed scale from the zoom behavior
-                         const minScale = currentZoomBehavior.scaleExtent()[0];
-
-                         // Calculate the translation to center the tree at the minimum scale
-                         // The target position in the container is (containerWidth/2, containerHeight/2)
-                         // The tree's center in the original SVG space is (treeCenterX, treeCenterY)
-                         // We want to apply a transform (translate, scale) such that
-                         // (treeCenterX, treeCenterY) * scale + translate = (containerWidth/2, containerHeight/2)
-                         // translate = (containerWidth/2, containerHeight/2) - (treeCenterX, treeCenterY) * scale
-
-                         const translateX = containerWidth / 2 - treeCenterX * minScale;
-                         const translateY = containerHeight / 2 - treeCenterY * minScale;
-
-                         // Create the new transform with the minimum scale and calculated translation
-                         const newTransform = d3.zoomIdentity
-                            .translate(translateX, translateY)
-                            .scale(minScale); // Use the minimum scale for max zoom out
-
-                         // Apply the transform
-                         zoomToTransform(newTransform);
-                    }
-
-
-                    searchButton.addEventListener("click", () => {
-                        const searchTerm = searchInput.value.trim();
-                        performSearch(searchTerm);
-                        suggestionsList.style.display = 'none'; // Hide suggestions after search
-                    });
-
-                    // Allow searching by pressing Enter in the input field
-                    searchInput.addEventListener("keypress", (event) => {
-                        if (event.key === "Enter") {
-                            event.preventDefault(); // Prevent default form submission if any
-                            const searchTerm = searchInput.value.trim();
-                            performSearch(searchTerm);
-                            suggestionsList.style.display = 'none'; // Hide suggestions after search
-                        }
-                    });
-
-                    // --- Search Suggestion Functionality ---
-
-                    searchInput.addEventListener("input", () => {
-                        const searchTerm = searchInput.value.trim().toLowerCase();
-                        suggestionsList.innerHTML = ''; // Clear previous suggestions
-
-                        // 入力が空になったらハイライトをクリアし、ツリー全体表示に戻す
-                        if (searchTerm.length === 0) {
-                             mainG.selectAll(".node-highlight").classed("node-highlight", false);
-                             suggestionsList.style.display = 'none';
-                             zoomToMaxZoomOut(); // 入力クリアで全体表示
-                             return;
-                        }
-
-
-                        if (searchTerm.length > 0) {
-                            // Convert search term to Katakana for matching
-                            const searchTermKata = hiraToKata(searchTerm);
-
-                            // Filter nodes whose names contain the search term (case-insensitive, using Katakana)
-                            const matchingNodes = allNodesData.filter(d => {
-                                const nodeName = d.name || "";
-                                const nodeNameKata = hiraToKata(nodeName).toLowerCase();
-                                return nodeNameKata.includes(searchTermKata);
-                            });
-
-                            // Display suggestions
-                            if (matchingNodes.length > 0) {
-                                matchingNodes.forEach(node => {
-                                    const li = document.createElement("li");
-                                    li.textContent = node.name;
-                                    li.addEventListener("click", () => {
-                                        searchInput.value = node.name; // Put selected suggestion in input
-                                        performSearch(node.name); // Perform search for the selected name
-                                        suggestionsList.style.display = 'none'; // Hide suggestions
-                                    });
-                                    suggestionsList.appendChild(li);
-                                });
-                                suggestionsList.style.display = 'block'; // Show suggestions list
-                            } else {
-                                suggestionsList.style.display = 'none'; // Hide if no matches
-                            }
-                        } else {
-                            suggestionsList.style.display = 'none'; // Hide if input is empty
-                            // Clear highlight when input is cleared
+                            // Remove previous highlights
                             mainG.selectAll(".node-highlight").classed("node-highlight", false);
                         }
                     });
-
-                    // Hide suggestions when clicking outside the input/suggestions
-                    document.addEventListener("click", (event) => {
-                        const isClickInsideSearchContainer = document.getElementById("search-container").contains(event.target);
-                        if (!isClickInsideSearchContainer) {
-                            suggestionsList.style.display = 'none';
-                        }
-                    });
-
-                    // --- End Search Suggestion Functionality ---
+                    // --- End Search Functionality ---
 
 
                 })
