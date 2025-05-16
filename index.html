@@ -121,7 +121,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: center; /* 中央寄せに変更 */
             background-color: white;
             border: 1px solid #d1d5db; /* Tailwind gray-300 border */
             border-radius: 12px; /* Tailwind rounded-xl */
@@ -135,36 +135,18 @@
         }
 
         .node-card a {
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
+             /* リンク自体は維持するが、flexboxのレイアウトには使わない */
+             text-decoration: none;
+             color: inherit;
+             display: block; /* flex item ではなく block 要素にする */
+             width: 100%;
+             height: 100%; /* カード全体をリンク可能にする */
+             display: flex; /* 子要素を中央寄せするためにflexboxを使う */
+             flex-direction: column;
+             align-items: center;
+             justify-content: center;
         }
 
-        .node-image {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 6px;
-            box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
-        }
-
-        .node-placeholder {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #d1d5db;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4b5563;
-            font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 6px;
-        }
 
         .node-name {
             font-size: 11px;
@@ -174,18 +156,17 @@
             white-space: normal;
             word-break: break-word;
             max-width: 100%;
+            /* 画像や他の要素を削除したので、マージンは不要か調整 */
+            margin: 0;
         }
 
-        .node-introducer, .node-reason {
-            font-size: 9px;
-            color: #555;
-            text-align: center;
-            line-height: 1.2;
-            white-space: normal;
-            word-break: break-word;
-            max-width: 100%;
-            margin-top: 2px;
+        /* Remove styles for elements that are being removed */
+        /*
+        .node-image, .node-placeholder, .node-introducer, .node-reason {
+            display: none;
         }
+        */
+
 
         .link {
             fill: none;
@@ -203,7 +184,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版）あ</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
 
     <div id="search-container">
         <div class="search-input-wrapper">
@@ -231,6 +212,15 @@
         let finalSvgHeight = 0;
         let mainG; // Main group for all chart elements
 
+        // Helper function to convert Hiragana to Katakana for search matching
+        function hiraToKata(str) {
+            if (!str) return "";
+            return str.replace(/[\u3041-\u3096]/g, function(match) {
+                const chr = match.charCodeAt(0) + 0x60;
+                return String.fromCharCode(chr);
+            });
+        }
+
         // Wait for the DOM to be fully loaded
         window.addEventListener("DOMContentLoaded", () => {
             const searchInput = document.getElementById("search-input");
@@ -254,13 +244,11 @@
                     }
                     allNodesData = jsonData;
 
-                    // Populate suggestions initially if needed, or just prepare for input handling
-                    // (Suggestions will be built on input)
-
                     const groupedData = d3.group(jsonData, d => d.introduction_reason || "その他");
                     const margin = {top: 40, right: 20, bottom: 40, left: 20};
                     const nodeWidth = 120;
-                    const nodeHeight = 90; // Adjusted slightly for potentially more text
+                    // ノードの高さを調整（画像や他の要素を削除したため）
+                    const nodeHeight = 60; // Adjusted height for name only
                     const verticalSpacing = 60; // Increased for more space
                     const horizontalSpacing = 30; // Increased for more space
 
@@ -273,41 +261,55 @@
                         const rootNodesData = groupData.filter(d => d.introducerPageId === null);
                         rootNodesData.forEach(rootData => {
                             const root = d3.hierarchy(rootData, d => jsonData.filter(item => item.introducerPageId === d.id));
+                            // nodeSizeのy軸をnodeHeight + verticalSpacingに設定
                             const treeLayout = d3.tree().nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]);
                             treeLayout(root);
 
                             let x0 = Infinity, x1 = -Infinity;
                             root.each(d => {
+                                // レイアウト計算後のノード座標を基準に幅を計算
                                 if (d.x < x0) x0 = d.x;
                                 if (d.x > x1) x1 = d.x;
                             });
-                            const treeWidth = (x1 - x0) + nodeWidth; // Width of this specific tree
+                            // ツリーの実際の幅は x の最小値から最大値までの範囲 + ノードの幅
+                            const treeWidth = (x1 - x0) + nodeWidth;
                             if (treeWidth > tempMaxTreeWidth) {
                                 tempMaxTreeWidth = treeWidth;
                             }
+                            // ツリーの実際の高さは y の最小値から最大値までの範囲 + ノードの高さ
+                            // D3 tree layoutのy座標は深さに基づいて増える
                             const treeHeight = root.height * (nodeHeight + verticalSpacing) + nodeHeight;
 
-                            allRootsLayouts.push({ root, reason, x0, x1, treeWidth, treeHeight, startY: currentYOffset });
-                            currentYOffset += treeHeight + margin.bottom; // Spacing for next tree group
 
-                            // Populate hierarchyNodeMap
-                            root.descendants().forEach(dNode => {
-                                if (dNode.data && dNode.data.id) {
-                                    hierarchyNodeMap.set(dNode.data.id, dNode);
-                                }
-                            });
+                            allRootsLayouts.push({ root, reason, x0, x1, treeWidth, treeHeight, startY: currentYOffset });
+                            currentYOffset += treeHeight + margin.bottom; // Add height of the tree and margin for the next one
                         });
                     });
 
+                    // Total width is max individual tree width plus left/right margins
                     finalSvgWidth = tempMaxTreeWidth + margin.left + margin.right;
-                    finalSvgHeight = currentYOffset - margin.bottom + margin.top; // Total height based on last Y offset
+                    // Total height is the final accumulated Y offset (includes top margin of first tree
+                    // and bottom margin after the last tree)
+                    finalSvgHeight = currentYOffset;
 
-                    // Second pass: Draw the trees now that we have final max width
+
+                    // Second pass: Draw the trees now that we have final max width and total height
                     allRootsLayouts.forEach(({ root, reason, x0, x1, treeWidth, startY }) => {
-                        const offsetX = (finalSvgWidth / 2) - ((x1 + x0 + nodeWidth) / 2) ; // Centering calculation
+                         // Calculate offset to center this subtree horizontally within the total SVG width
+                         // (x0 + x1) / 2 is the center of the node x coordinates
+                         // Subtract this center from the center of the finalSvgWidth to find the translation needed
+                        const offsetX = (finalSvgWidth / 2) - ((x0 + x1) / 2);
 
                         const subtreeG = mainG.append("g")
                             .attr("transform", `translate(${offsetX}, ${startY})`);
+
+                        // Add a title for the subtree group if needed (optional)
+                        // subtreeG.append("text")
+                        //     .attr("x", 0) // Position relative to subtreeG
+                        //     .attr("y", -margin.top / 2) // Position above the root
+                        //     .attr("text-anchor", "middle")
+                        //     .text(reason);
+
 
                         subtreeG.append("g")
                             .attr("fill", "none")
@@ -346,38 +348,13 @@
                             .attr("href", d => d.data.page_url || "#")
                             .attr("target", "_blank");
 
-                        linkWrapper.each(function(d) {
-                            const container = d3.select(this);
-                            if (d.data.image) {
-                                container.append("img")
-                                    .attr("class", "node-image")
-                                    .attr("src", d.data.image)
-                                    .attr("alt", d.data.name + " photo");
-                            } else {
-                                container.append("div")
-                                    .attr("class", "node-placeholder")
-                                    .text(d.data.name ? d.data.name.charAt(0).toUpperCase() : '?');
-                            }
-                        });
+                         // メンバー名のみを表示
+                        linkWrapper.append("div")
+                             .attr("class", "node-name")
+                             .text(d => d.data.name);
 
-                        const textContent = linkWrapper.append("div");
-                        textContent.append("div")
-                            .attr("class", "node-name")
-                            .text(d => d.data.name);
+                        // 画像、紹介者、理由の表示コードは削除しました
 
-                        textContent.each(function(d) {
-                            const container = d3.select(this);
-                            if (d.data.introducer_name) {
-                                container.append("div")
-                                    .attr("class", "node-introducer")
-                                    .text(`紹介者: ${d.data.introducer_name}`);
-                            }
-                            if (d.data.introduction_reason && d.data.introduction_reason !== "その他") {
-                                 container.append("div")
-                                    .attr("class", "node-reason")
-                                    .text(`理由: ${d.data.introduction_reason}`);
-                            }
-                        });
                     });
 
 
@@ -402,41 +379,57 @@
                         const containerWidth = containerNode.clientWidth;
                         const containerHeight = containerNode.clientHeight;
 
-                        if (finalSvgWidth === 0 || finalSvgHeight === 0) return; // Avoid division by zero
+                        if (finalSvgWidth === 0 || finalSvgHeight === 0) {
+                            console.warn("SVG dimensions are zero. Cannot perform initial fit.");
+                            return; // Avoid division by zero or invalid transform
+                        }
 
+                        // Calculate scale to fit the entire content bounding box (finalSvgWidth, finalSvgHeight)
                         const scaleX = containerWidth / finalSvgWidth;
                         const scaleY = containerHeight / finalSvgHeight;
                         const initialScale = Math.min(scaleX, scaleY, 1.0); // Cap at 1.0
 
-                        const initialTranslateX = (containerWidth - finalSvgWidth * initialScale) / 2;
-                        const initialTranslateY = (containerHeight - finalSvgHeight * initialScale) / 2;
-                        
+                         // Calculate translation to center the scaled content within the container
+                         // The target center of the SVG content (in SVG's initial coordinates) is (finalSvgWidth / 2, finalSvgHeight / 2)
+                         // We want this point to be at (containerWidth / 2, containerHeight / 2) after scaling and translating
+                         // target_screen = transform(target_svg)
+                         // (containerWidth / 2, containerHeight / 2) = transform(finalSvgWidth / 2, finalSvgHeight / 2)
+                         // (containerWidth / 2, containerHeight / 2) = scale * (finalSvgWidth / 2) + translateX, scale * (finalSvgHeight / 2) + translateY
+                         // translateX = containerWidth / 2 - scale * (finalSvgWidth / 2)
+                         // translateY = containerHeight / 2 - scale * (finalSvgHeight / 2)
+
+                        const initialTranslateX = containerWidth / 2 - initialScale * (finalSvgWidth / 2);
+                        const initialTranslateY = containerHeight / 2 - initialScale * (finalSvgHeight / 2);
+
+
                         const initialTransform = d3.zoomIdentity
                             .translate(initialTranslateX, initialTranslateY)
                             .scale(initialScale);
                         
                         svg.transition().duration(750).call(currentZoomBehavior.transform, initialTransform);
-                    }, 100);
+                    }, 100); // Small delay to ensure container dimensions are stable
 
 
                     // --- Search Input Suggestions ---
                     searchInput.addEventListener("input", function() {
-                        const term = this.value.trim().toLowerCase();
+                        // Convert input term to lowercased katakana for matching
+                        const term = hiraToKata(this.value.trim().toLowerCase());
                         suggestionsContainer.innerHTML = ""; // Clear previous suggestions
                         if (!term) {
                             suggestionsContainer.style.display = "none";
                             return;
                         }
 
-                        const matches = allNodesData.filter(d => d.name && d.name.toLowerCase().includes(term)).slice(0, 10); // Limit suggestions
+                        // Filter nodes whose name (converted to katakana) includes the term
+                        const matches = allNodesData.filter(d => d.name && hiraToKata(d.name).toLowerCase().includes(term)).slice(0, 10); // Limit suggestions
 
                         if (matches.length > 0) {
                             matches.forEach(match => {
                                 const item = document.createElement("div");
                                 item.classList.add("suggestion-item");
-                                item.textContent = match.name;
+                                item.textContent = match.name; // Display original name in suggestion
                                 item.addEventListener("click", () => {
-                                    searchInput.value = match.name;
+                                    searchInput.value = match.name; // Put original name back in input
                                     suggestionsContainer.style.display = "none";
                                     searchButton.click(); // Trigger search
                                 });
@@ -466,7 +459,11 @@
 
                         if (!searchTerm) return;
 
-                        const foundNodeData = allNodesData.find(d => d.name && d.name.toLowerCase() === searchTerm.toLowerCase()); // Exact match for search, suggestions are includes based
+                         // Convert search term to lowercased katakana for exact matching
+                        const searchKata = hiraToKata(searchTerm).toLowerCase();
+
+                         // Find node where name (converted to katakana) exactly matches search term
+                        const foundNodeData = allNodesData.find(d => d.name && hiraToKata(d.name).toLowerCase() === searchKata);
 
                         if (foundNodeData) {
                             const foundHierarchyNode = hierarchyNodeMap.get(foundNodeData.id);
@@ -480,36 +477,50 @@
                                 const containerWidth = containerNode.clientWidth;
                                 const containerHeight = containerNode.clientHeight;
 
-                                // Get the absolute position of the node within the mainG's unscaled coordinate system
-                                let targetMainGX = foundHierarchyNode.x;
-                                let targetMainGY = foundHierarchyNode.y;
-
+                                // Get the transform applied to the subtree G this node belongs to
+                                let subtreeTransform = { x: 0, y: 0 };
                                 let parent = foundNodeElement.node().parentNode; // This is the <g> for nodes
                                 parent = parent.parentNode; // This should be the subtreeG
-                                
+
                                 const subtreeTransformString = d3.select(parent).attr("transform");
                                 if (subtreeTransformString) {
-                                    const match = subtreeTransformString.match(/translate\(([^,]+),([^)]+)\)/);
-                                    if (match) {
-                                        targetMainGX += parseFloat(match[1]);
-                                        targetMainGY += parseFloat(match[2]);
-                                    }
+                                     const match = subtreeTransformString.match(/translate\(([^,]+),([^)]+)\)/);
+                                     if (match) {
+                                         subtreeTransform.x = parseFloat(match[1]);
+                                         subtreeTransform.y = parseFloat(match[2]);
+                                     }
                                 }
-                                
-                                // Calculate scale to fit the entire tree
-                                const scaleX = containerWidth / finalSvgWidth;
-                                const scaleY = containerHeight / finalSvgHeight;
-                                const fitAllScale = Math.min(scaleX, scaleY, 1.0); // Cap at 1.0, ensure it fits
+
+                                // Calculate the absolute position of the found node within the mainG's
+                                // unscaled coordinate system. It's the node's layout position plus the subtree's translation.
+                                const targetMainGX = foundHierarchyNode.x + subtreeTransform.x;
+                                const targetMainGY = foundHierarchyNode.y + subtreeTransform.y;
+
+                                // Get the current transform of the SVG (applied to mainG by zoom)
+                                const currentTransform = d3.zoomTransform(svg.node());
+
+                                // Calculate the desired transform to center the target node
+                                // The target screen position is the center of the container (containerWidth/2, containerHeight/2)
+                                // The target SVG position (within mainG's initial coordinates) is (targetMainGX, targetMainGY)
+                                // We want transform * (targetMainGX, targetMainGY) = (containerWidth/2, containerHeight/2)
+                                // transform = translate * scale
+                                // translate(tx, ty) * scale(k) * (targetMainGX, targetMainGY) = (containerWidth/2, containerHeight/2)
+                                // k * targetMainGX + tx = containerWidth/2 => tx = containerWidth/2 - k * targetMainGX
+                                // k * targetMainGY + ty = containerHeight/2 => ty = containerHeight/2 - k * targetMainGY
+
+                                // We'll keep the current scale and only pan to the node
+                                const targetScale = currentTransform.k; // Keep current zoom level
+                                const targetTranslateX = containerWidth / 2 - targetScale * targetMainGX;
+                                const targetTranslateY = containerHeight / 2 - targetScale * targetMainGY;
 
                                 const newTransform = d3.zoomIdentity
-                                    .translate(containerWidth / 2, containerHeight / 2)
-                                    .scale(fitAllScale)
-                                    .translate(-targetMainGX, -targetMainGY);
+                                     .translate(targetTranslateX, targetTranslateY)
+                                     .scale(targetScale);
 
                                 svg.transition().duration(750).call(currentZoomBehavior.transform, newTransform);
 
                             } else {
-                                console.warn("Could not find hierarchy node or element for data:", foundNodeData);
+                                console.warn("Could not find hierarchy node or element for data ID:", foundNodeData.id);
                                 alert("検索されたメンバーのノードが見つかりませんでした。");
                             }
                         } else {
