@@ -25,32 +25,32 @@
 
         /* Search container styling */
         #search-container {
-            /* フローティング表示 */
-            position: fixed; /* 画面に固定 */
-            top: 10px; /* 上から10px */
-            right: 10px; /* 右から10px */
-            padding: 10px;
+            /* フローティング解除 */
+            position: static; /* 元の位置に戻す */
+            top: auto;
+            right: auto;
+            padding: 8px; /* 縦幅を小さくするためにpaddingを調整 */
             background-color: #e5e7eb; /* Tailwind gray-200 */
-            border: 1px solid #d1d5db; /* Tailwind gray-300 */
-            border-radius: 8px; /* 角を少し丸く */
-            z-index: 100; /* ツリーより前面に表示 */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* 影を追加 */
-            text-align: left; /* テキストを左寄せに */
-            width: 250px; /* 検索コンテナの幅 */
+            border-bottom: 1px solid #d1d5db; /* Tailwind gray-300 */
+            border-radius: 0; /* 角丸を解除 */
+            z-index: auto; /* z-indexを解除 */
+            box-shadow: none; /* 影を解除 */
+            text-align: center; /* 中央寄せに戻す */
+            width: auto; /* 幅の固定を解除 */
         }
 
         #search-container input[type="text"] {
-            padding: 8px;
+            padding: 6px; /* 入力フィールドのpaddingも小さく */
             margin-right: 5px;
             border: 1px solid #d1d5db;
             border-radius: 4px;
             font-size: 1rem;
-            width: calc(100% - 75px); /* ボタンの幅とマージンを考慮して計算 */
-            box-sizing: border-box; /* Paddingとborderを幅に含める */
+            width: 200px; /* 入力フィールドの幅を固定（必要に応じて調整）*/
+            box-sizing: border-box;
         }
 
         #search-container button {
-            padding: 8px 15px;
+            padding: 6px 12px; /* ボタンのpaddingも小さく */
             background-color: #3b82f6; /* Tailwind blue-500 */
             color: white;
             border: none;
@@ -67,9 +67,10 @@
         /* Search suggestions dropdown */
         #suggestions-list {
             position: absolute;
-            top: calc(100% + 5px); /* 検索コンテナの下に少し隙間を開けて配置 */
-            left: 0; /* コンテナの左端に合わせる */
-            width: 100%; /* コンテナの幅に合わせる */
+            top: calc(100% + 2px); /* 検索コンテナの下に少し隙間を開けて配置 */
+            left: 50%; /* 中央寄せ */
+            transform: translateX(-50%); /* 中央寄せ */
+            width: 200px; /* 入力フィールドの幅に合わせる */
             max-height: 150px; /* Limit height and add scroll */
             overflow-y: auto;
             background-color: white;
@@ -81,6 +82,7 @@
             text-align: left;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             display: none; /* Hidden by default */
+            z-index: 10; /* ツリーより前面に表示 */
         }
 
         #suggestions-list li {
@@ -102,11 +104,10 @@
         /* Container for the chart, allows scrolling */
         #chart-container {
             width: 100%;
-            /* ヘッダーの高さだけ考慮 */
-            height: calc(100vh - 60px);
+            /* ヘッダーと検索バーの高さだけ考慮 */
+            height: calc(100vh - 60px - 40px); /* ヘッダー約60px, 検索バー約40px */
             overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
-            /* 検索バーが重ならないように上部にパディングを追加 */
-            padding-top: 70px; /* 検索バーの高さ＋少しの隙間 */
+            padding-top: 0; /* パディングを解除 */
             box-sizing: border-box;
         }
 
@@ -527,8 +528,7 @@
                                 // Add highlight to the found node's SVG group element
                                 foundNodeElement.classed("node-highlight", true);
 
-                                // *** 自動移動のコードを削除 ***
-                                // 検索時の移動は行わない
+                                // *** 自動移動のコードは削除済み ***
                             } else {
                                 console.warn("Could not find SVG element in map for data:", foundNodeData);
                                 alert("検索されたメンバーのノード情報が見つかりませんでした。");
