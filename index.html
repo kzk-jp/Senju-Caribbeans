@@ -200,7 +200,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版1）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
 
     <div id="search-container">
         <input type="text" id="search-input" placeholder="メンバーの名前で検索" autocomplete="off" />
@@ -464,13 +464,17 @@
                      const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
                      const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
 
-                    // Use translateTo to center the overall tree
-                    // Use the calculated center of the main group's bounding box
-                    svg.transition().duration(750).call(
-                        zoom.translateTo,
-                        treeCenterX,
-                        treeCenterY
-                    );
+                    // Calculate the transform to center the overall tree
+                    const initialScale = 1.0; // Start with 1x scale
+                    const initialTranslateX = containerWidth / 2 - treeCenterX * initialScale;
+                    const initialTranslateY = containerHeight / 2 - treeCenterY * initialScale;
+
+                    const initialTransform = d3.zoomIdentity
+                        .translate(initialTranslateX, initialTranslateY)
+                        .scale(initialScale);
+
+                    // Apply the initial transform with a smooth transition
+                    svg.transition().duration(750).call(zoom.transform, initialTransform);
 
                     // --- End Initial centering ---
 
