@@ -219,7 +219,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー（D3.js版）</h1>
+    <h1>フットサルメンバー紹介ツリー（D3.js版a）</h1>
 
     <div id="search-container">
         <div class="input-container">
@@ -565,7 +565,15 @@
 
                     // Function to zoom to fit the entire tree within the container
                     function zoomToFitTree() {
+                         // Get the bounding box of the main group (which contains the entire tree)
                          const mainGBounds = mainGElement.getBBox();
+
+                         // Check if the bounding box is valid (width and height > 0)
+                         if (mainGBounds.width <= 0 || mainGBounds.height <= 0) {
+                             console.warn("Main group bounding box is invalid. Cannot zoom to fit tree.");
+                             return;
+                         }
+
                          const treeWidth = mainGBounds.width;
                          const treeHeight = mainGBounds.height;
                          const treeCenterX = mainGBounds.x + treeWidth / 2;
@@ -578,20 +586,26 @@
                          const padding = 50; // Add some padding around the tree
                          const scaleX = (containerWidth - padding * 2) / treeWidth;
                          const scaleY = (containerHeight - padding * 2) / treeHeight;
-                         const scale = Math.min(scaleX, scaleY, 1.0); // Use the smaller scale, but not larger than 1.0
-
-                         // Clamp the scale within the zoom behavior's scale extent
-                         const clampedScale = Math.max(currentZoomBehavior.scaleExtent()[0], Math.min(scale, currentZoomBehavior.scaleExtent()[1]));
+                         // Use the smaller scale to ensure the entire tree fits,
+                         // and clamp it within the zoom behavior's scale extent.
+                         // Also, ensure we don't zoom in beyond the initial scale (1.0) if the tree is smaller than the container.
+                         const scale = Math.max(currentZoomBehavior.scaleExtent()[0], Math.min(scaleX, scaleY, 1.0));
 
 
                          // Calculate the translation to center the tree at the calculated scale
-                         const translateX = containerWidth / 2 - treeCenterX * clampedScale;
-                         const translateY = containerHeight / 2 - treeCenterY * clampedScale;
+                         // The target position in the container is (containerWidth/2, containerHeight/2)
+                         // The tree's center in the original SVG space is (treeCenterX, treeCenterY)
+                         // We want to apply a transform (translate, scale) such that
+                         // (treeCenterX, treeCenterY) * scale + translate = (containerWidth/2, containerHeight/2)
+                         // translate = (containerWidth/2, containerHeight/2) - (treeCenterX, treeCenterY) * scale
+
+                         const translateX = containerWidth / 2 - treeCenterX * scale;
+                         const translateY = containerHeight / 2 - treeCenterY * scale;
 
                          // Create the new transform
                          const newTransform = d3.zoomIdentity
                             .translate(translateX, translateY)
-                            .scale(clampedScale);
+                            .scale(scale);
 
                          // Apply the transform
                          zoomToTransform(newTransform);
