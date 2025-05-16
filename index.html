@@ -5,55 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>フットサルメンバー紹介ツリー（D3.js版）</title>
     <style>
+        /* Basic body styling */
         body {
             margin: 0;
             font-family: "Helvetica Neue", sans-serif;
-            background-color: #f3f4f6;
-            color: #333;
+            background-color: #f3f4f6; /* Light gray background */
+            color: #333; /* Dark gray text */
         }
 
+        /* Header styling */
         h1 {
             text-align: center;
             padding: 1rem;
             margin: 0;
             font-size: 1.4rem;
-            background: #2563eb; /* blue-700 */
+            background: #2563eb; /* Tailwind blue-700 */
             color: white;
         }
 
+        /* Container for the chart, allows scrolling */
         #chart-container {
             width: 100%;
-            /* Allow vertical overflow for scrolling if tree is very tall */
-            overflow-x: auto;
-            overflow-y: auto; /* Changed to auto to allow vertical scrolling */
-            -webkit-overflow-scrolling: touch;
-            padding: 1rem 0.5rem;
-            box-sizing: border-box; /* Include padding in width */
-            /* touch-action: pan-x pan-y; /* Removed to allow default click behavior */
+            height: calc(100vh - 60px); /* Adjust height to fit viewport, subtracting header height */
+            overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
+            /* Removed overflow-x/y: auto and -webkit-overflow-scrolling */
+            padding: 0; /* Remove padding as zoom will handle positioning */
+            box-sizing: border-box;
+            /* touch-action: none; /* Prevent default touch actions on the container */
         }
 
+        /* SVG element styling */
         svg {
             display: block; /* Remove extra space below svg */
-            /* margin: 0 auto; /* Removed auto margin for better control with zoom/pan */
-            /* Set initial width and height dynamically */
+            /* Initial width and height will be set dynamically by JS */
+            /* Set to 100% to fill the container */
+            width: 100%;
+            height: 100%;
         }
 
+        /* Styling for the node card (using foreignObject) */
         .node-card {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             background-color: white;
-            border: 1px solid #d1d5db; /* gray-300 */
-            border-radius: 12px; /* rounded-xl */
-            padding: 8px; /* Increased padding slightly */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-            width: 120px; /* Increased width slightly */
+            border: 1px solid #d1d5db; /* Tailwind gray-300 border */
+            border-radius: 12px; /* Tailwind rounded-xl */
+            padding: 8px; /* Increased padding */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* Subtle shadow */
+            width: 120px; /* Fixed width for the card */
             box-sizing: border-box; /* Include padding and border in width */
             text-align: center;
         }
 
-        /* Add styles for the link wrapper inside the node card */
+        /* Styling for the link wrapper inside the node card */
         .node-card a {
             text-decoration: none; /* Remove underline from links */
             color: inherit; /* Inherit text color */
@@ -61,46 +67,46 @@
             flex-direction: column; /* Stack content vertically within link */
             align-items: center; /* Center content horizontally within link */
             width: 100%; /* Make link fill the card width */
-            /* Prevent touch actions on links specifically if needed, but general SVG handling is better */
-            /* touch-action: manipulation; */
         }
 
-
+        /* Styling for the node image */
         .node-image {
             width: 50px;
             height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 6px; /* Increased space below image */
-            box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+            border-radius: 50%; /* Circular image */
+            object-fit: cover; /* Crop image to fit */
+            margin-bottom: 6px; /* Space below image */
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.2); /* Subtle shadow */
         }
 
-         .node-placeholder {
+        /* Styling for the placeholder when no image is available */
+        .node-placeholder {
             width: 50px;
             height: 50px;
-            border-radius: 50%;
-            background-color: #d1d5db; /* bg-gray-300 */
+            border-radius: 50%; /* Circular placeholder */
+            background-color: #d1d5db; /* Tailwind gray-300 */
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #4b5563; /* text-gray-600 */
-            font-weight: bold; /* font-bold */
+            color: #4b5563; /* Tailwind gray-600 */
+            font-weight: bold;
             font-size: 1rem; /* Increased font size */
-            margin-bottom: 6px; /* Increased space below placeholder */
-         }
+            margin-bottom: 6px; /* Space below placeholder */
+        }
 
-
+        /* Styling for the node name */
         .node-name {
-            font-size: 11px; /* Increased font size slightly */
+            font-size: 11px; /* Increased font size */
             text-align: center;
-            font-weight: 600; /* Increased font weight */
+            font-weight: 600; /* Semi-bold */
             line-height: 1.3; /* Adjusted line height */
             white-space: normal; /* Allow text to wrap */
             word-break: break-word; /* Break long words */
             max-width: 100%; /* Ensure name fits within card */
         }
 
-         .node-introducer, .node-reason {
+        /* Styling for introducer and reason text */
+        .node-introducer, .node-reason {
             font-size: 9px; /* Smaller font for details */
             color: #555;
             text-align: center;
@@ -109,12 +115,12 @@
             word-break: break-word;
             max-width: 100%;
             margin-top: 2px; /* Space above introducer/reason */
-         }
+        }
 
-
+        /* Styling for the links between nodes */
         .link {
             fill: none;
-            stroke: #94a3b8; /* slate-400 */
+            stroke: #94a3b8; /* Tailwind slate-400 */
             stroke-width: 1.5px; /* Increased line thickness */
         }
     </style>
@@ -127,108 +133,127 @@
     </div>
 
     <script>
-        // ここをGitHubのRawtherapee URLに変更してください
-        const JSON_FILE_PATH = 'tree_data.json'; // Replace with your actual GitHub Raw URL
+        // Define the path to your JSON data file
+        // IMPORTANT: Replace with your actual GitHub Raw URL or local path
+        const JSON_FILE_PATH = 'tree_data.json';
 
+        // Wait for the DOM to be fully loaded
         window.addEventListener("DOMContentLoaded", () => {
+            // Fetch the JSON data
             fetch(JSON_FILE_PATH)
                 .then(response => {
+                    // Check if the response was successful
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
+                    // Parse the JSON data
                     return response.json();
                 })
                 .then(jsonData => {
+                    // Validate the data format
                     if (!Array.isArray(jsonData)) {
                         document.getElementById("chart-container").innerHTML = "<p>データの形式が正しくありません。</p>";
                         return;
                     }
 
-                    // Group data by introduction_reason for separate trees
+                    // Group data by introduction_reason to potentially draw separate trees
+                    // If introduction_reason is null or undefined, group under "その他" (Other)
                     const groupedData = d3.group(jsonData, d => d.introduction_reason || "その他");
 
+                    // Select the SVG element and the container
                     const svg = d3.select("#tree-svg");
                     const chartContainer = d3.select("#chart-container");
-                    const margin = {top: 40, right: 20, bottom: 40, left: 20}; // Adjusted margins
+
+                    // Define margins and node dimensions
+                    const margin = {top: 40, right: 20, bottom: 40, left: 20};
                     const nodeWidth = 120; // Matches .node-card width
                     const nodeHeight = 80; // Approximate height of .node-card content
                     const verticalSpacing = 50; // Space between parent and child levels
                     const horizontalSpacing = 20; // Minimum space between sibling nodes
 
-                    let currentYOffset = margin.top;
-                    let maxSvgWidth = 0;
-                    let totalSvgHeight = 0; // Track total height needed
+                    let currentYOffset = margin.top; // Vertical offset for placing subtrees
+                    let maxSvgWidth = 0; // Track maximum width needed for all subtrees
+                    let totalSvgHeight = 0; // Track total height needed for all subtrees
 
                     // Create a main group to hold all group subtrees - This group will be zoomed/panned
                     const mainG = svg.append("g");
 
-                    // Add a background rectangle to the main group to make panning easier
-                    mainG.append("rect")
-                        .attr("width", "100%") // Initial width, will be updated
-                        .attr("height", "100%") // Initial height, will be updated
-                        .attr("fill", "transparent"); // Make it invisible
-
+                    // Iterate through each group (based on introduction_reason)
                     groupedData.forEach((groupData, reason) => {
+                        // Find the root nodes for this group (nodes with no introducer)
                         const rootNodesData = groupData.filter(d => d.introducerPageId === null);
 
+                        // For each root node, draw a separate tree
                         rootNodesData.forEach(rootData => {
+                            // Create a D3 hierarchy from the root data
                             const root = d3.hierarchy(rootData, d => jsonData.filter(item => item.introducerPageId === d.id));
 
+                            // Define the tree layout
                             const treeLayout = d3.tree()
+                                // nodeSize sets the fixed dimensions for each node cell in the layout
                                 .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]);
 
+                            // Apply the tree layout to the hierarchy
                             treeLayout(root);
 
+                            // Calculate the horizontal extent of the current subtree
                             let x0 = Infinity, x1 = -Infinity;
                             root.each(d => {
                                 if (d.x < x0) x0 = d.x;
                                 if (d.x > x1) x1 = d.x;
                             });
 
+                            // Calculate the width of the current subtree
                             const subtreeWidth = x1 - x0 + nodeWidth + horizontalSpacing;
+                            // Update maxSvgWidth if the current subtree is wider
                             if (subtreeWidth > maxSvgWidth) {
                                 maxSvgWidth = subtreeWidth;
                             }
 
+                            // Calculate the horizontal offset needed to center the subtree
                             const offsetX = (maxSvgWidth / 2) - ((x1 + x0) / 2);
 
                             // Create a group for the current subtree within the main group
                             const subtreeG = mainG.append("g")
                                 .attr("transform", `translate(${margin.left + offsetX}, ${currentYOffset})`);
 
-                            // Draw links
+                            // Draw links (paths) between nodes
                             subtreeG.append("g")
                                 .attr("fill", "none")
                                 .attr("stroke-linejoin", "round")
                                 .attr("stroke-width", 1.5)
                                 .selectAll("path")
-                                .data(root.links())
+                                .data(root.links()) // Get link data from the hierarchy
                                 .join("path")
                                 .attr("class", "link")
-                                .attr("d", d3.linkVertical()
-                                    .x(d => d.x)
-                                    .y(d => d.y)
+                                .attr("d", d3.linkVertical() // Use vertical links
+                                    .x(d => d.x) // X coordinate of the node
+                                    .y(d => d.y) // Y coordinate of the node
                                 );
 
-                            // Draw nodes
+                            // Draw nodes (groups containing foreignObject for HTML content)
                             const node = subtreeG.append("g")
                                 .selectAll("g")
-                                .data(root.descendants())
+                                .data(root.descendants()) // Get all nodes from the hierarchy
                                 .join("g")
-                                .attr("transform", d => `translate(${d.x},${d.y})`);
+                                .attr("transform", d => `translate(${d.x},${d.y})`); // Position the node group
 
+                            // Append foreignObject to each node group to embed HTML
                             const nodeForeignObject = node.append("foreignObject")
-                                .attr("x", -(nodeWidth / 2))
-                                .attr("y", -(nodeHeight / 2))
+                                .attr("x", -(nodeWidth / 2)) // Center the foreignObject horizontally
+                                .attr("y", -(nodeHeight / 2)) // Center the foreignObject vertically
                                 .attr("width", nodeWidth)
                                 .attr("height", nodeHeight);
 
+                            // Append the HTML div (.node-card) inside the foreignObject
                             const nodeCard = nodeForeignObject.append("xhtml:div")
                                 .attr("class", "node-card");
 
+                            // Append an anchor tag (link) inside the card
                             const linkWrapper = nodeCard.append("a")
-                                .attr("href", d => d.data.page_url || "#")
-                                .attr("target", "_blank")
+                                .attr("href", d => d.data.page_url || "#") // Link to page_url or '#' if none
+                                .attr("target", "_blank") // Open link in a new tab
+                                // Apply necessary styles to the anchor tag to make it behave like a container
                                 .style("text-decoration", "none")
                                 .style("color", "inherit")
                                 .style("display", "flex")
@@ -236,26 +261,30 @@
                                 .style("align-items", "center")
                                 .style("width", "100%");
 
-
+                            // Add image or placeholder to the link wrapper
                             linkWrapper.each(function(d) {
                                 const container = d3.select(this);
                                 if (d.data.image) {
+                                    // If image URL exists, add an image element
                                     container.append("img")
                                         .attr("class", "node-image")
                                         .attr("src", d.data.image)
                                         .attr("alt", "photo");
                                 } else {
+                                    // If no image, add a placeholder div with the first letter of the name
                                     container.append("div")
                                         .attr("class", "node-placeholder")
                                         .text(d.data.name ? d.data.name.charAt(0) : '?');
                                 }
                             });
 
-                            const textContent = linkWrapper.append("div");
+                            // Add text content (name, introducer, reason) below the image/placeholder
+                            const textContent = linkWrapper.append("div"); // Container for text elements
                             textContent.append("div")
                                 .attr("class", "node-name")
-                                .text(d => d.data.name);
+                                .text(d => d.data.name); // Display the member's name
 
+                            // Add introducer name if it exists
                             textContent.each(function(d) {
                                 const container = d3.select(this);
                                 if (d.data.introducer_name) {
@@ -263,188 +292,92 @@
                                         .attr("class", "node-introducer")
                                         .text(`紹介者: ${d.data.introducer_name}`);
                                 }
+                                // Add introduction reason if it exists and is not the default "その他"
+                                if (d.data.introduction_reason && d.data.introduction_reason !== "その他") {
+                                     container.append("div")
+                                        .attr("class", "node-reason")
+                                        .text(`理由: ${d.data.introduction_reason}`);
+                                }
                             });
 
-                            // Add space for the next subtree
+
+                            // Calculate the height of the current subtree
                             const subtreeHeight = root.height * (nodeHeight + verticalSpacing);
+                            // Update the vertical offset for the next subtree
                             currentYOffset += subtreeHeight + margin.bottom + verticalSpacing;
+                            // Add subtree height to the total height needed
                             totalSvgHeight += subtreeHeight + margin.bottom + verticalSpacing;
 
                         }); // End rootNodesData.forEach
                     }); // End groupedData.forEach
 
-                    // Adjust SVG width and height based on content
+                    // Adjust SVG width and height based on the calculated maximum width and total height
+                    // Set SVG dimensions large enough to contain all content initially
                     const finalSvgWidth = maxSvgWidth + margin.left + margin.right;
-                    const finalSvgHeight = totalSvgHeight + margin.top + margin.bottom; // Use totalSvgHeight
+                    const finalSvgHeight = totalSvgHeight + margin.top + margin.bottom;
                     svg.attr("width", finalSvgWidth);
                     svg.attr("height", finalSvgHeight);
 
-                    // Update background rect size
-                    mainG.select("rect")
-                        .attr("width", finalSvgWidth)
-                        .attr("height", finalSvgHeight);
+                    // --- D3 Zoom and Pan Functionality ---
 
+                    // Create a zoom behavior
+                    const zoom = d3.zoom()
+                        // Set the extent of the zoomable area to the calculated SVG dimensions
+                        .extent([[0, 0], [finalSvgWidth, finalSvgHeight]])
+                        // Set the zoom scale limits
+                        .scaleExtent([0.5, 3]) // Allow zooming between 0.5x and 3x
+                        // Define the function to call when zooming occurs
+                        .on("zoom", zoomed);
 
-                    // 🌟 中央に自動スクロールする処理を追加
-                    const containerElement = document.getElementById("chart-container");
-                    // Use a slight delay to ensure rendering is complete before scrolling
-                     setTimeout(() => {
-                         // Scroll to center horizontally
-                         containerElement.scrollLeft = (finalSvgWidth - containerElement.clientWidth) / 2;
-                         // Scroll to top vertically (or a little bit down if needed)
-                         containerElement.scrollTop = 0; // Or a small offset like margin.top
-                     }, 100);
+                    // Apply the zoom behavior to the SVG element
+                    svg.call(zoom);
 
-
-                    // --- Pinch-to-Zoom and Pan Functionality ---
-                    let initialPinchDistance = 0;
-                    let currentScale = 1;
-                    let lastTranslateX = 0;
-                    let lastTranslateY = 0;
-                    let isPanning = false;
-                    let lastTouchX = 0;
-                    let lastTouchY = 0;
-                    let initialTouchX = 0; // Added to track initial touch position
-                    let initialTouchY = 0; // Added to track initial touch position
-                    const tapThreshold = 5; // Pixels: how far a touch can move and still be considered a tap
-
-                    // Get the bounding box of the SVG for coordinate calculations
-                    const svgRect = svg.node().getBoundingClientRect();
-
-                    svg.on("touchstart", (event) => {
-                        if (event.touches.length === 2) {
-                            // Pinch start
-                            initialPinchDistance = getPinchDistance(event.touches);
-                            isPanning = false; // Not panning when pinching
-                            // Prevent default only for pinch start to avoid scrolling interference
-                            event.preventDefault();
-                        } else if (event.touches.length === 1) {
-                            // Pan or Tap start
-                            isPanning = false; // Assume not panning initially
-                            lastTouchX = event.touches[0].clientX;
-                            lastTouchY = event.touches[0].clientY;
-                            initialTouchX = lastTouchX; // Record initial position
-                            initialTouchY = lastTouchY; // Record initial position
-
-                            // Get current transform for smooth panning start
-                            const transform = mainG.attr("transform");
-                            if (transform) {
-                                const translateMatch = transform.match(/translate\(([^,]+),([^)]+)\)/);
-                                if (translateMatch) {
-                                    lastTranslateX = parseFloat(translateMatch[1]);
-                                    lastTranslateY = parseFloat(translateMatch[2]);
-                                } else {
-                                     lastTranslateX = 0;
-                                     lastTranslateY = 0;
-                                }
-                            } else {
-                                lastTranslateX = 0;
-                                lastTranslateY = 0;
-                            }
-                            // Do NOT preventDefault here to allow potential link clicks
-                        }
-                    });
-
-                    svg.on("touchmove", (event) => {
-                        if (event.touches.length === 2) {
-                            // Pinch move
-                            event.preventDefault(); // Prevent default touch behavior like scrolling/zooming
-
-                            const currentPinchDistance = getPinchDistance(event.touches);
-                            if (initialPinchDistance === 0) {
-                                initialPinchDistance = currentPinchDistance; // Handle case where touchstart missed
-                                return;
-                            }
-
-                            // Calculate scale change
-                            const scaleChange = currentPinchDistance / initialPinchDistance;
-                            currentScale *= scaleChange;
-
-                            // Optional: Clamp scale to a reasonable range (e.g., 0.5 to 3)
-                            currentScale = Math.max(0.5, Math.min(currentScale, 3));
-
-                            // Apply scale transformation to the main group
-                            // We need to maintain the current translation as well
-                            mainG.attr("transform", `translate(${lastTranslateX}, ${lastTranslateY}) scale(${currentScale})`);
-
-                            initialPinchDistance = currentPinchDistance; // Update initial distance for next move event
-
-                        } else if (event.touches.length === 1) {
-                            // Pan move
-                            const touch = event.touches[0];
-                            const deltaX = touch.clientX - lastTouchX;
-                            const deltaY = touch.clientY - lastTouchY;
-
-                            // Check if touch has moved beyond tap threshold
-                            const moveDistance = Math.sqrt(
-                                Math.pow(touch.clientX - initialTouchX, 2) +
-                                Math.pow(touch.clientY - initialTouchY, 2)
-                            );
-
-                            if (moveDistance > tapThreshold) {
-                                isPanning = true; // It's a pan, not a tap
-                                event.preventDefault(); // Prevent default behavior (like scrolling)
-                            }
-
-                            if (isPanning) {
-                                lastTranslateX += deltaX;
-                                lastTranslateY += deltaY;
-
-                                // Apply pan transformation to the main group, maintaining current scale
-                                mainG.attr("transform", `translate(${lastTranslateX}, ${lastTranslateY}) scale(${currentScale})`);
-
-                                lastTouchX = touch.clientX;
-                                lastTouchY = touch.clientY;
-                            }
-                        }
-                    });
-
-                    svg.on("touchend", (event) => {
-                        // Reset state when touches end
-                        initialPinchDistance = 0;
-                        // isPanning state is used in touchmove to decide preventDefault
-
-                        // If it was a pan, prevent default to stop potential click after drag
-                        if (isPanning) {
-                             // Check if there are still touches left from other fingers (for multi-touch)
-                             if (event.touches.length === 0) {
-                                // Only prevent default if all touches have ended and it was a pan
-                                // This is tricky, as preventDefault in touchend can prevent clicks.
-                                // A better approach is to preventDefault only in touchmove if it's a drag.
-                                // Let's rely on the touchmove logic to set isPanning and preventDefault there.
-                             }
-                        }
-                         isPanning = false; // Reset for the next interaction
-                         // Do NOT preventDefault here unconditionally, let default click happen if it was a tap
-                    });
-
-                     svg.on("touchcancel", (event) => {
-                        // Handle cases where touch is interrupted (e.g., call incoming)
-                        initialPinchDistance = 0;
-                        isPanning = false;
-                     });
-
-
-                    // Helper function to calculate distance between two touch points
-                    function getPinchDistance(touches) {
-                        const dx = touches[0].clientX - touches[1].clientX;
-                        const dy = touches[0].clientY - touches[1].clientY;
-                        return Math.sqrt(dx * dx + dy * dy);
+                    // Zoom event handler function
+                    function zoomed(event) {
+                        // Apply the transform from the zoom event to the main group
+                        mainG.attr("transform", event.transform);
                     }
 
-                    // --- End Pinch-to-Zoom and Pan Functionality ---
+                     // --- Initial centering using zoom transform ---
+                    const containerElement = document.getElementById("chart-container");
+                    const containerWidth = containerElement.clientWidth;
+                    const containerHeight = containerElement.clientHeight;
+
+                    // Calculate initial scale to fit the content if it's larger than the container
+                    // Or just use scale 1 if the content is smaller
+                    const initialScale = 1.0; // Start with 1x scale
+                    // const initialScale = Math.min(containerWidth / finalSvgWidth, containerHeight / finalSvgHeight);
+                    // const clampedInitialScale = Math.max(0.5, Math.min(initialScale, 1.0)); // Clamp between 0.5 and 1
+
+                    // Calculate initial translation to center the content
+                    const initialTranslateX = (containerWidth - finalSvgWidth * initialScale) / 2;
+                    const initialTranslateY = (containerHeight - finalSvgHeight * initialScale) / 2;
+
+
+                    // Create the initial transform
+                    const initialTransform = d3.zoomIdentity
+                        .translate(initialTranslateX, initialTranslateY)
+                        .scale(initialScale);
+
+                    // Apply the initial transform with a smooth transition
+                    svg.transition().duration(750).call(zoom.transform, initialTransform);
+
+
+                    // --- End D3 Zoom and Pan Functionality ---
 
 
                 })
                 .catch(error => {
+                    // Log any errors during data fetching or processing
                     console.error('Error fetching JSON data:', error);
+                    // Display an error message to the user
                     document.getElementById("chart-container").innerHTML = "<p>データの読み込みに失敗しました。GitHubのRawtherapee URLが正しいか、またはCORSの問題がないか確認してください。</p>";
                 });
         });
 
-        // Optional: Redraw on window resize (more complex with D3 layout)
-        // For simplicity, we'll skip full redraw on resize for this example.
-        // A robust solution would recalculate layout and redraw SVG on resize.
+        // Optional: Add a resize handler if you need the layout to recalculate
+        // on window resize. This is more complex with D3 layout and pan/zoom.
+        // For simplicity, this example does not include a full redraw on resize.
 
     </script>
 </body>
