@@ -16,7 +16,7 @@
         /* Header styling */
         h1 {
             text-align: center;
-            padding: 0.4rem 1rem; /* ヘッダーの高さを調整 */
+            padding: 0.4rem 1rem; /* ヘッダーの上下paddingを調整 */
             margin: 0;
             font-size: 1.1rem; /* フォントサイズを調整 */
             background: #4b5563; /* ヘッダー背景を濃いグレーに (Gray 600) */
@@ -28,11 +28,20 @@
             align-items: center; /* 垂直方向中央寄せ */
             justify-content: center; /* 中央寄せ */
             white-space: nowrap; /* テキストが改行されないように */
+            /* ヘッダーの正確な高さを指定 */
+            height: auto; /* paddingとfont-sizeで高さを決定 */
+            line-height: 1.5; /* 行の高さを調整してpaddingと合わせる */
+            box-sizing: border-box; /* paddingを含めて高さを計算 */
         }
 
         h1 .header-content {
             flex-grow: 1; /* 中央にタイトルを寄せる */
             text-align: center;
+            /* flexアイテムとして中央寄せ */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%; /* 親要素の高さいっぱいに */
         }
 
         h1 .list-button {
@@ -48,6 +57,9 @@
             text-decoration: none; /* 下線を解除 */
             transition: background-color 0.2s ease;
             white-space: nowrap; /* テキストが改行されないように */
+            /* ボタンを垂直方向中央に配置 */
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         h1 .list-button:hover {
@@ -58,7 +70,9 @@
         /* Search container styling */
         #search-container {
             position: sticky; /* 常時表示 */
-            top: 40px; /* ヘッダーの高さ分だけ下に配置 (h1のpadding+font-sizeで約40pxに調整) */
+            /* ヘッダーの高さに基づいてtopを調整 */
+            /* ヘッダーの計算された高さに合わせて調整 */
+            top: 40px; /* 目測で調整 */
             padding: 4px 8px; /* 縦幅を小さくするためにpaddingを調整 */
             background-color: #e5e7eb; /* 検索バー背景を明るいグレーに (Gray 200) */
             border-bottom: 1px solid #d1d5db; /* 検索バー下線をやや明るいグレーに (Gray 300) */
@@ -67,7 +81,18 @@
             box-shadow: none; /* 影を解除 */
             text-align: center; /* 中央寄せに戻す */
             width: auto; /* 幅の固定を解除 */
+            /* 検索バーの正確な高さを指定 */
+            height: auto; /* paddingと内部要素で高さを決定 */
+            box-sizing: border-box; /* paddingを含めて高さを計算 */
         }
+
+        #search-container .input-container {
+            position: relative; /* このコンテナ内で絶対配置 */
+            display: inline-block; /* 中央寄せのためにinline-block */
+            /* inputとbuttonを垂直方向中央寄せ */
+            vertical-align: middle;
+        }
+
 
         #search-container input[type="text"] {
             padding: 3px; /* 入力フィールドのpaddingも小さく */
@@ -80,6 +105,7 @@
             /* サジェストリストの基準位置にするためにrelativeを追加 */
             position: relative;
             display: inline-block; /* 中央寄せのためにinline-block */
+            height: 22px; /* 高さを固定して調整しやすく */
         }
 
         #search-container button {
@@ -91,6 +117,9 @@
             cursor: pointer;
             font-size: 0.9rem; /* フォントサイズを調整 */
             transition: background-color 0.2s ease;
+             height: 22px; /* 高さを固定して調整しやすく */
+             line-height: 1; /* テキストの垂直方向位置調整 */
+             box-sizing: border-box; /* paddingを含めて高さを計算 */
         }
 
         #search-container button:hover {
@@ -103,7 +132,7 @@
             /* 検索入力ボックスの左端に合わせる */
             left: 50%; /* 親要素の中央に */
             transform: translateX(-50%); /* 要素自体の幅の半分だけ左に移動 */
-            top: 100%; /* 検索入力ボックスの直下に配置 */
+            top: calc(100% + 5px); /* 検索入力ボックスの直下に配置し、少し隙間を空ける */
             width: 200px; /* 入力フィールドの幅に合わせる */
             max-height: 150px; /* Limit height and add scroll */
             overflow-y: auto;
@@ -118,13 +147,6 @@
             display: none; /* Hidden by default */
             z-index: 10; /* ツリーより前面に表示 */
         }
-
-        /* input要素を基準にするための調整 */
-        #search-container .input-container {
-            position: relative; /* このコンテナ内で絶対配置 */
-            display: inline-block; /* 中央寄せのためにinline-block */
-        }
-
 
         #suggestions-list li {
             padding: 8px 10px;
@@ -145,9 +167,9 @@
         /* Container for the chart, allows scrolling */
         #chart-container {
             width: 100%;
-            /* ヘッダーと検索バーの高さだけ考慮 */
-            /* ヘッダー約40px, 検索バー約30px (padding 4px*2 + input/button height 約22px) */
-            height: calc(100vh - 40px - 30px);
+            /* ヘッダーと検索バーの正確な高さを考慮して高さを計算 */
+            /* ヘッダー高さ + 検索バー高さ */
+            height: calc(100vh - 40px - 30px); /* 目測で調整したtop値とpaddingから計算 */
             overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
             padding-top: 0; /* パディングを解除 */
             box-sizing: border-box;
