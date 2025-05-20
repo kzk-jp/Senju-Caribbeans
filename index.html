@@ -11,6 +11,8 @@
             font-family: "Helvetica Neue", sans-serif;
             background-color: #f3f4f6; /* Light gray background */
             color: #333; /* Dark gray text */
+            /* フローティングボタンがコンテンツを隠さないように下部にパディングを追加 */
+            padding-bottom: 60px; /* ボタンの高さと下からの距離を考慮 */
         }
 
         /* Header styling */
@@ -221,6 +223,30 @@
             box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); /* Amber shadow */
             background-color: #fcd34d; /* Tailwind amber-300 - Highlight background color */
         }
+
+        /* リンクボタンのスタイル */
+        .floating-button {
+            /* 画面左下に固定 */
+            position: fixed;
+            bottom: 20px; /* 下からの距離 */
+            left: 20px; /* 左からの距離 */
+            /* ボタンの見た目 */
+            display: inline-block;
+            background-color: #007bff; /* 背景色 */
+            color: white; /* 文字色 */
+            padding: 8px 15px; /* 内側の余白 */
+            border-radius: 5px; /* 角の丸み */
+            text-decoration: none; /* 下線をなくす */
+            font-size: 0.9em; /* フォントサイズを小さめに */
+            z-index: 1000; /* 他の要素より前面に表示 */
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* 影 */
+            transition: background-color 0.3s ease; /* ホバー時のアニメーション */
+        }
+
+        /* ホバー時のスタイル */
+        .floating-button:hover {
+            background-color: #0056b3;
+        }
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
@@ -238,6 +264,10 @@
     <div id="chart-container">
         <svg id="tree-svg"></svg>
     </div>
+
+    <a href="https://phase-laundry-290.notion.site/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" class="floating-button" target="_blank">
+        リストへ
+    </a>
 
     <script>
         // Define the path to your JSON data file
@@ -660,55 +690,62 @@
                             // Convert search term to Katakana for matching
                             const searchTermKata = hiraToKata(searchTerm);
 
-                            // Filter nodes whose names contain the search term (case-insensitive, using Katakana)
-                            const matchingNodes = allNodesData.filter(d => {
+                            const filteredSuggestions = allNodesData.filter(d => {
                                 const nodeName = d.name || "";
                                 const nodeNameKata = hiraToKata(nodeName).toLowerCase();
                                 return nodeNameKata.includes(searchTermKata);
                             });
 
-                            if (matchingNodes.length > 0) {
-                                matchingNodes.forEach(node => {
+                            if (filteredSuggestions.length > 0) {
+                                filteredSuggestions.forEach(suggestion => {
                                     const li = document.createElement('li');
-                                    li.textContent = node.name;
+                                    li.textContent = suggestion.name;
                                     li.addEventListener('click', () => {
-                                        searchInput.value = node.name; // Set input value to selected suggestion
-                                        performSearch(node.name); // Perform search for the selected name
-                                        suggestionsList.style.display = 'none'; // Hide suggestions
+                                        searchInput.value = suggestion.name;
+                                        performSearch(suggestion.name);
+                                        suggestionsList.style.display = 'none';
                                     });
                                     suggestionsList.appendChild(li);
                                 });
-                                suggestionsList.style.display = 'block'; // Show suggestions
+                                suggestionsList.style.display = 'block';
                             } else {
-                                suggestionsList.style.display = 'none'; // Hide suggestions if no matches
+                                suggestionsList.style.display = 'none';
                             }
                         } else {
-                            suggestionsList.style.display = 'none'; // Hide suggestions if input is empty
-                        }
-                    });
-
-                    // Hide suggestions when clicking outside the input and list
-                    document.addEventListener('click', (event) => {
-                        const isClickInsideSearchContainer = document.getElementById('search-container').contains(event.target);
-                        if (!isClickInsideSearchContainer) {
                             suggestionsList.style.display = 'none';
                         }
                     });
 
-                    // Prevent clicks inside the suggestions list from closing it
-                    suggestionsList.addEventListener('click', (event) => {
-                        event.stopPropagation();
+                    // Hide suggestions when clicking outside
+                    document.addEventListener('click', (event) => {
+                        if (!searchContainer.contains(event.target)) {
+                            suggestionsList.style.display = 'none';
+                        }
                     });
 
 
-                }) // End then(jsonData => ...)
+                })
                 .catch(error => {
                     // Handle any errors during the fetch operation
-                    console.error("Error fetching or processing JSON data:", error);
+                    console.error("Error fetching or parsing JSON:", error);
                     document.getElementById("chart-container").innerHTML = "<p>データの読み込み中にエラーが発生しました。</p>";
-                }); // End fetch().then().catch()
+                });
+        });
 
-        }); // End DOMContentLoaded
+        // Add a resize event listener to re-center the tree when the window is resized
+        window.addEventListener("resize", () => {
+            // Recalculate container dimensions
+            const containerWidth = chartContainerElement.clientWidth;
+            const containerHeight = chartContainerElement.clientHeight;
+
+            // Update SVG dimensions to match container
+            svgElement.setAttribute("width", containerWidth);
+            svgElement.setAttribute("height", containerHeight);
+
+            // Zoom to fit the tree within the new container dimensions
+            zoomToFitTree();
+        });
+
 
     </script>
 </body>
