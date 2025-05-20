@@ -542,8 +542,8 @@
                         .extent([[0, 0], [finalSvgWidth, finalSvgHeight]])
                         // Restrict pan range to allow moving the view up to the original SVG size outside the original bounds
                         .translateExtent([
-                            [-finalSvgWidth, -finalSvgHeight], // 元のSVGサイズ分だけ左上方向にパン可能
-                            [finalSvgWidth * 2, finalSvgHeight * 2] // 元のSVGサイズ分だけ右下方向にパン可能
+                            [-finalSvgWidth * 5, -finalSvgHeight * 5], // 元のSVGサイズ分だけ左上方向にパン可能 (範囲を5倍に拡大)
+                            [finalSvgWidth * 5, finalSvgHeight * 5] // 元のSVGサイズ分だけ右下方向にパン可能 (範囲を5倍に拡大)
                         ])
                         // Set the zoom scale limits
                         .scaleExtent([0.5, 3]) // Allow zooming between 0.5x and 3x
@@ -776,18 +776,14 @@
                         const containerWidth = chartContainerElement.clientWidth;
                         const containerHeight = chartContainerElement.clientHeight;
 
-                        // Update SVG dimensions (optional, but good practice if SVG size is relative)
-                        // svg.attr("width", containerWidth);
-                        // svg.attr("height", containerHeight);
-
                         // Re-apply zoom behavior with updated extent based on new container size
                         // This is important for translateExtent to work correctly after resize
                         const currentTransform = d3.zoomTransform(svgElement); // Get current transform
                         const zoom = d3.zoom()
                             .extent([[0, 0], [containerWidth, containerHeight]]) // Update extent to container size
                             .translateExtent([
-                                [-finalSvgWidth, -finalSvgHeight], // Use original calculated tree size for pan limits
-                                [finalSvgWidth * 2, finalSvgHeight * 2]
+                                [-finalSvgWidth * 5, -finalSvgHeight * 5], // Use original calculated tree size for pan limits (範囲を5倍に拡大)
+                                [finalSvgWidth * 5, finalSvgHeight * 5] // 元のSVGサイズ分だけ右下方向にパン可能 (範囲を5倍に拡大)
                             ])
                             .scaleExtent([0.5, 3])
                             .on("zoom", zoomed);
