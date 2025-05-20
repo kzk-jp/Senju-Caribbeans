@@ -28,11 +28,12 @@
 
         /* Header title styling */
         .header-container h1 {
-            text-align: center; /* タイトルを左寄せに */
+            text-align: center; /* タイトルを中央寄せに */
             padding: 0; /* コンテナでパディングを設定したのでここでは0 */
             margin: 0;
             font-size: 1.1rem; /* フォントサイズを調整 */
             color: white; /* 親要素で設定済みだが明示的に */
+            flex-grow: 1; /* 中央寄せのために利用可能なスペースを埋める */
         }
 
         /* Header link button styling */
@@ -45,6 +46,7 @@
             border-radius: 20px; /* 角丸を大きく */
             font-size: 0.9rem; /* フォントサイズを調整 */
             transition: background-color 0.2s ease;
+            flex-shrink: 0; /* 縮小しない */
         }
 
         .header-link:hover {
@@ -176,9 +178,9 @@
             background-color: white;
             border: 1px solid #d1d5db; /* Tailwind gray-300 border */
             border-radius: 12px; /* Tailwind rounded-xl */
-            padding: 6px; /* Increased padding */
+            padding: 8px; /* Original padding */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* Subtle shadow */
-            width: 100px; /* Fixed width for the card */
+            width: 120px; /* Original width for the card */
             box-sizing: border-box; /* Include padding and border in width */
             text-align: center;
         }
@@ -195,18 +197,18 @@
 
         /* Styling for the node image */
         .node-image {
-            width: 40px; /* 画像サイズを調整 */
-            height: 40px; /* 画像サイズを調整 */
+            width: 50px; /* Original image size */
+            height: 50px; /* Original image size */
             border-radius: 50%; /* Circular image */
             object-fit: cover; /* Crop image to fit */
-            margin-bottom: 4px; /* Space below image */
+            margin-bottom: 6px; /* Original space below image */
             box-shadow: 0 0 3px rgba(0, 0, 0, 0.2); /* Subtle shadow */
         }
 
         /* Styling for the placeholder when no image is available */
         .node-placeholder {
-            width: 40px; /* プレースホルダーサイズを調整 */
-            height: 40px; /* プレースホルダーサイズを調整 */
+            width: 50px; /* Original placeholder size */
+            height: 50px; /* Original placeholder size */
             border-radius: 50%; /* Circular placeholder */
             background-color: #d1d5db; /* Tailwind gray-300 */
             display: flex;
@@ -214,13 +216,13 @@
             justify-content: center;
             color: #4b5563; /* Tailwind gray-600 */
             font-weight: bold;
-            font-size: 0.9rem; /* Increased font size */
-            margin-bottom: 4px; /* Space below placeholder */
+            font-size: 1rem; /* Original font size */
+            margin-bottom: 6px; /* Original space below placeholder */
         }
 
         /* Styling for the node name */
         .node-name {
-            font-size: 10px; /* Increased font size */
+            font-size: 11px; /* Original font size */
             text-align: center;
             font-weight: 600; /* Semi-bold */
             line-height: 1.3; /* Adjusted line height */
@@ -231,14 +233,14 @@
 
         /* Styling for introducer and reason text */
         .node-introducer, .node-reason {
-            font-size: 8px; /* Smaller font for details */
+            font-size: 9px; /* Original smaller font for details */
             color: #555;
             text-align: center;
             line-height: 1.2;
             white-space: normal;
             word-break: break-word;
             max-width: 100%;
-            margin-top: 1px; /* Space above introducer/reason */
+            margin-top: 2px; /* Original space above introducer/reason */
         }
 
         /* Styling for the links between nodes */
@@ -337,11 +339,11 @@
 
 
                     // Define margins and node dimensions
-                    const margin = {top: 20, right: 10, bottom: 20, left: 10}; // マージンを半分に
-                    const nodeWidth = 100; // Matches .node-card width
-                    const nodeHeight = 70; // Approximate height of .node-card content
-                    const verticalSpacing = 40; // Space between parent and child levels
-                    const horizontalSpacing = 15; // Minimum space between sibling nodes
+                    const margin = {top: 40, right: 20, bottom: 40, left: 20}; // Original margins
+                    const nodeWidth = 120; // Original width for the card
+                    const nodeHeight = 80; // Original approximate height of .node-card content
+                    const verticalSpacing = 50; // Original space between parent and child levels
+                    const horizontalSpacing = 20; // Original minimum space between sibling nodes
 
                     let currentYOffset = margin.top; // Vertical offset for placing subtrees
                     let maxSvgWidth = 0; // Track maximum width needed for all subtrees
@@ -369,7 +371,7 @@
                             // Define the tree layout
                             const treeLayout = d3.tree()
                                 // nodeSize sets the fixed dimensions for each node cell in the layout
-                                .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]);
+                                .nodeSize([nodeHeight + verticalSpacing, nodeWidth + horizontalSpacing]); // Original node size
 
                             // Apply the tree layout to the hierarchy
                             treeLayout(root);
