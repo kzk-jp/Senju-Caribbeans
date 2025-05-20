@@ -11,76 +11,39 @@
             font-family: "Helvetica Neue", sans-serif;
             background-color: #f3f4f6; /* Light gray background */
             color: #333; /* Dark gray text */
-            /* 固定ヘッダー+検索バーの合計高さを考慮してpadding-topを設定 */
-            /* ここでは約80pxと仮定。実際の高さに合わせて調整が必要な場合があります。 */
-            padding-top: 80px;
-            padding-bottom: 20px; /* フローティングボタンはなくなったので下部のパディングを減らす（必要に応じて調整） */
         }
 
-        /* 画面上部に固定するエリアのスタイル */
-        #top-fixed-area {
-            position: fixed; /* 画面上部に固定 */
-            top: 0; /* 上端に配置 */
-            left: 0; /* 左端に配置 */
-            right: 0; /* 右端に配置 */
-            z-index: 100; /* 他の要素より前面に表示 */
-            background-color: #f3f4f6; /* 背景色（ボディの背景色に合わせるか、適宜変更） */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 軽い影を追加 */
-            display: flex; /* ヘッダー、検索バー、ボタンを横並びにするためにFlexboxを使用 */
-            flex-direction: column; /* 要素を縦に並べる（ヘッダーと検索バー/ボタンの行） */
-        }
-
-        /* ヘッダーとボタンを配置する行 */
-        #header-row {
-            display: flex;
-            /* justify-content: space-between; /* ヘッダータイトルとボタンを左右に配置 */ */
-            align-items: center; /* 縦方向の中央揃え */
-            padding: 0.5rem 1rem; /* パディングを調整 */
+        /* Header styling */
+        h1 {
+            text-align: center;
+            padding: 1rem;
+            margin: 0;
+            font-size: 1.4rem;
             background: #2563eb; /* Tailwind blue-700 */
             color: white;
         }
 
-        /* Header styling */
-        #header-row h1 {
-            margin: 0; /* 固定エリア内なのでmarginを0に */
-            font-size: 1.2rem; /* フォントサイズも少し小さく */
-            /* backgroundとcolorは#header-rowで設定済み */
-            flex-grow: 1; /* 残りのスペースを埋める */
-            text-align: center; /* テキストを中央揃え */
-        }
-
         /* Search container styling */
         #search-container {
-            /* 固定エリア内に配置されるため、position: fixedは不要 */
-            position: static; /* デフォルトに戻す */
+            position: static; /* 元の位置に戻す */
             top: auto;
             right: auto;
-            padding: 4px 8px; /* 縦方向のパディングを小さく */
+            padding: 8px; /* 縦幅を小さくするためにpaddingを調整 */
             background-color: #e5e7eb; /* Tailwind gray-200 */
             border-bottom: 1px solid #d1d5db; /* Tailwind gray-300 */
-            border-radius: 0;
-            z-index: auto;
-            box-shadow: none;
-            text-align: center;
-            width: auto;
-            /* flexboxを使って要素を中央揃えに */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 5px; /* 要素間の隙間 */
+            border-radius: 0; /* 角丸を解除 */
+            z-index: auto; /* z-indexを解除 */
+            box-shadow: none; /* 影を解除 */
+            text-align: center; /* 中央寄せに戻す */
+            width: auto; /* 幅の固定を解除 */
         }
-
-        #search-container .input-container {
-             position: relative; /* このコンテナ内で絶対配置 */
-             display: inline-block; /* 中央寄せのためにinline-block */
-        }
-
 
         #search-container input[type="text"] {
-            padding: 4px 6px; /* 入力フィールドのpaddingも小さく */
+            padding: 6px; /* 入力フィールドのpaddingも小さく */
+            margin-right: 5px;
             border: 1px solid #d1d5db;
             border-radius: 4px;
-            font-size: 0.9rem; /* フォントサイズも少し小さく */
+            font-size: 1rem;
             width: 200px; /* 入力フィールドの幅を固定（必要に応じて調整）*/
             box-sizing: border-box;
             /* サジェストリストの基準位置にするためにrelativeを追加 */
@@ -89,15 +52,14 @@
         }
 
         #search-container button {
-            padding: 4px 10px; /* ボタンのpaddingも小さく */
+            padding: 6px 12px; /* ボタンのpaddingも小さく */
             background-color: #3b82f6; /* Tailwind blue-500 */
             color: white;
             border: none;
             border-radius: 44px; /* ボタンの角を丸く */
             cursor: pointer;
-            font-size: 0.9rem; /* フォントサイズも少し小さく */
+            font-size: 1rem;
             transition: background-color 0.2s ease;
-            /* flexアイテムとして中央揃えされる */
         }
 
         #search-container button:hover {
@@ -126,12 +88,18 @@
             z-index: 10; /* ツリーより前面に表示 */
         }
 
+         /* input要素を基準にするための調整 */
+        #search-container .input-container {
+            position: relative; /* このコンテナ内で絶対配置 */
+            display: inline-block; /* 中央寄せのためにinline-block */
+        }
+
 
         #suggestions-list li {
-            padding: 6px 10px; /* サジェストリストのpaddingも調整 */
+            padding: 8px 10px;
             cursor: pointer;
             border-bottom: 1px solid #eee;
-            font-size: 0.85rem; /* フォントサイズも調整 */
+            font-size: 0.9rem;
         }
 
         #suggestions-list li:last-child {
@@ -146,11 +114,10 @@
         /* Container for the chart, allows scrolling */
         #chart-container {
             width: 100%;
-            /* ヘッダーと検索バーの高さに合わせて再計算 */
-            /* bodyにpadding-topを設定したので、vhからその分を引く */
-            height: calc(100vh - 80px); /* bodyのpadding-topと同じ値を引く */
+            /* ヘッダーと検索バーの高さだけ考慮 */
+            height: calc(100vh - 60px - 40px); /* ヘッダー約60px, 検索バー約40px */
             overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
-            padding-top: 0; /* bodyにpadding-topがあるので不要 */
+            padding-top: 0; /* パディングを解除 */
             box-sizing: border-box;
         }
 
@@ -248,53 +215,22 @@
             box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); /* Amber shadow */
             background-color: #fcd34d; /* Tailwind amber-300 - Highlight background color */
         }
-
-        /* リンクボタンのスタイル（固定ヘッダー内に配置するため修正） */
-        .header-button {
-            /* ボタンの見た目 */
-            display: inline-block;
-            background-color: #007bff; /* 背景色 */
-            color: white; /* 文字色 */
-            padding: 4px 10px; /* 内側の余白（検索ボタンと合わせる） */
-            border-radius: 44px; /* 角の丸み（検索ボタンと合わせる） */
-            text-decoration: none; /* 下線をなくす */
-            font-size: 0.9rem; /* フォントサイズを小さめに（検索ボタンと合わせる） */
-            /* z-indexは親要素#top-fixed-areaで設定済み */
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* 影 */
-            transition: background-color 0.3s ease; /* ホバー時のアニメーション */
-            /* Flexアイテムとして右端に寄せる */
-            margin-left: auto; /* 左側の余白を自動で設定し、右に寄せる */
-        }
-
-        /* ホバー時のスタイル */
-        .header-button:hover {
-            background-color: #0056b3;
-        }
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <div id="top-fixed-area">
-        <div id="header-row">
-            <h1>フットサルメンバー紹介ツリー</h1>
-            <a href="https://phase-laundry-290.notion.site/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" class="header-button" target="_blank">
-                リストへ
-            </a>
-        </div>
-        <div id="search-container">
-            <div class="input-container">
-                <input type="text" id="search-input" placeholder="メンバーの名前で検索" autocomplete="off" />
-                <ul id="suggestions-list"></ul>
-            </div>
-            <button id="search-button">検索</button>
-        </div>
-    </div>
+    <h1>フットサルメンバー紹介ツリー</h1>
 
+    <div id="search-container">
+        <div class="input-container">
+            <input type="text" id="search-input" placeholder="メンバーの名前で検索" autocomplete="off" />
+            <ul id="suggestions-list"></ul> </div>
+        <button id="search-button">検索</button>
+    </div>
 
     <div id="chart-container">
         <svg id="tree-svg"></svg>
     </div>
-
 
     <script>
         // Define the path to your JSON data file
@@ -506,8 +442,8 @@
                                 // Add introduction reason if it exists and is not the default "その他"
                                 if (d.data.introduction_reason && d.data.introduction_reason !== "その他") {
                                      container.append("div")
-                                         .attr("class", "node-reason")
-                                         .text(`理由: ${d.data.introduction_reason}`);
+                                        .attr("class", "node-reason")
+                                        .text(`理由: ${d.data.introduction_reason}`);
                                 }
                             });
 
@@ -563,7 +499,7 @@
                     // Calculate the overall bounds of the tree using the main group's bounding box
                      const mainGBounds = mainGElement.getBBox();
                      const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
-                     const treeCenterY = mainGBounds.y + treeHeight / 2; // ツリーの高さを使用
+                     const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
 
                     // Calculate the transform to center the overall tree
                     const initialScale = 0.5; // Start with 0.5x scale
@@ -584,8 +520,6 @@
                     const searchInput = document.getElementById("search-input");
                     const searchButton = document.getElementById("search-button");
                     const suggestionsList = document.getElementById("suggestions-list");
-                    const searchContainer = document.getElementById("search-container"); // サジェストリストの表示/非表示に使用
-
 
                     // Function to perform the search and highlight
                     function performSearch(searchTerm) {
@@ -603,6 +537,7 @@
 
                         // Find the node data that matches the search term (case-insensitive, using Katakana)
                         const foundNodeData = allNodesData.find(d => {
+                            // Convert node name to Katakana for comparison if it's not already
                             const nodeName = d.name || "";
                             const nodeNameKata = hiraToKata(nodeName).toLowerCase();
                             return nodeNameKata.includes(searchTermKata);
@@ -718,39 +653,70 @@
                             // Convert search term to Katakana for matching
                             const searchTermKata = hiraToKata(searchTerm);
 
-                            const filteredSuggestions = allNodesData.filter(d => {
+                            // Filter nodes whose names contain the search term (case-insensitive, using Katakana)
+                            const matchingNodes = allNodesData.filter(d => {
                                 const nodeName = d.name || "";
                                 const nodeNameKata = hiraToKata(nodeName).toLowerCase();
                                 return nodeNameKata.includes(searchTermKata);
                             });
 
-                            if (filteredSuggestions.length > 0) {
-                                filteredSuggestions.forEach(suggestion => {
-                                    const li = document.createElement('li');
-                                    li.textContent = suggestion.name;
-                                    li.addEventListener('click', () => {
-                                        searchInput.value = suggestion.name;
-                                        performSearch(suggestion.name);
-                                        suggestionsList.style.display = 'none';
+                            // Display suggestions
+                            if (matchingNodes.length > 0) {
+                                matchingNodes.forEach(node => {
+                                    const li = document.createElement("li");
+                                    li.textContent = node.name;
+                                    li.addEventListener("click", () => {
+                                        searchInput.value = node.name;
+                                        performSearch(node.name);
+                                        suggestionsList.style.display = 'none'; // Hide suggestions after selecting
                                     });
                                     suggestionsList.appendChild(li);
                                 });
-                                suggestionsList.style.display = 'block';
+                                suggestionsList.style.display = 'block'; // Show suggestions list
                             } else {
-                                suggestionsList.style.display = 'none';
+                                suggestionsList.style.display = 'none'; // Hide if no matches
                             }
                         } else {
+                            suggestionsList.style.display = 'none'; // Hide if input is empty
+                        }
+                    });
+
+                    // Hide suggestions when clicking outside the input/list
+                    document.addEventListener('click', (event) => {
+                        const isClickInsideSearch = document.getElementById('search-container').contains(event.target);
+                        if (!isClickInsideSearch) {
                             suggestionsList.style.display = 'none';
                         }
                     });
 
-                    // Hide suggestions when clicking outside
-                    document.addEventListener('click', (event) => {
-                        // searchContainer の親要素である top-fixed-area を含むように修正
-                        const topFixedArea = document.getElementById("top-fixed-area");
-                        if (topFixedArea && !topFixedArea.contains(event.target)) {
-                            suggestionsList.style.display = 'none';
-                        }
+
+                    // --- Handle Window Resize ---
+                    window.addEventListener('resize', () => {
+                        // Recalculate container dimensions
+                        const containerWidth = chartContainerElement.clientWidth;
+                        const containerHeight = chartContainerElement.clientHeight;
+
+                        // Update SVG dimensions (optional, but good practice if SVG size is relative)
+                        // svg.attr("width", containerWidth);
+                        // svg.attr("height", containerHeight);
+
+                        // Re-apply zoom behavior with updated extent based on new container size
+                        // This is important for translateExtent to work correctly after resize
+                        const currentTransform = d3.zoomTransform(svgElement); // Get current transform
+                        const zoom = d3.zoom()
+                            .extent([[0, 0], [containerWidth, containerHeight]]) // Update extent to container size
+                            .translateExtent([
+                                [-finalSvgWidth, -finalSvgHeight], // Use original calculated tree size for pan limits
+                                [finalSvgWidth * 2, finalSvgHeight * 2]
+                            ])
+                            .scaleExtent([0.5, 3])
+                            .on("zoom", zoomed);
+
+                        svg.call(zoom); // Apply the updated zoom behavior
+                        currentZoomBehavior = zoom; // Store the updated behavior
+
+                        // Optionally, recenter the tree after resize
+                        // zoomToFitTree(); // Uncomment this line to recenter on resize
                     });
 
 
@@ -761,22 +727,6 @@
                     document.getElementById("chart-container").innerHTML = "<p>データの読み込み中にエラーが発生しました。</p>";
                 });
         });
-
-        // Add a resize event listener to re-center the tree when the window is resized
-        window.addEventListener("resize", () => {
-            // Recalculate container dimensions
-            const containerWidth = chartContainerElement.clientWidth;
-            const containerHeight = chartContainerElement.clientHeight;
-
-            // Update SVG dimensions to match container
-            svgElement.setAttribute("width", containerWidth);
-            svgElement.setAttribute("height", containerHeight);
-
-            // Zoom to fit the tree within the new container dimensions
-            zoomToFitTree();
-        });
-
-
     </script>
 </body>
 </html>
