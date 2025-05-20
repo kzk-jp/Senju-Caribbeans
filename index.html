@@ -16,34 +16,44 @@
         /* Header styling */
         h1 {
             text-align: center;
-            padding: 1rem;
+            padding: 0.5rem; /* ヘッダーのパディングを小さく */
             margin: 0;
-            font-size: 1.4rem;
+            font-size: 1.2rem; /* フォントサイズも少し小さく */
             background: #2563eb; /* Tailwind blue-700 */
             color: white;
         }
 
         /* Search container styling */
         #search-container {
-            position: static; /* 元の位置に戻す */
+            position: static;
             top: auto;
             right: auto;
-            padding: 8px; /* 縦幅を小さくするためにpaddingを調整 */
+            padding: 4px 8px; /* 縦方向のパディングを小さく */
             background-color: #e5e7eb; /* Tailwind gray-200 */
             border-bottom: 1px solid #d1d5db; /* Tailwind gray-300 */
-            border-radius: 0; /* 角丸を解除 */
-            z-index: auto; /* z-indexを解除 */
-            box-shadow: none; /* 影を解除 */
-            text-align: center; /* 中央寄せに戻す */
-            width: auto; /* 幅の固定を解除 */
+            border-radius: 0;
+            z-index: auto;
+            box-shadow: none;
+            text-align: center;
+            width: auto;
+            /* flexboxを使って要素を中央揃えに */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px; /* 要素間の隙間 */
         }
 
+        #search-container .input-container {
+             position: relative; /* このコンテナ内で絶対配置 */
+             display: inline-block; /* 中央寄せのためにinline-block */
+        }
+
+
         #search-container input[type="text"] {
-            padding: 6px; /* 入力フィールドのpaddingも小さく */
-            margin-right: 5px;
+            padding: 4px 6px; /* 入力フィールドのpaddingも小さく */
             border: 1px solid #d1d5db;
             border-radius: 4px;
-            font-size: 1rem;
+            font-size: 0.9rem; /* フォントサイズも少し小さく */
             width: 200px; /* 入力フィールドの幅を固定（必要に応じて調整）*/
             box-sizing: border-box;
             /* サジェストリストの基準位置にするためにrelativeを追加 */
@@ -52,14 +62,15 @@
         }
 
         #search-container button {
-            padding: 6px 12px; /* ボタンのpaddingも小さく */
+            padding: 4px 10px; /* ボタンのpaddingも小さく */
             background-color: #3b82f6; /* Tailwind blue-500 */
             color: white;
             border: none;
             border-radius: 44px; /* ボタンの角を丸く */
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.9rem; /* フォントサイズも少し小さく */
             transition: background-color 0.2s ease;
+            /* flexアイテムとして中央揃えされる */
         }
 
         #search-container button:hover {
@@ -88,18 +99,12 @@
             z-index: 10; /* ツリーより前面に表示 */
         }
 
-         /* input要素を基準にするための調整 */
-        #search-container .input-container {
-            position: relative; /* このコンテナ内で絶対配置 */
-            display: inline-block; /* 中央寄せのためにinline-block */
-        }
-
 
         #suggestions-list li {
-            padding: 8px 10px;
+            padding: 6px 10px; /* サジェストリストのpaddingも調整 */
             cursor: pointer;
             border-bottom: 1px solid #eee;
-            font-size: 0.9rem;
+            font-size: 0.85rem; /* フォントサイズも調整 */
         }
 
         #suggestions-list li:last-child {
@@ -114,10 +119,11 @@
         /* Container for the chart, allows scrolling */
         #chart-container {
             width: 100%;
-            /* ヘッダーと検索バーの高さだけ考慮 */
-            height: calc(100vh - 60px - 40px); /* ヘッダー約60px, 検索バー約40px */
+            /* ヘッダーと検索バーの高さに合わせて再計算 */
+            /* ヘッダー約40px, 検索バー約30px と仮定して調整 */
+            height: calc(100vh - 40px - 30px);
             overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
-            padding-top: 0; /* パディングを解除 */
+            padding-top: 0;
             box-sizing: border-box;
         }
 
@@ -224,7 +230,8 @@
     <div id="search-container">
         <div class="input-container">
             <input type="text" id="search-input" placeholder="メンバーの名前で検索" autocomplete="off" />
-            <ul id="suggestions-list"></ul> </div>
+            <ul id="suggestions-list"></ul>
+        </div>
         <button id="search-button">検索</button>
     </div>
 
@@ -442,8 +449,8 @@
                                 // Add introduction reason if it exists and is not the default "その他"
                                 if (d.data.introduction_reason && d.data.introduction_reason !== "その他") {
                                      container.append("div")
-                                        .attr("class", "node-reason")
-                                        .text(`理由: ${d.data.introduction_reason}`);
+                                         .attr("class", "node-reason")
+                                         .text(`理由: ${d.data.introduction_reason}`);
                                 }
                             });
 
@@ -660,73 +667,49 @@
                                 return nodeNameKata.includes(searchTermKata);
                             });
 
-                            // Display suggestions
                             if (matchingNodes.length > 0) {
                                 matchingNodes.forEach(node => {
-                                    const li = document.createElement("li");
+                                    const li = document.createElement('li');
                                     li.textContent = node.name;
-                                    li.addEventListener("click", () => {
-                                        searchInput.value = node.name;
-                                        performSearch(node.name);
-                                        suggestionsList.style.display = 'none'; // Hide suggestions after selecting
+                                    li.addEventListener('click', () => {
+                                        searchInput.value = node.name; // Set input value to selected suggestion
+                                        performSearch(node.name); // Perform search for the selected name
+                                        suggestionsList.style.display = 'none'; // Hide suggestions
                                     });
                                     suggestionsList.appendChild(li);
                                 });
-                                suggestionsList.style.display = 'block'; // Show suggestions list
+                                suggestionsList.style.display = 'block'; // Show suggestions
                             } else {
-                                suggestionsList.style.display = 'none'; // Hide if no matches
+                                suggestionsList.style.display = 'none'; // Hide suggestions if no matches
                             }
                         } else {
-                            suggestionsList.style.display = 'none'; // Hide if input is empty
+                            suggestionsList.style.display = 'none'; // Hide suggestions if input is empty
                         }
                     });
 
-                    // Hide suggestions when clicking outside the input/list
+                    // Hide suggestions when clicking outside the input and list
                     document.addEventListener('click', (event) => {
-                        const isClickInsideSearch = document.getElementById('search-container').contains(event.target);
-                        if (!isClickInsideSearch) {
+                        const isClickInsideSearchContainer = document.getElementById('search-container').contains(event.target);
+                        if (!isClickInsideSearchContainer) {
                             suggestionsList.style.display = 'none';
                         }
                     });
 
-
-                    // --- Handle Window Resize ---
-                    window.addEventListener('resize', () => {
-                        // Recalculate container dimensions
-                        const containerWidth = chartContainerElement.clientWidth;
-                        const containerHeight = chartContainerElement.clientHeight;
-
-                        // Update SVG dimensions (optional, but good practice if SVG size is relative)
-                        // svg.attr("width", containerWidth);
-                        // svg.attr("height", containerHeight);
-
-                        // Re-apply zoom behavior with updated extent based on new container size
-                        // This is important for translateExtent to work correctly after resize
-                        const currentTransform = d3.zoomTransform(svgElement); // Get current transform
-                        const zoom = d3.zoom()
-                            .extent([[0, 0], [containerWidth, containerHeight]]) // Update extent to container size
-                            .translateExtent([
-                                [-finalSvgWidth, -finalSvgHeight], // Use original calculated tree size for pan limits
-                                [finalSvgWidth * 2, finalSvgHeight * 2]
-                            ])
-                            .scaleExtent([0.5, 3])
-                            .on("zoom", zoomed);
-
-                        svg.call(zoom); // Apply the updated zoom behavior
-                        currentZoomBehavior = zoom; // Store the updated behavior
-
-                        // Optionally, recenter the tree after resize
-                        // zoomToFitTree(); // Uncomment this line to recenter on resize
+                    // Prevent clicks inside the suggestions list from closing it
+                    suggestionsList.addEventListener('click', (event) => {
+                        event.stopPropagation();
                     });
 
 
-                })
+                }) // End then(jsonData => ...)
                 .catch(error => {
                     // Handle any errors during the fetch operation
-                    console.error("Error fetching or parsing JSON:", error);
+                    console.error("Error fetching or processing JSON data:", error);
                     document.getElementById("chart-container").innerHTML = "<p>データの読み込み中にエラーが発生しました。</p>";
-                });
-        });
+                }); // End fetch().then().catch()
+
+        }); // End DOMContentLoaded
+
     </script>
 </body>
 </html>
