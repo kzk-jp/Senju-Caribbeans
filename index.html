@@ -78,6 +78,9 @@
             flex-shrink: 0; /* 縮小しない */
             border: none; /* ボタンの枠線を削除 */
             cursor: pointer; /* カーソルをポインターに */
+            width: 15%; /* 新しい幅 */
+            box-sizing: border-box; /* パディングとボーダーを幅に含める */
+            text-align: center; /* テキストを中央寄せにする */
         }
 
         .search-link:hover, .reset-button:hover {
@@ -96,7 +99,8 @@
             border: 1px solid #d1d5db;
             border-radius: 4px;
             font-size: 0.9rem; /* フォントサイズを調整 */
-            width: 180px; /* 入力フィールドの幅を固定（必要に応じて調整）*/
+            width: 25%; /* 新しい幅 */
+            min-width: 100px; /* 最小幅を設定して小さくなりすぎないようにする */
             box-sizing: border-box;
             /* サジェストリストの基準位置にするためにrelativeを追加 */
             position: relative;
