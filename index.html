@@ -16,34 +16,65 @@
         /* Header styling */
         h1 {
             text-align: center;
-            padding: 1rem;
+            padding: 0.5rem 1rem; /* 高さを半分にする */
             margin: 0;
-            font-size: 1.4rem;
+            font-size: 1.2rem; /* フォントサイズを調整 */
             background: #2563eb; /* Tailwind blue-700 */
             color: white;
+            position: sticky; /* 常時表示 */
+            top: 0; /* 上部に固定 */
+            z-index: 20; /* 検索バーより前面に */
+            display: flex; /* ボタン配置のためにflexbox使用 */
+            align-items: center; /* 垂直方向中央寄せ */
+            justify-content: center; /* 中央寄せ */
+            white-space: nowrap; /* テキストが改行されないように */
         }
+
+        h1 .header-content {
+            flex-grow: 1; /* 中央にタイトルを寄せる */
+            text-align: center;
+        }
+
+        h1 .list-button {
+            position: absolute; /* 親要素h1を基準に絶対配置 */
+            right: 1rem; /* 右端からの距離 */
+            padding: 4px 8px; /* ボタンのpadding */
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            color: white;
+            border: none;
+            border-radius: 44px; /* ボタンの角を丸く */
+            cursor: pointer;
+            font-size: 0.9rem; /* フォントサイズ */
+            text-decoration: none; /* 下線を解除 */
+            transition: background-color 0.2s ease;
+            white-space: nowrap; /* テキストが改行されないように */
+        }
+
+        h1 .list-button:hover {
+            background-color: #2563eb; /* Tailwind blue-700 */
+        }
+
 
         /* Search container styling */
         #search-container {
-            position: static; /* 元の位置に戻す */
-            top: auto;
-            right: auto;
-            padding: 8px; /* 縦幅を小さくするためにpaddingを調整 */
+            position: sticky; /* 常時表示 */
+            top: 48px; /* ヘッダーの高さ分だけ下に配置 (h1のpadding+font-sizeで約48px) */
+            padding: 6px 8px; /* 縦幅を小さくするためにpaddingを調整 */
             background-color: #e5e7eb; /* Tailwind gray-200 */
             border-bottom: 1px solid #d1d5db; /* Tailwind gray-300 */
             border-radius: 0; /* 角丸を解除 */
-            z-index: auto; /* z-indexを解除 */
+            z-index: 10; /* ツリーより前面に表示 */
             box-shadow: none; /* 影を解除 */
             text-align: center; /* 中央寄せに戻す */
             width: auto; /* 幅の固定を解除 */
         }
 
         #search-container input[type="text"] {
-            padding: 6px; /* 入力フィールドのpaddingも小さく */
+            padding: 4px; /* 入力フィールドのpaddingも小さく */
             margin-right: 5px;
             border: 1px solid #d1d5db;
             border-radius: 4px;
-            font-size: 1rem;
+            font-size: 0.9rem; /* フォントサイズを調整 */
             width: 200px; /* 入力フィールドの幅を固定（必要に応じて調整）*/
             box-sizing: border-box;
             /* サジェストリストの基準位置にするためにrelativeを追加 */
@@ -52,13 +83,13 @@
         }
 
         #search-container button {
-            padding: 6px 12px; /* ボタンのpaddingも小さく */
+            padding: 4px 10px; /* ボタンのpaddingも小さく */
             background-color: #3b82f6; /* Tailwind blue-500 */
             color: white;
             border: none;
             border-radius: 44px; /* ボタンの角を丸く */
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.9rem; /* フォントサイズを調整 */
             transition: background-color 0.2s ease;
         }
 
@@ -88,7 +119,7 @@
             z-index: 10; /* ツリーより前面に表示 */
         }
 
-         /* input要素を基準にするための調整 */
+        /* input要素を基準にするための調整 */
         #search-container .input-container {
             position: relative; /* このコンテナ内で絶対配置 */
             display: inline-block; /* 中央寄せのためにinline-block */
@@ -115,7 +146,8 @@
         #chart-container {
             width: 100%;
             /* ヘッダーと検索バーの高さだけ考慮 */
-            height: calc(100vh - 60px - 40px); /* ヘッダー約60px, 検索バー約40px */
+            /* ヘッダー約48px, 検索バー約36px (padding 6px*2 + input/button height 約24px) */
+            height: calc(100vh - 48px - 36px);
             overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
             padding-top: 0; /* パディングを解除 */
             box-sizing: border-box;
@@ -219,12 +251,16 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <h1>フットサルメンバー紹介ツリー</h1>
+    <h1>
+        <div class="header-content">フットサルメンバー紹介ツリー</div>
+        <a href="https://phase-laundry-290.notion.site/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" target="_blank" class="list-button">リストへ</a>
+    </h1>
 
     <div id="search-container">
         <div class="input-container">
             <input type="text" id="search-input" placeholder="メンバーの名前で検索" autocomplete="off" />
-            <ul id="suggestions-list"></ul> </div>
+            <ul id="suggestions-list"></ul>
+        </div>
         <button id="search-button">検索</button>
     </div>
 
@@ -442,8 +478,8 @@
                                 // Add introduction reason if it exists and is not the default "その他"
                                 if (d.data.introduction_reason && d.data.introduction_reason !== "その他") {
                                      container.append("div")
-                                        .attr("class", "node-reason")
-                                        .text(`理由: ${d.data.introduction_reason}`);
+                                         .attr("class", "node-reason")
+                                         .text(`理由: ${d.data.introduction_reason}`);
                                 }
                             });
 
@@ -660,73 +696,65 @@
                                 return nodeNameKata.includes(searchTermKata);
                             });
 
-                            // Display suggestions
                             if (matchingNodes.length > 0) {
-                                matchingNodes.forEach(node => {
+                                // Sort suggestions: exact matches first, then starts-with, then includes
+                                matchingNodes.sort((a, b) => {
+                                    const nameA = hiraToKata(a.name || "").toLowerCase();
+                                    const nameB = hiraToKata(b.name || "").toLowerCase();
+
+                                    const startsWithA = nameA.startsWith(searchTermKata);
+                                    const startsWithB = nameB.startsWith(searchTermKata);
+
+                                    const includesA = nameA.includes(searchTermKata);
+                                    const includesB = nameB.includes(searchTermKata);
+
+                                    if (startsWithA && !startsWithB) return -1;
+                                    if (!startsWithA && startsWithB) return 1;
+
+                                    if (includesA && !includesB) return -1;
+                                    if (!includesA && includesB) return 1;
+
+                                    return nameA.localeCompare(nameB, 'ja', { sensitivity: 'base' });
+                                });
+
+
+                                matchingNodes.slice(0, 10).forEach(node => { // Limit to 10 suggestions
                                     const li = document.createElement("li");
                                     li.textContent = node.name;
                                     li.addEventListener("click", () => {
                                         searchInput.value = node.name;
                                         performSearch(node.name);
-                                        suggestionsList.style.display = 'none'; // Hide suggestions after selecting
+                                        suggestionsList.style.display = 'none';
                                     });
                                     suggestionsList.appendChild(li);
                                 });
-                                suggestionsList.style.display = 'block'; // Show suggestions list
+                                suggestionsList.style.display = 'block';
                             } else {
-                                suggestionsList.style.display = 'none'; // Hide if no matches
+                                suggestionsList.style.display = 'none';
                             }
                         } else {
-                            suggestionsList.style.display = 'none'; // Hide if input is empty
-                        }
-                    });
-
-                    // Hide suggestions when clicking outside the input/list
-                    document.addEventListener('click', (event) => {
-                        const isClickInsideSearch = document.getElementById('search-container').contains(event.target);
-                        if (!isClickInsideSearch) {
                             suggestionsList.style.display = 'none';
                         }
                     });
 
-
-                    // --- Handle Window Resize ---
-                    window.addEventListener('resize', () => {
-                        // Recalculate container dimensions
-                        const containerWidth = chartContainerElement.clientWidth;
-                        const containerHeight = chartContainerElement.clientHeight;
-
-                        // Update SVG dimensions (optional, but good practice if SVG size is relative)
-                        // svg.attr("width", containerWidth);
-                        // svg.attr("height", containerHeight);
-
-                        // Re-apply zoom behavior with updated extent based on new container size
-                        // This is important for translateExtent to work correctly after resize
-                        const currentTransform = d3.zoomTransform(svgElement); // Get current transform
-                        const zoom = d3.zoom()
-                            .extent([[0, 0], [containerWidth, containerHeight]]) // Update extent to container size
-                            .translateExtent([
-                                [-finalSvgWidth, -finalSvgHeight], // Use original calculated tree size for pan limits
-                                [finalSvgWidth * 2, finalSvgHeight * 2]
-                            ])
-                            .scaleExtent([0.5, 3])
-                            .on("zoom", zoomed);
-
-                        svg.call(zoom); // Apply the updated zoom behavior
-                        currentZoomBehavior = zoom; // Store the updated behavior
-
-                        // Optionally, recenter the tree after resize
-                        // zoomToFitTree(); // Uncomment this line to recenter on resize
+                    // Hide suggestions when clicking outside
+                    document.addEventListener("click", (event) => {
+                        if (!search-input.contains(event.target) && !suggestions-list.contains(event.target)) {
+                            suggestionsList.style.display = 'none';
+                        }
                     });
 
+                    // Ensure the initial tree view is correctly centered and scaled after loading
+                    // This is handled by the initial zoom.transform call after data processing.
 
                 })
                 .catch(error => {
-                    // Handle any errors during the fetch operation
-                    console.error("Error fetching or parsing JSON:", error);
-                    document.getElementById("chart-container").innerHTML = "<p>データの読み込み中にエラーが発生しました。</p>";
+                    // Log any errors during fetch or parsing
+                    console.error("Error loading JSON data:", error);
+                    document.getElementById("chart-container").innerHTML = `<p>データの読み込み中にエラーが発生しました: ${error.message}</p>`;
                 });
         });
+
     </script>
 </body>
 </html>
