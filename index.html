@@ -475,8 +475,8 @@
                         .extent([[0, 0], [finalSvgWidth, finalSvgHeight]])
                         // Restrict pan range to allow moving the view up to the original SVG size outside the original bounds
                         .translateExtent([
-                            [-finalSvgWidth, -finalSvgHeight], // 元のSVGサイズ分だけ左上方向にパン可能
-                            [finalSvgWidth * 2, finalSvgHeight * 2] // 元のSVGサイズ分だけ右下方向にパン可能
+                            [-finalSvgWidth * 0.75, -finalSvgHeight * 0.75], // 左上方向に元のSVGサイズの0.75倍までパン可能
+                            [finalSvgWidth * 1.75, finalSvgHeight * 1.75] // 右下方向に元のSVGサイズの1.75倍までパン可能 (合計 0.75 + 1 + 0.75 = 2.5倍)
                         ])
                         // Set the zoom scale limits
                         .scaleExtent([0.5, 2.5]) // Allow zooming between 0.5x and 2.5x
@@ -706,8 +706,8 @@
                         const zoom = d3.zoom()
                             .extent([[0, 0], [containerWidth, containerHeight]]) // Update extent to container size
                             .translateExtent([
-                                [-finalSvgWidth, -finalSvgHeight], // Use original calculated tree size for pan limits
-                                [finalSvgWidth * 2, finalSvgHeight * 2]
+                                [-finalSvgWidth * 0.75, -finalSvgHeight * 0.75], // Use original calculated tree size for pan limits
+                                [finalSvgWidth * 1.75, finalSvgHeight * 1.75]
                             ])
                             .scaleExtent([0.5, 2.5]) // Updated scale extent
                             .on("zoom", zoomed);
