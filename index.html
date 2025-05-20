@@ -475,10 +475,6 @@
                         // Set the zoom scale limits
                         .scaleExtent([0.5, 3]) // Allow zooming between 0.5x and 3x
                         // Define the function to call when zooming occurs
-                        .translateExtent([  // パンは元の svg サイズの半分まで（中央の要素を端に移動できる範囲）
-                            [-width * 0.5, -height * 0.5],
-                            [width * 1.5, height * 1.5]
-                         ])
                         .on("zoom", zoomed);
 
                     // Apply the zoom behavior to the SVG element
@@ -593,7 +589,7 @@
                          // Use the smaller scale to ensure the entire tree fits,
                          // and clamp it within the zoom behavior's scale extent.
                          // Also, ensure we don't zoom in beyond the initial scale (1.0) if the tree is smaller than the container.
-                         const scale = Math.max(currentZoomBehavior.scaleExtent()[0], Math.min(scaleX, scaleY, 0.5));
+                         const scale = Math.max(currentZoomBehavior.scaleExtent()[0], Math.min(scaleX, scaleY, 1.0));
 
 
                          // Calculate the translation to center the tree at the calculated scale
