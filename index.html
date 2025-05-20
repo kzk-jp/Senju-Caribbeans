@@ -707,7 +707,7 @@
                             .extent([[0, 0], [containerWidth, containerHeight]]) // Update extent to container size
                             .translateExtent([
                                 [-finalSvgWidth * 0.5, -finalSvgHeight * 0.5], // Use original calculated tree size for pan limits
-                                [finalSvgWidth * 1.5, finalSvgHeight * 1.5]
+                                [finalSvgWidth * 2, finalSvgHeight * 2]
                             ])
                             .scaleExtent([0.5, 3])
                             .on("zoom", zoomed);
