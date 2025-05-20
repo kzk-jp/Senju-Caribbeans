@@ -59,7 +59,7 @@
         }
 
         /* Search link button styling (formerly .header-link) */
-        .search-link {
+        .search-link, .reset-button {
             display: inline-block; /* ボタンとして表示 */
             padding: 4px 8px; /* ボタンのパディングを調整 */
             background-color: #3b82f6; /* Tailwind blue-500 */
@@ -69,10 +69,11 @@
             font-size: 0.8rem; /* フォントサイズを調整 */
             transition: background-color 0.2s ease;
             flex-shrink: 0; /* 縮小しない */
-            /* margin-left: auto; は不要になる */
+            border: none; /* ボタンの枠線を削除 */
+            cursor: pointer; /* カーソルをポインターに */
         }
 
-        .search-link:hover {
+        .search-link:hover, .reset-button:hover {
             background-color: #2563eb; /* Tailwind blue-700 */
         }
 
@@ -274,7 +275,10 @@
     </div>
 
     <div id="search-container">
-        <a href="https://phase-laundry-290.notion.site/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" class="search-link" target="_blank">リスト表示</a>
+        <div>
+            <a href="https://phase-laundry-290.notion.site/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" class="search-link" target="_blank">リスト表示</a>
+            <button id="reset-button" class="reset-button">リセット</button>
+        </div>
         <div class="search-controls">
             <div class="input-container">
                 <input type="text" id="search-input" placeholder="名前で検索" autocomplete="off" />
@@ -743,6 +747,19 @@
                         if (!isClickInsideSearch) {
                             suggestionsList.style.display = 'none';
                         }
+                    });
+
+                    // --- Reset Button Functionality ---
+                    const resetButton = document.getElementById("reset-button");
+                    resetButton.addEventListener("click", () => {
+                        // 検索ハイライトをクリア
+                        mainG.selectAll(".node-highlight").classed("node-highlight", false);
+                        // 検索入力フィールドをクリア
+                        searchInput.value = '';
+                        // サジェストリストを非表示
+                        suggestionsList.style.display = 'none';
+                        // ツリーのズームとパンを初期状態に戻す
+                        zoomToFitTree();
                     });
 
 
