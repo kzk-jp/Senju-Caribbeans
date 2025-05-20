@@ -479,7 +479,7 @@
                             [finalSvgWidth * 2, finalSvgHeight * 2] // 元のSVGサイズ分だけ右下方向にパン可能
                         ])
                         // Set the zoom scale limits
-                        .scaleExtent([0.5, 3]) // Allow zooming between 0.5x and 3x
+                        .scaleExtent([0.5, 2.5]) // Allow zooming between 0.5x and 2.5x
                         // Define the function to call when zooming occurs
                         .on("zoom", zoomed);
 
@@ -709,7 +709,7 @@
                                 [-finalSvgWidth, -finalSvgHeight], // Use original calculated tree size for pan limits
                                 [finalSvgWidth * 2, finalSvgHeight * 2]
                             ])
-                            .scaleExtent([0.5, 3])
+                            .scaleExtent([0.5, 2.5]) // Updated scale extent
                             .on("zoom", zoomed);
 
                         svg.call(zoom); // Apply the updated zoom behavior
