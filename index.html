@@ -765,8 +765,29 @@
                         searchInput.value = '';
                         // サジェストリストを非表示
                         suggestionsList.style.display = 'none';
-                        // ツリーのズームとパンを初期状態に戻す
-                        zoomToFitTree();
+
+                        // Calculate the overall bounds of the tree using the main group's bounding box
+                        const mainGBounds = mainGElement.getBBox();
+                        const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
+                        const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
+
+                        const containerWidth = chartContainerElement.clientWidth;
+                        const containerHeight = chartContainerElement.clientHeight;
+
+                        // Set the desired scale for reset (0.5x)
+                        const resetScale = 0.5;
+
+                        // Calculate the translation to center the tree at the reset scale
+                        const translateX = containerWidth / 2 - treeCenterX * resetScale;
+                        const translateY = containerHeight / 2 - treeCenterY * resetScale;
+
+                        // Create the new transform
+                        const newTransform = d3.zoomIdentity
+                            .translate(translateX, translateY)
+                            .scale(resetScale);
+
+                        // Apply the transform
+                        zoomToTransform(newTransform);
                     });
 
 
