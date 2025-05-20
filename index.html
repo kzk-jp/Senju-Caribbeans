@@ -16,11 +16,11 @@
         /* Header styling */
         h1 {
             text-align: center;
-            padding: 0.5rem 1rem; /* 高さを半分にする */
+            padding: 0.4rem 1rem; /* ヘッダーの高さを調整 */
             margin: 0;
-            font-size: 1.2rem; /* フォントサイズを調整 */
-            background: #2563eb; /* Tailwind blue-700 */
-            color: white;
+            font-size: 1.1rem; /* フォントサイズを調整 */
+            background: #4b5563; /* ヘッダー背景を濃いグレーに (Gray 600) */
+            color: white; /* ヘッダーテキストを白に */
             position: sticky; /* 常時表示 */
             top: 0; /* 上部に固定 */
             z-index: 20; /* 検索バーより前面に */
@@ -38,30 +38,30 @@
         h1 .list-button {
             position: absolute; /* 親要素h1を基準に絶対配置 */
             right: 1rem; /* 右端からの距離 */
-            padding: 4px 8px; /* ボタンのpadding */
-            background-color: #3b82f6; /* Tailwind blue-500 */
-            color: white;
+            padding: 3px 7px; /* ボタンのpaddingを調整 */
+            background-color: #3b82f6; /* リストへボタン背景を青色に (Blue 500) */
+            color: white; /* ボタンテキストを白に */
             border: none;
             border-radius: 44px; /* ボタンの角を丸く */
             cursor: pointer;
-            font-size: 0.9rem; /* フォントサイズ */
+            font-size: 0.8rem; /* フォントサイズを調整 */
             text-decoration: none; /* 下線を解除 */
             transition: background-color 0.2s ease;
             white-space: nowrap; /* テキストが改行されないように */
         }
 
         h1 .list-button:hover {
-            background-color: #2563eb; /* Tailwind blue-700 */
+            background-color: #2563eb; /* ホバー時を濃い青色に (Blue 700) */
         }
 
 
         /* Search container styling */
         #search-container {
             position: sticky; /* 常時表示 */
-            top: 48px; /* ヘッダーの高さ分だけ下に配置 (h1のpadding+font-sizeで約48px) */
-            padding: 6px 8px; /* 縦幅を小さくするためにpaddingを調整 */
-            background-color: #e5e7eb; /* Tailwind gray-200 */
-            border-bottom: 1px solid #d1d5db; /* Tailwind gray-300 */
+            top: 40px; /* ヘッダーの高さ分だけ下に配置 (h1のpadding+font-sizeで約40pxに調整) */
+            padding: 4px 8px; /* 縦幅を小さくするためにpaddingを調整 */
+            background-color: #e5e7eb; /* 検索バー背景を明るいグレーに (Gray 200) */
+            border-bottom: 1px solid #d1d5db; /* 検索バー下線をやや明るいグレーに (Gray 300) */
             border-radius: 0; /* 角丸を解除 */
             z-index: 10; /* ツリーより前面に表示 */
             box-shadow: none; /* 影を解除 */
@@ -70,9 +70,9 @@
         }
 
         #search-container input[type="text"] {
-            padding: 4px; /* 入力フィールドのpaddingも小さく */
+            padding: 3px; /* 入力フィールドのpaddingも小さく */
             margin-right: 5px;
-            border: 1px solid #d1d5db;
+            border: 1px solid #d1d5db; /* 入力ボーダーをやや明るいグレーに (Gray 300) */
             border-radius: 4px;
             font-size: 0.9rem; /* フォントサイズを調整 */
             width: 200px; /* 入力フィールドの幅を固定（必要に応じて調整）*/
@@ -83,9 +83,9 @@
         }
 
         #search-container button {
-            padding: 4px 10px; /* ボタンのpaddingも小さく */
-            background-color: #3b82f6; /* Tailwind blue-500 */
-            color: white;
+            padding: 3px 9px; /* ボタンのpaddingも小さく */
+            background-color: #6b7280; /* 検索ボタン背景を中間グレーに (Gray 500) */
+            color: white; /* ボタンテキストを白に */
             border: none;
             border-radius: 44px; /* ボタンの角を丸く */
             cursor: pointer;
@@ -94,7 +94,7 @@
         }
 
         #search-container button:hover {
-            background-color: #2563eb; /* Tailwind blue-700 */
+            background-color: #4b5563; /* ホバー時を濃いグレーに (Gray 600) */
         }
 
         /* Search suggestions dropdown */
@@ -107,8 +107,8 @@
             width: 200px; /* 入力フィールドの幅に合わせる */
             max-height: 150px; /* Limit height and add scroll */
             overflow-y: auto;
-            background-color: white;
-            border: 1px solid #d1d5db;
+            background-color: white; /* サジェスト背景は白のまま */
+            border: 1px solid #d1d5db; /* ボーダーをやや明るいグレーに (Gray 300) */
             border-radius: 4px;
             list-style: none;
             padding: 0;
@@ -129,7 +129,7 @@
         #suggestions-list li {
             padding: 8px 10px;
             cursor: pointer;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #eee; /* 区切り線は明るいグレー */
             font-size: 0.9rem;
         }
 
@@ -138,7 +138,7 @@
         }
 
         #suggestions-list li:hover {
-            background-color: #f3f4f6;
+            background-color: #f3f4f6; /* ホバー時背景を非常に明るいグレーに (Gray 100) */
         }
 
 
@@ -146,8 +146,8 @@
         #chart-container {
             width: 100%;
             /* ヘッダーと検索バーの高さだけ考慮 */
-            /* ヘッダー約48px, 検索バー約36px (padding 6px*2 + input/button height 約24px) */
-            height: calc(100vh - 48px - 36px);
+            /* ヘッダー約40px, 検索バー約30px (padding 4px*2 + input/button height 約22px) */
+            height: calc(100vh - 40px - 30px);
             overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
             padding-top: 0; /* パディングを解除 */
             box-sizing: border-box;
@@ -534,20 +534,56 @@
                      // --- Initial centering using zoom transform ---
                     // Calculate the overall bounds of the tree using the main group's bounding box
                      const mainGBounds = mainGElement.getBBox();
-                     const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
-                     const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
 
-                    // Calculate the transform to center the overall tree
-                    const initialScale = 0.5; // Start with 0.5x scale
-                    const initialTranslateX = containerWidth / 2 - treeCenterX * initialScale;
-                    const initialTranslateY = containerHeight / 2 - treeCenterY * initialScale;
+                     // Check if the bounding box is valid (width and height > 0)
+                     if (mainGBounds.width <= 0 || mainGBounds.height <= 0) {
+                         console.warn("Main group bounding box is invalid. Cannot zoom to fit tree.");
+                         // Bounding box invalid, try to center based on container size if possible
+                         const containerWidth = chartContainerElement.clientWidth;
+                         const containerHeight = chartContainerElement.clientHeight;
+                         const initialTransform = d3.zoomIdentity
+                            .translate(containerWidth / 2, containerHeight / 2)
+                            .scale(0.5); // Default scale
+                         svg.transition().duration(750).call(currentZoomBehavior.transform, initialTransform);
+                         return;
+                     }
 
-                    const initialTransform = d3.zoomIdentity
-                        .translate(initialTranslateX, initialTranslateY)
-                        .scale(initialScale);
 
-                    // Apply the initial transform with a smooth transition
-                    svg.transition().duration(750).call(zoom.transform, initialTransform);
+                     const treeWidth = mainGBounds.width;
+                     const treeHeight = mainGBounds.height;
+                     const treeCenterX = mainGBounds.x + treeWidth / 2;
+                     const treeCenterY = mainGBounds.y + treeHeight / 2;
+
+                     const containerWidth = chartContainerElement.clientWidth;
+                     const containerHeight = chartContainerElement.clientHeight;
+
+                     // Calculate scale to fit the tree within the container, with some padding
+                     const padding = 50; // Add some padding around the tree
+                     const scaleX = (containerWidth - padding * 2) / treeWidth;
+                     const scaleY = (containerHeight - padding * 2) / treeHeight;
+                     // Use the smaller scale to ensure the entire tree fits,
+                     // and clamp it within the zoom behavior's scale extent.
+                     // Also, ensure we don't zoom in beyond the initial scale (1.0) if the tree is smaller than the container.
+                     const scale = Math.max(currentZoomBehavior.scaleExtent()[0], Math.min(scaleX, scaleY, 1.0));
+
+
+                     // Calculate the translation to center the tree at the calculated scale
+                     // The target position in the container is (containerWidth/2, containerHeight/2)
+                     // The tree's center in the original SVG space is (treeCenterX, treeCenterY)
+                     // We want to apply a transform (translate, scale) such that
+                     // (treeCenterX, treeCenterY) * scale + translate = (containerWidth/2, containerHeight/2)
+                     // translate = (containerWidth/2, containerHeight/2) - (treeCenterX, treeCenterY) * scale
+
+                     const translateX = containerWidth / 2 - treeCenterX * scale;
+                     const translateY = containerHeight / 2 - treeCenterY * scale;
+
+                     // Create the new transform
+                     const newTransform = d3.zoomIdentity
+                         .translate(translateX, translateY)
+                         .scale(scale);
+
+                     // Apply the transform
+                     zoomToTransform(newTransform);
 
                     // --- End Initial centering ---
 
@@ -613,8 +649,16 @@
                          // Check if the bounding box is valid (width and height > 0)
                          if (mainGBounds.width <= 0 || mainGBounds.height <= 0) {
                              console.warn("Main group bounding box is invalid. Cannot zoom to fit tree.");
+                             // Bounding box invalid, try to center based on container size if possible
+                             const containerWidth = chartContainerElement.clientWidth;
+                             const containerHeight = chartContainerElement.clientHeight;
+                             const initialTransform = d3.zoomIdentity
+                                .translate(containerWidth / 2, containerHeight / 2)
+                                .scale(0.5); // Default scale
+                             svg.transition().duration(750).call(currentZoomBehavior.transform, initialTransform);
                              return;
                          }
+
 
                          const treeWidth = mainGBounds.width;
                          const treeHeight = mainGBounds.height;
@@ -739,10 +783,15 @@
 
                     // Hide suggestions when clicking outside
                     document.addEventListener("click", (event) => {
-                        if (!search-input.contains(event.target) && !suggestions-list.contains(event.target)) {
+                        // Check if the clicked element is outside the search input and the suggestions list
+                        const isClickInsideSearch = searchInput.contains(event.target);
+                        const isClickInsideSuggestions = suggestionsList.contains(event.target);
+
+                        if (!isClickInsideSearch && !isClickInsideSuggestions) {
                             suggestionsList.style.display = 'none';
                         }
                     });
+
 
                     // Ensure the initial tree view is correctly centered and scaled after loading
                     // This is handled by the initial zoom.transform call after data processing.
