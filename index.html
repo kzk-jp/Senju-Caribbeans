@@ -58,6 +58,13 @@
             box-sizing: border-box; /* パディングを含めて高さ計算 */
         }
 
+        /* Group for list and reset buttons */
+        .button-group {
+            display: flex;
+            gap: 8px; /* ボタン間のマージン */
+            align-items: center;
+        }
+
         /* Search link button styling (formerly .header-link) */
         .search-link, .reset-button {
             display: inline-block; /* ボタンとして表示 */
@@ -275,7 +282,7 @@
     </div>
 
     <div id="search-container">
-        <div>
+        <div class="button-group">
             <a href="https://phase-laundry-290.notion.site/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" class="search-link" target="_blank">リスト表示</a>
             <button id="reset-button" class="reset-button">リセット</button>
         </div>
