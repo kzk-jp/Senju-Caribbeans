@@ -23,7 +23,7 @@
             margin: 0;
             background: #2563eb; /* Tailwind blue-700 */
             color: white;
-            height: 30px; /* ヘッダーの高さを調整 */
+            height: 40px; /* ヘッダーの高さを調整 */
             position: sticky; /* ヘッダーを固定 */
             top: 0; /* 画面上部に固定 */
             z-index: 1000; /* 他の要素より前面に表示 */
@@ -32,12 +32,18 @@
 
         /* Header title styling */
         .header-container h1 {
+            /* リンクボタンを無視して画面の中央に表示するために絶対位置指定 */
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
             text-align: center; /* タイトルを中央寄せに */
             padding: 0; /* コンテナでパディングを設定したのでここでは0 */
             margin: 0;
             font-size: 1.1rem; /* フォントサイズを調整 */
             color: white; /* 親要素で設定済みだが明示的に */
-            flex-grow: 1; /* 中央寄せのために利用可能なスペースを埋める */
+            /* flex-growはabsolute positioningと併用しないため削除 */
+            /* flex-grow: 1; */
+            white-space: nowrap; /* タイトルが改行されないようにする */
         }
 
         /* Header link button styling */
@@ -51,6 +57,8 @@
             font-size: 0.9rem; /* フォントサイズを調整 */
             transition: background-color 0.2s ease;
             flex-shrink: 0; /* 縮小しない */
+            /* リンクボタンを右端に配置するためにml-autoを使用 */
+            margin-left: auto;
         }
 
         .header-link:hover {
@@ -72,7 +80,7 @@
             justify-content: center; /* 水平方向の中央に */
             align-items: center; /* 垂直方向の中央に */
             position: sticky; /* 検索バーを固定 */
-            top: 30px; /* ヘッダーの高さ分下に配置 */
+            top: 35px; /* ヘッダーの高さ分下に配置 */
             z-index: 999; /* ヘッダーよりは下だが、ツリーよりは前面に表示 */
             box-sizing: border-box; /* パディングを含めて高さ計算 */
         }
@@ -160,7 +168,7 @@
         #chart-container {
             width: 100%;
             /* ヘッダーと検索バーの高さだけ考慮して高さを計算 */
-            height: calc(100vh - 60px); /* ヘッダー(30px)と検索バー(30px)の合計高さを60pxに調整 */
+            height: calc(100vh - 65px); /* ヘッダー(35px)と検索バー(30px)の合計高さを65pxに調整 */
             overflow: hidden; /* Hide default scrollbars, D3 zoom handles pan */
             padding-top: 0; /* パディングを解除 */
             box-sizing: border-box;
@@ -266,12 +274,12 @@
 <body>
     <div class="header-container">
         <h1>フットサルメンバー紹介ツリー</h1>
-        <a href="https://www.notion.so/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" class="header-link" target="_blank">リンクへ</a>
+        <a href="https://www.notion.so/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" class="header-link" target="_blank">リスト表示</a>
     </div>
 
     <div id="search-container">
         <div class="input-container">
-            <input type="text" id="search-input" placeholder="メンバーの名前で検索" autocomplete="off" />
+            <input type="text" id="search-input" placeholder="名前で検索" autocomplete="off" />
             <ul id="suggestions-list"></ul>
         </div>
         <button id="search-button">検索</button>
@@ -354,7 +362,7 @@
                     let totalSvgHeight = 0; // Track total height needed for all subtrees
 
 
-                    // Create a main group to hold all group subtrees - This group will be zoomed/panned
+                    // Create a main group to hold all group subtrees - This group will be zoomed/panne
                     const mainG = svg.append("g");
                     mainGElement = mainG.node(); // Store reference to the DOM element
 
