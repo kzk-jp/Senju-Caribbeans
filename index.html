@@ -305,7 +305,7 @@
                     let totalSvgHeight = 0; // Track total height needed for all subtrees
 
 
-                    // Create a main group to hold all group subtrees - This group will be zoomed/panne d
+                    // Create a main group to hold all group subtrees - This group will be zoomed/panned
                     const mainG = svg.append("g");
                     mainGElement = mainG.node(); // Store reference to the DOM element
 
@@ -471,7 +471,13 @@
                     // Create a zoom behavior
                     const zoom = d3.zoom()
                         // Set the extent of the zoomable area to the calculated SVG dimensions
+                        // Allowing pan slightly outside the bounds
                         .extent([[0, 0], [finalSvgWidth, finalSvgHeight]])
+                        // Restrict pan range to allow moving the view up to half the SVG size outside the original bounds
+                        .translateExtent([
+                            [-finalSvgWidth * 0.5, -finalSvgHeight * 0.5],
+                            [finalSvgWidth * 1.5, finalSvgHeight * 1.5]
+                        ])
                         // Set the zoom scale limits
                         .scaleExtent([0.5, 3]) // Allow zooming between 0.5x and 3x
                         // Define the function to call when zooming occurs
@@ -521,10 +527,10 @@
                          mainG.selectAll(".node-highlight").classed("node-highlight", false);
 
                          if (!searchTerm) {
-                            // 検索語が空の場合はツリー全体表示のみ行う
-                            zoomToFitTree();
-                            return;
-                        }
+                             // 検索語が空の場合はツリー全体表示のみ行う
+                             zoomToFitTree();
+                             return;
+                         }
 
                         // Convert search term to Katakana for fuzzy matching
                         const searchTermKata = hiraToKata(searchTerm).toLowerCase();
@@ -604,12 +610,12 @@
 
                          // Create the new transform
                          const newTransform = d3.zoomIdentity
-                            .translate(translateX, translateY)
-                            .scale(scale);
+                             .translate(translateX, translateY)
+                             .scale(scale);
 
                          // Apply the transform
                          zoomToTransform(newTransform);
-                    }
+                     }
 
 
                     searchButton.addEventListener("click", () => {
@@ -660,9 +666,9 @@
                                     const li = document.createElement("li");
                                     li.textContent = node.name;
                                     li.addEventListener("click", () => {
-                                        searchInput.value = node.name; // Put selected suggestion in input
-                                        performSearch(node.name); // Perform search for the selected name
-                                        suggestionsList.style.display = 'none'; // Hide suggestions
+                                        searchInput.value = node.name;
+                                        performSearch(node.name);
+                                        suggestionsList.style.display = 'none'; // Hide suggestions after selecting
                                     });
                                     suggestionsList.appendChild(li);
                                 });
@@ -672,35 +678,55 @@
                             }
                         } else {
                             suggestionsList.style.display = 'none'; // Hide if input is empty
-                            // Clear highlight when input is cleared
-                            mainG.selectAll(".node-highlight").classed("node-highlight", false);
                         }
                     });
 
-                    // Hide suggestions when clicking outside the input/suggestions
-                    document.addEventListener("click", (event) => {
-                        const isClickInsideSearchContainer = document.getElementById("search-container").contains(event.target);
-                        if (!isClickInsideSearchContainer) {
+                    // Hide suggestions when clicking outside the input/list
+                    document.addEventListener('click', (event) => {
+                        const isClickInsideSearch = document.getElementById('search-container').contains(event.target);
+                        if (!isClickInsideSearch) {
                             suggestionsList.style.display = 'none';
                         }
                     });
 
-                    // --- End Search Suggestion Functionality ---
+
+                    // --- Handle Window Resize ---
+                    window.addEventListener('resize', () => {
+                        // Recalculate container dimensions
+                        const containerWidth = chartContainerElement.clientWidth;
+                        const containerHeight = chartContainerElement.clientHeight;
+
+                        // Update SVG dimensions (optional, but good practice if SVG size is relative)
+                        // svg.attr("width", containerWidth);
+                        // svg.attr("height", containerHeight);
+
+                        // Re-apply zoom behavior with updated extent based on new container size
+                        // This is important for translateExtent to work correctly after resize
+                        const currentTransform = d3.zoomTransform(svgElement); // Get current transform
+                        const zoom = d3.zoom()
+                            .extent([[0, 0], [containerWidth, containerHeight]]) // Update extent to container size
+                            .translateExtent([
+                                [-finalSvgWidth * 0.5, -finalSvgHeight * 0.5], // Use original calculated tree size for pan limits
+                                [finalSvgWidth * 1.5, finalSvgHeight * 1.5]
+                            ])
+                            .scaleExtent([0.5, 3])
+                            .on("zoom", zoomed);
+
+                        svg.call(zoom); // Apply the updated zoom behavior
+                        currentZoomBehavior = zoom; // Store the updated behavior
+
+                        // Optionally, recenter the tree after resize
+                        // zoomToFitTree(); // Uncomment this line to recenter on resize
+                    });
 
 
                 })
                 .catch(error => {
-                    // Log any errors during data fetching or processing
-                    console.error('Error fetching JSON data:', error);
-                    // Display an error message to the user
-                    document.getElementById("chart-container").innerHTML = "<p>データの読み込みに失敗しました。GitHubのRawtherapee URLが正しいか、またはCORSの問題がないか確認してください。</p>";
+                    // Handle any errors during the fetch operation
+                    console.error("Error fetching or parsing JSON:", error);
+                    document.getElementById("chart-container").innerHTML = "<p>データの読み込み中にエラーが発生しました。</p>";
                 });
         });
-
-        // Optional: Add a resize handler if you need the layout to recalculate
-        // on window resize. This is more complex with D3 layout and pan/zoom.
-        // For simplicity, this example does not include a full redraw on resize.
-
     </script>
 </body>
 </html>
