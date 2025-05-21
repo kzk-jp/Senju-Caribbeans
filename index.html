@@ -50,7 +50,7 @@
             width: auto; /* 幅の固定を解除 */
             height: 30px; /* 検索バーの高さを調整 */
             display: flex; /* Flexboxを使用して子要素を配置 */
-            justify-content: space-between; /* リンクボタンを左、検索機能を右に配置 */
+            justify-content: space-between; /* リスト、検索グループ、リセットを両端と中央に配置 */
             align-items: center; /* 垂直方向の中央に */
             position: sticky; /* 検索バーを固定 */
             top: 35px; /* ヘッダーの高さ分下に配置 */
@@ -59,19 +59,11 @@
             flex-wrap: nowrap; /* 子要素の折り返しを防ぐ */
         }
 
-        /* Group for list and reset buttons */
-        .button-group {
-            display: flex;
-            gap: 8px; /* ボタン間のマージン */
-            align-items: center;
-            flex-shrink: 0; /* 縮小しない */
-        }
-
-        /* Search link button styling (formerly .header-link) */
+        /* Search link button styling */
         .search-link, .reset-button {
             display: inline-block; /* ボタンとして表示 */
             padding: 4px 8px; /* ボタンのパディングを調整 */
-            background-color: #3b82f6; /* Tailwind blue-500 */
+            background-color: #6b7280; /* Tailwind gray-500 */
             color: white;
             text-decoration: none; /* 下線を削除 */
             border-radius: 20px; /* 角丸を大きく */
@@ -85,14 +77,14 @@
         }
 
         .search-link:hover, .reset-button:hover {
-            background-color: #2563eb; /* Tailwind blue-700 */
+            background-color: #374151; /* Tailwind gray-700 */
         }
 
-        /* Container for search input and button */
-        .search-controls {
+        /* Container for search input and button (new group) */
+        .search-input-group {
             display: flex;
             align-items: center;
-            margin-left: auto; /* 右に寄せる */
+            margin: 0 auto; /* 中央に配置 */
             flex-shrink: 1; /* 縮小を許可 */
             min-width: 0; /* flexアイテムの最小幅を設定 */
             gap: 5px; /* inputとbuttonの間の隙間をflexboxのgapで管理 */
@@ -100,7 +92,6 @@
 
         #search-container input[type="text"] {
             padding: 4px 6px; /* 入力フィールドのpaddingも小さく */
-            /* margin-right: 5px; */ /* gapで管理するので削除 */
             border: 1px solid #d1d5db;
             border-radius: 4px;
             font-size: 0.9rem; /* フォントサイズを調整 */
@@ -112,7 +103,7 @@
 
         #search-container button {
             padding: 4px 8px; /* ボタンのpaddingも小さく */
-            background-color: #3b82f6; /* Tailwind blue-500 */
+            background-color: #6b7280; /* Tailwind gray-500 */
             color: white;
             border: none;
             border-radius: 44px; /* ボタンの角を丸く */
@@ -127,7 +118,7 @@
         }
 
         #search-container button:hover {
-            background-color: #2563eb; /* Tailwind blue-700 */
+            background-color: #374151; /* Tailwind gray-700 */
         }
 
         /* Search suggestions dropdown */
@@ -292,17 +283,15 @@
     </div>
 
     <div id="search-container">
-        <div class="button-group">
-            <a href="https://phase-laundry-290.notion.site/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" class="search-link" target="_blank">リスト表示</a>
-            <button id="reset-button" class="reset-button">リセット</button>
-        </div>
-        <div class="search-controls">
+        <a href="https://phase-laundry-290.notion.site/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" class="search-link" target="_blank">List↗</a>
+        <div class="search-input-group">
             <div class="input-container">
                 <input type="text" id="search-input" placeholder="名前で検索" autocomplete="off" />
                 <ul id="suggestions-list"></ul>
             </div>
             <button id="search-button">検索</button>
         </div>
+        <button id="reset-button" class="reset-button">Reset</button>
     </div>
 
     <div id="chart-container">
@@ -852,7 +841,7 @@
                         const zoom = d3.zoom()
                             .extent([[0, 0], [containerWidth, containerHeight]]) // Update extent to container size
                             .translateExtent([
-                                [-finalSvgWidth * 5, -finalSvgHeight * 5], // Use original calculated tree size for pan limits (範囲を5倍に拡大)
+                                [-finalSvgWidth * 5, -finalSvgHeight * 5], // 元のSVGサイズ分だけ左上方向にパン可能 (範囲を5倍に拡大)
                                 [finalSvgWidth * 5, finalSvgHeight * 5] // 元のSVGサイズ分だけ右下方向にパン可能 (範囲を5倍に拡大)
                             ])
                             .scaleExtent([0.5, 3])
