@@ -609,7 +609,8 @@
 
                          if (!searchTerm) {
                              // 検索語が空の場合はツリー全体表示のみ行う
-                             zoomToTransform(initialTransform); // リセットと同じ挙動
+                             // ここではリセットと同じ挙動をさせるため、initialTransformを適用
+                             svg.transition().duration(750).call(currentZoomBehavior.transform, initialTransform);
                              return;
                          }
 
@@ -634,20 +635,23 @@
                                 foundNodeElement.classed("node-highlight", true);
 
                                 // 検索されたらツリー全体表示にズームアウト (初期状態に戻す)
-                                zoomToTransform(initialTransform);
+                                // ここではリセットと同じ挙動をさせるため、initialTransformを適用
+                                svg.transition().duration(750).call(currentZoomBehavior.transform, initialTransform);
 
                             } else {
                                 console.warn("Could not find SVG element in map for data:", foundNodeData);
                                 // カスタムメッセージボックスを表示するなどの代替手段を検討
                                 displayMessage("検索されたメンバーのノード情報が見つかりませんでした。");
                                 // 見つからなかった場合もツリー全体表示に戻す
-                                zoomToTransform(initialTransform);
+                                // ここではリセットと同じ挙動をさせるため、initialTransformを適用
+                                svg.transition().duration(750).call(currentZoomBehavior.transform, initialTransform);
                             }
                         } else {
                             // Member not found
                             displayMessage("「" + searchTerm + "」という名前のメンバーは見つかりませんでした。");
                             // 見つからなかった場合もツリー全体表示に戻す
-                            zoomToTransform(initialTransform);
+                            // ここではリセットと同じ挙動をさせるため、initialTransformを適用
+                            svg.transition().duration(750).call(currentZoomBehavior.transform, initialTransform);
                         }
                     }
 
@@ -728,7 +732,7 @@
                              .scale(scale);
 
                          // Apply the transform
-                         zoomToTransform(newTransform);
+                         svg.transition().duration(750).call(currentZoomBehavior.transform, newTransform);
                      }
 
 
@@ -758,7 +762,8 @@
                         if (searchTerm.length === 0) {
                              mainG.selectAll(".node-highlight").classed("node-highlight", false);
                              suggestionsList.style.display = 'none';
-                             zoomToTransform(initialTransform); // 入力クリアで初期状態に戻す
+                             // 入力クリアで初期状態に戻す
+                             svg.transition().duration(750).call(currentZoomBehavior.transform, initialTransform);
                              return;
                         }
 
@@ -813,16 +818,25 @@
                         // サジェストリストを非表示
                         suggestionsList.style.display = 'none';
 
-                        console.log("Reset button clicked. Applying transform:", initialTransform); // デバッグログ
-                        console.log("Current transform before reset:", d3.zoomTransform(svgElement)); // デバッグログ
+                        console.log("--- Reset button clicked ---");
+                        console.log("Applying transform:", initialTransform);
+                        console.log("Current SVG transform BEFORE reset:", d3.zoomTransform(svgElement));
+                        console.log("Current mainG transform BEFORE reset:", d3.select(mainGElement).attr("transform"));
 
                         // ページ読み込み時と同じ初期ズームとパンを適用
-                        zoomToTransform(initialTransform);
+                        // currentZoomBehaviorが正しいズームオブジェクトを指していることを確認
+                        if (currentZoomBehavior) {
+                            svg.transition().duration(750).call(currentZoomBehavior.transform, initialTransform);
+                        } else {
+                            console.error("currentZoomBehavior is not defined. Cannot reset zoom.");
+                        }
 
-                        // ズーム適用後の状態もログで確認
+                        // ズーム適用後の状態もログで確認 (遷移時間より少し長めに待つ)
                         setTimeout(() => {
-                            console.log("Current transform after reset (short delay):", d3.zoomTransform(svgElement));
-                        }, 800); // 遷移時間より少し長めに待つ
+                            console.log("Current SVG transform AFTER reset (short delay):", d3.zoomTransform(svgElement));
+                            console.log("Current mainG transform AFTER reset (short delay):", d3.select(mainGElement).attr("transform"));
+                            console.log("--- End Reset button clicked ---");
+                        }, 800);
                     });
 
 
