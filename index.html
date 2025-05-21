@@ -50,8 +50,9 @@
             width: auto; /* 幅の固定を解除 */
             height: 30px; /* 検索バーの高さを調整 */
             display: flex; /* Flexboxを使用して子要素を配置 */
-            justify-content: space-between; /* リスト、検索グループ、リセットを両端と中央に配置 */
+            justify-content: space-between; /* 要素を両端に配置 */
             align-items: center; /* 垂直方向の中央に */
+            /* gap: 8px; */ /* 個別のグループで管理 */
             position: sticky; /* 検索バーを固定 */
             top: 35px; /* ヘッダーの高さ分下に配置 */
             z-index: 999; /* ヘッダーよりは下だが、ツリーよりは前面に表示 */
@@ -80,14 +81,14 @@
             background-color: #374151; /* Tailwind gray-700 */
         }
 
-        /* Container for search input and button (new group) */
-        .search-input-group {
+        /* Group for search input, search button, and reset button */
+        .right-aligned-group {
             display: flex;
             align-items: center;
-            margin: 0 auto; /* 中央に配置 */
+            gap: 8px; /* 要素間の間隔 */
+            margin-left: auto; /* 右端に寄せる */
             flex-shrink: 1; /* 縮小を許可 */
             min-width: 0; /* flexアイテムの最小幅を設定 */
-            gap: 5px; /* inputとbuttonの間の隙間をflexboxのgapで管理 */
         }
 
         #search-container input[type="text"] {
@@ -124,10 +125,9 @@
         /* Search suggestions dropdown */
         #suggestions-list {
             position: absolute;
-            left: 50%; /* 親要素の中央に */
-            transform: translateX(-50%); /* 要素自体の幅の半分だけ左に移動 */
+            left: 0; /* 親要素のinput-containerに合わせる */
             top: 100%; /* 検索入力ボックスの直下に配置 */
-            width: calc(100%); /* 入力フィールドの幅に合わせる (gap分はinput-containerで調整) */
+            width: 100%; /* 入力フィールドの幅に合わせる */
             max-width: 180px; /* 最大幅を設定 */
             max-height: 120px; /* Limit height and add scroll */
             overflow-y: auto;
@@ -148,7 +148,6 @@
         #search-container .input-container {
             position: relative; /* このコンテナ内で絶対配置 */
             display: flex; /* flexboxに変更 */
-            flex-grow: 1; /* 親要素の幅に合わせて拡張 */
             max-width: 180px; /* 検索ボックスの最大幅を制限 */
             min-width: 80px; /* 最小幅を設定 */
         }
@@ -284,14 +283,14 @@
 
     <div id="search-container">
         <a href="https://phase-laundry-290.notion.site/1eead9abbc8680bdbbf2db393fccb974?v=1eead9abbc8681cd81db000cb443821c" class="search-link" target="_blank">List↗</a>
-        <div class="search-input-group">
+        <div class="right-aligned-group">
             <div class="input-container">
                 <input type="text" id="search-input" placeholder="名前で検索" autocomplete="off" />
                 <ul id="suggestions-list"></ul>
             </div>
             <button id="search-button">Search</button>
+            <button id="reset-button" class="reset-button">Reset</button>
         </div>
-        <button id="reset-button" class="reset-button">Reset</button>
     </div>
 
     <div id="chart-container">
@@ -841,7 +840,7 @@
                         const zoom = d3.zoom()
                             .extent([[0, 0], [containerWidth, containerHeight]]) // Update extent to container size
                             .translateExtent([
-                                [-finalSvgWidth * 5, -finalSvgHeight * 5], // 元のSVGサイズ分だけ左上方向にパン可能 (範囲を5倍に拡大)
+                                [-finalSvgWidth * 5, -finalSvgHeight * 5], // Use original calculated tree size for pan limits (範囲を5倍に拡大)
                                 [finalSvgWidth * 5, finalSvgHeight * 5] // 元のSVGサイズ分だけ右下方向にパン可能 (範囲を5倍に拡大)
                             ])
                             .scaleExtent([0.5, 3])
@@ -851,7 +850,7 @@
                         currentZoomBehavior = zoom; // Store the updated behavior
 
                         // Optionally, recenter the tree after resize
-                        // zoomToFitTree(); // Uncomment this line to recenter on resize
+                        // zoomToFitTree(); // Uncomment this line to recenter on recenter the tree after resize
                     });
 
 
