@@ -589,6 +589,8 @@
                         .translate(initialTranslateX, initialTranslateY)
                         .scale(fixedInitialScale);
 
+                    console.log("Initial Transform set:", initialTransform); // デバッグログ
+
                     // Apply the initial transform with a smooth transition
                     svg.transition().duration(750).call(zoom.transform, initialTransform);
 
@@ -607,7 +609,7 @@
 
                          if (!searchTerm) {
                              // 検索語が空の場合はツリー全体表示のみ行う
-                             zoomToFitTree(); // こちらは動的なフィットを維持
+                             zoomToTransform(initialTransform); // リセットと同じ挙動
                              return;
                          }
 
@@ -631,21 +633,21 @@
                                 // Add highlight to the found node's SVG group element
                                 foundNodeElement.classed("node-highlight", true);
 
-                                // 検索されたらツリー全体表示にズームアウト
-                                zoomToFitTree(); // こちらは動的なフィットを維持
+                                // 検索されたらツリー全体表示にズームアウト (初期状態に戻す)
+                                zoomToTransform(initialTransform);
 
                             } else {
                                 console.warn("Could not find SVG element in map for data:", foundNodeData);
                                 // カスタムメッセージボックスを表示するなどの代替手段を検討
                                 displayMessage("検索されたメンバーのノード情報が見つかりませんでした。");
                                 // 見つからなかった場合もツリー全体表示に戻す
-                                zoomToFitTree(); // こちらは動的なフィットを維持
+                                zoomToTransform(initialTransform);
                             }
                         } else {
                             // Member not found
                             displayMessage("「" + searchTerm + "」という名前のメンバーは見つかりませんでした。");
                             // 見つからなかった場合もツリー全体表示に戻す
-                            zoomToFitTree(); // こちらは動的なフィットを維持
+                            zoomToTransform(initialTransform);
                         }
                     }
 
@@ -687,6 +689,7 @@
 
 
                     // Function to zoom to fit the entire tree within the container dynamically
+                    // この関数は、リセットボタンでは使用されず、動的なフィットが必要な場合のみ使用されます。
                     function zoomToFitTree() {
                          // Get the bounding box of the main group (which contains the entire tree)
                          const mainGBounds = mainGElement.getBBox();
@@ -755,7 +758,7 @@
                         if (searchTerm.length === 0) {
                              mainG.selectAll(".node-highlight").classed("node-highlight", false);
                              suggestionsList.style.display = 'none';
-                             zoomToFitTree(); // 入力クリアで全体表示 (動的なフィット)
+                             zoomToTransform(initialTransform); // 入力クリアで初期状態に戻す
                              return;
                         }
 
@@ -810,8 +813,16 @@
                         // サジェストリストを非表示
                         suggestionsList.style.display = 'none';
 
+                        console.log("Reset button clicked. Applying transform:", initialTransform); // デバッグログ
+                        console.log("Current transform before reset:", d3.zoomTransform(svgElement)); // デバッグログ
+
                         // ページ読み込み時と同じ初期ズームとパンを適用
                         zoomToTransform(initialTransform);
+
+                        // ズーム適用後の状態もログで確認
+                        setTimeout(() => {
+                            console.log("Current transform after reset (short delay):", d3.zoomTransform(svgElement));
+                        }, 800); // 遷移時間より少し長めに待つ
                     });
 
 
