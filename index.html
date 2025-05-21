@@ -605,7 +605,7 @@
 
                          if (!searchTerm) {
                              // 検索語が空の場合はツリー全体表示のみ行う
-                             zoomToFitTree();
+                             zoomToFitTree(); // こちらは動的なフィットを維持
                              return;
                          }
 
@@ -630,20 +630,20 @@
                                 foundNodeElement.classed("node-highlight", true);
 
                                 // 検索されたらツリー全体表示にズームアウト
-                                zoomToFitTree();
+                                zoomToFitTree(); // こちらは動的なフィットを維持
 
                             } else {
                                 console.warn("Could not find SVG element in map for data:", foundNodeData);
                                 // カスタムメッセージボックスを表示するなどの代替手段を検討
                                 displayMessage("検索されたメンバーのノード情報が見つかりませんでした。");
                                 // 見つからなかった場合もツリー全体表示に戻す
-                                zoomToFitTree();
+                                zoomToFitTree(); // こちらは動的なフィットを維持
                             }
                         } else {
                             // Member not found
                             displayMessage("「" + searchTerm + "」という名前のメンバーは見つかりませんでした。");
                             // 見つからなかった場合もツリー全体表示に戻す
-                            zoomToFitTree();
+                            zoomToFitTree(); // こちらは動的なフィットを維持
                         }
                     }
 
@@ -685,6 +685,7 @@
 
 
                     // Function to zoom to fit the entire tree within the container
+                    // This function now calculates a dynamic fit, not a fixed 0.5 scale.
                     function zoomToFitTree() {
                          // Get the bounding box of the main group (which contains the entire tree)
                          const mainGBounds = mainGElement.getBBox();
@@ -814,8 +815,24 @@
                         // サジェストリストを非表示
                         suggestionsList.style.display = 'none';
 
-                        // ツリー全体表示にズームをリセット
-                        zoomToFitTree();
+                        // ページ読み込み時と同じ初期ズームとパンを適用
+                        const mainGBounds = mainGElement.getBBox();
+                        const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
+                        const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
+
+                        const containerWidth = chartContainerElement.clientWidth;
+                        const containerHeight = chartContainerElement.clientHeight;
+
+                        const resetScale = 0.5; // 初期スケールを0.5に固定
+
+                        const translateX = containerWidth / 2 - treeCenterX * resetScale;
+                        const translateY = containerHeight / 2 - treeCenterY * resetScale;
+
+                        const newTransform = d3.zoomIdentity
+                            .translate(translateX, translateY)
+                            .scale(resetScale);
+
+                        zoomToTransform(newTransform);
                     });
 
 
