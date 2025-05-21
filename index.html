@@ -321,6 +321,7 @@
         let mainGElement = null; // Reference to the main group DOM element
         let chartContainerElement = null; // Reference to the chart container DOM element
         let nodeElements = new Map(); // Store D3 selection of node elements by data ID
+        let initialTransform = null; // Store the initial transform for reset
 
         // Function to convert Hiragana to Katakana
         function hiraToKata(str) {
@@ -579,13 +580,14 @@
                      const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
 
                     // Calculate the transform to center the overall tree
-                    const initialScale = 0.5; // Start with 0.5x scale
-                    const initialTranslateX = containerWidth / 2 - treeCenterX * initialScale;
-                    const initialTranslateY = containerHeight / 2 - treeCenterY * initialScale;
+                    const fixedInitialScale = 0.5; // Start with 0.5x scale for initial and reset
+                    const initialTranslateX = containerWidth / 2 - treeCenterX * fixedInitialScale;
+                    const initialTranslateY = containerHeight / 2 - treeCenterY * fixedInitialScale;
 
-                    const initialTransform = d3.zoomIdentity
+                    // Store the initial transform
+                    initialTransform = d3.zoomIdentity
                         .translate(initialTranslateX, initialTranslateY)
-                        .scale(initialScale);
+                        .scale(fixedInitialScale);
 
                     // Apply the initial transform with a smooth transition
                     svg.transition().duration(750).call(zoom.transform, initialTransform);
@@ -684,8 +686,7 @@
                     }
 
 
-                    // Function to zoom to fit the entire tree within the container
-                    // This function now calculates a dynamic fit, not a fixed 0.5 scale.
+                    // Function to zoom to fit the entire tree within the container dynamically
                     function zoomToFitTree() {
                          // Get the bounding box of the main group (which contains the entire tree)
                          const mainGBounds = mainGElement.getBBox();
@@ -715,12 +716,6 @@
 
 
                          // Calculate the translation to center the tree at the calculated scale
-                         // The target position in the container is (containerWidth/2, containerHeight/2)
-                         // The tree's center in the original SVG space is (treeCenterX, treeCenterY)
-                         // We want to apply a transform (translate, scale) such that
-                         // (treeCenterX, treeCenterY) * scale + translate = (containerWidth/2, containerHeight/2)
-                         // translate = (containerWidth/2, containerHeight/2) - (treeCenterX, treeCenterY) * scale
-
                          const translateX = containerWidth / 2 - treeCenterX * scale;
                          const translateY = containerHeight / 2 - treeCenterY * scale;
 
@@ -760,7 +755,7 @@
                         if (searchTerm.length === 0) {
                              mainG.selectAll(".node-highlight").classed("node-highlight", false);
                              suggestionsList.style.display = 'none';
-                             zoomToFitTree(); // 入力クリアで全体表示
+                             zoomToFitTree(); // 入力クリアで全体表示 (動的なフィット)
                              return;
                         }
 
@@ -816,23 +811,7 @@
                         suggestionsList.style.display = 'none';
 
                         // ページ読み込み時と同じ初期ズームとパンを適用
-                        const mainGBounds = mainGElement.getBBox();
-                        const treeCenterX = mainGBounds.x + mainGBounds.width / 2;
-                        const treeCenterY = mainGBounds.y + mainGBounds.height / 2;
-
-                        const containerWidth = chartContainerElement.clientWidth;
-                        const containerHeight = chartContainerElement.clientHeight;
-
-                        const resetScale = 0.5; // 初期スケールを0.5に固定
-
-                        const translateX = containerWidth / 2 - treeCenterX * resetScale;
-                        const translateY = containerHeight / 2 - treeCenterY * resetScale;
-
-                        const newTransform = d3.zoomIdentity
-                            .translate(translateX, translateY)
-                            .scale(resetScale);
-
-                        zoomToTransform(newTransform);
+                        zoomToTransform(initialTransform);
                     });
 
 
